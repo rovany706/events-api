@@ -111,7 +111,6 @@ curl -X 'POST' \
   -H 'accept: */*' \
   -H 'Content-Type: application/json' \
   -d '{
-  "id": 0,
   "title": "Rock Concert",
   "description": "Metallica in Moscow",
   "startAt": "2026-05-07T15:00:00.000Z",
@@ -133,23 +132,22 @@ curl -X 'POST' \
 }
 ```
 
-### `PUT /api/v1/events`
+### `PUT /api/v1/events/{id}`
 
 Обновление информации о мероприятии
 
 Запрос:
 
 ```
-PUT /api/v1/events
+PUT /api/v1/events/1
 ```
 
 ```bash
 curl -X 'PUT' \
-  'http://localhost:5080/api/v1/Events' \
+  'http://localhost:5080/api/v1/Events/1' \
   -H 'accept: */*' \
   -H 'Content-Type: application/json' \
   -d '{
-  "id": 1,
   "title": "Jazz Concert",
   "description": "Frank Sinatra in Moscow",
   "startAt": "2026-05-08T15:00:00.000Z",
