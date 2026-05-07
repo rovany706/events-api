@@ -51,7 +51,7 @@ public class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<EventResponse> GetEventById(int id)
     {
-        _logger.LogDebug("Получен запрос на получение мероприятия по идентификатору");
+        _logger.LogDebug("Получен запрос на получение мероприятия по идентификатору (id = {Id})", id);
 
         var eventToSend = _eventService.GetEventById(id);
 
@@ -91,7 +91,7 @@ public class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult UpdateEvent(int id, [FromBody]UpdateEventRequest updateEventRequest)
     {
-        _logger.LogDebug("Получен запрос на обновление информации о мероприятии");
+        _logger.LogDebug("Получен запрос на обновление информации о мероприятии (id = {Id})", id);
 
         var updateResult = _eventService.TryUpdateEvent(updateEventRequest.ToEvent(id));
 
@@ -114,7 +114,7 @@ public class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult DeleteEvent(int id)
     {
-        _logger.LogDebug("Получен запрос на удаление мероприятия");
+        _logger.LogDebug("Получен запрос на удаление мероприятия (id = {Id})", id);
 
         var removeResult = _eventService.TryRemoveEvent(id);
 
