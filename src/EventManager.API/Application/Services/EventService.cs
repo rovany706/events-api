@@ -19,14 +19,6 @@ public class EventService : IEventService
     }
 
     /// <inheritdoc />
-    public int AddEvent(Event eventToAdd)
-    {
-        var newId = _eventRepository.AddEvent(eventToAdd);
-
-        return newId;
-    }
-
-    /// <inheritdoc />
     public ReadOnlyCollection<Event> GetEvents()
     {
         return _eventRepository.GetEvents();
@@ -39,16 +31,11 @@ public class EventService : IEventService
     }
 
     /// <inheritdoc />
-    public bool TryRemoveEvent(int id)
+    public int AddEvent(Event eventToAdd)
     {
-        var eventToRemove = GetEventById(id);
+        var newId = _eventRepository.AddEvent(eventToAdd);
 
-        if (eventToRemove == null)
-        {
-            return false;
-        }
-
-        return _eventRepository.RemoveEvent(eventToRemove);
+        return newId;
     }
 
     /// <inheritdoc />
@@ -64,5 +51,18 @@ public class EventService : IEventService
         _eventRepository.UpdateEvent(eventToUpdate);
 
         return true;
+    }
+
+    /// <inheritdoc />
+    public bool TryRemoveEvent(int id)
+    {
+        var eventToRemove = GetEventById(id);
+
+        if (eventToRemove == null)
+        {
+            return false;
+        }
+
+        return _eventRepository.RemoveEvent(eventToRemove);
     }
 }

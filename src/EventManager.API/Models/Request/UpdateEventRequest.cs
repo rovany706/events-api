@@ -7,15 +7,9 @@ namespace EventManager.API.Models.Request;
 /// <summary>
 /// Запрос на обновление информации о мероприятии
 /// </summary>
-[EventEndNotBeforeStart]
+[EventEndNotBeforeStart(nameof(StartAt), nameof(EndAt))]
 public record UpdateEventRequest
 {
-    /// <summary>
-    /// Идентификатор мероприятия
-    /// </summary>
-    [Required(ErrorMessageResourceType = typeof(Resource), ErrorMessageResourceName = nameof(Resource.ErrorEventIdRequired))]
-    public required int Id { get; set; }
-
     /// <summary>
     /// Название мероприятия
     /// </summary>

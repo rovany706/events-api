@@ -1,28 +1,41 @@
-﻿using EventManager.API.Models;
-
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace EventManager.API.Validation;
 
 /// <summary>
-/// Атрибут для валидации того, что дата конца мероприятия не раньше даты начала
+/// Атрибут для валидации того, что дата конца мероприятия (EndAt) не раньше даты начала (StartAt)
 /// </summary>
 public class EventEndNotBeforeStart : ValidationAttribute
 {
-    public EventEndNotBeforeStart()
+    private readonly string _startAtPropertyName;
+    private readonly string _endAtPropertyName;
+
+    public EventEndNotBeforeStart(string startAtPropertyName, string endAtPropertyName)
     {
+        _startAtPropertyName = startAtPropertyName;
+        _endAtPropertyName = endAtPropertyName;
+
         ErrorMessageResourceType = typeof(Resource);
         ErrorMessageResourceName = nameof(Resource.ErrorEventEndBeforeStart);
     }
 
     /// <inheritdoc />
-    public override bool IsValid(object? value)
+    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
-        if (value is not Event eventDto)
+        var dtoType = validationContext.ObjectType;
+        var startAtValue = dtoType.GetProperty(_startAtPropertyName)?.GetValue(validationContext.ObjectInstance);
+        var endAtValue = dtoType.GetProperty(_endAtPropertyName)?.GetValue(validationContext.ObjectInstance);
+
+        if (startAtValue is not DateTime startAt || endAtValue is not DateTime endAt)
         {
-            return true;
+            return ValidationResult.Success;
         }
 
-        return eventDto.StartAt < eventDto.EndAt;
+        if (endAt < startAt)
+        {
+            return new ValidationResult(ErrorMessageString, [_endAtPropertyName]);
+        }
+
+        return ValidationResult.Success;
     }
 }

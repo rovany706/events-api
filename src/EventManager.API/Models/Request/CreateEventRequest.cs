@@ -7,7 +7,7 @@ namespace EventManager.API.Models.Request;
 /// <summary>
 /// Запрос на создание мероприятия
 /// </summary>
-[EventEndNotBeforeStart]
+[EventEndNotBeforeStart(nameof(StartAt), nameof(EndAt))]
 public record CreateEventRequest
 {
     /// <summary>

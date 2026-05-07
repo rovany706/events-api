@@ -17,11 +17,11 @@ public static class EventMapping
         };
     }
 
-    public static Event ToEvent(this UpdateEventRequest updateEventRequest)
+    public static Event ToEvent(this UpdateEventRequest updateEventRequest, int idToAssign)
     {
         return new Event
         {
-            Id = updateEventRequest.Id,
+            Id = idToAssign,
             Title = updateEventRequest.Title,
             Description = updateEventRequest.Description,
             StartAt = updateEventRequest.StartAt,

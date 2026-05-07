@@ -37,7 +37,8 @@ public class InMemoryEventRepository : IEventRepository
     /// <inheritdoc />
     public void UpdateEvent(Event updatedEvent)
     {
-        _events[updatedEvent.Id] = updatedEvent;
+        var eventIndex = _events.FindIndex(x => x.Id == updatedEvent.Id);
+        _events[eventIndex] = updatedEvent;
     }
 
     /// <inheritdoc />

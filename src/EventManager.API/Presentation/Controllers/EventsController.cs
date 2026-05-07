@@ -82,21 +82,22 @@ public class EventsController : ControllerBase
     /// <summary>
     /// Обновление информации о мероприятии
     /// </summary>
+    /// <param name="id">Идентификатор мероприятия</param>
     /// <param name="updateEventRequest">Запрос на обновление мероприятия</param>
     /// <response code="204">Мероприятие обновлено</response>
     /// <response code="404">Мероприятие не найдено</response>
     [HttpPut]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult UpdateEvent(UpdateEventRequest updateEventRequest)
+    public IActionResult UpdateEvent(int id, [FromBody]UpdateEventRequest updateEventRequest)
     {
         _logger.LogDebug("Получен запрос на обновление информации о мероприятии");
 
-        var updateResult = _eventService.TryUpdateEvent(updateEventRequest.ToEvent());
+        var updateResult = _eventService.TryUpdateEvent(updateEventRequest.ToEvent(id));
 
         if (updateResult == false)
         {
-            return NotFound(GetEventNotFoundErrorMessage(updateEventRequest.Id));
+            return NotFound(GetEventNotFoundErrorMessage(id));
         }
 
         return NoContent();
