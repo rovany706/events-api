@@ -79,7 +79,16 @@ namespace EventManager.API {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Мероприятние с id {0} не найдено..
+        ///   Looks up a localized string similar to Не указан идентификатор мероприятия..
+        /// </summary>
+        internal static string ErrorEventIdRequired {
+            get {
+                return ResourceManager.GetString("ErrorEventIdRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Мероприятие с id {0} не найдено..
         /// </summary>
         internal static string ErrorEventNotFound {
             get {

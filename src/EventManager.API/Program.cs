@@ -1,4 +1,5 @@
 using EventManager.API.Application;
+using EventManager.API.Domain;
 using EventManager.API.Presentation;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,7 @@ if (builder.Environment.IsDevelopment())
 }
 
 builder.Services.AddApplication();
+builder.Services.AddDomain();
 builder.Services.AddPresentation();
 
 var app = builder.Build();

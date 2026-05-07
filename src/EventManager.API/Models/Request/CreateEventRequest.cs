@@ -2,39 +2,35 @@
 
 using EventManager.API.Validation;
 
-namespace EventManager.API.Models;
+namespace EventManager.API.Models.Request;
 
 /// <summary>
-/// Мероприятие
+/// Запрос на создание мероприятия
 /// </summary>
-[EventEndNotBeforeStart(ErrorMessageResourceType = typeof(Resource), ErrorMessageResourceName = nameof(Resource.ErrorEventEndBeforeStart))]
-public class EventDto
+[EventEndNotBeforeStart]
+public record CreateEventRequest
 {
-    /// <summary>
-    /// Идентификатор мероприятия
-    /// </summary>
-    public required int Id { get; set; }
-
     /// <summary>
     /// Название мероприятия
     /// </summary>
     [Required(ErrorMessageResourceType = typeof(Resource), ErrorMessageResourceName = nameof(Resource.ErrorEventTitleRequired))]
-    public required string Title { get; set; }
+    public required string Title { get; init; }
 
     /// <summary>
     /// Описание мероприятия
     /// </summary>
-    public string Description { get; set; } = string.Empty;
+    public string? Description { get; init; }
 
     /// <summary>
     /// Дата начала мероприятия
     /// </summary>
     [Required(ErrorMessageResourceType = typeof(Resource), ErrorMessageResourceName = nameof(Resource.ErrorEventStartRequired))]
-    public required DateTime StartAt { get; set; }
+    public required DateTime StartAt { get; init; }
 
     /// <summary>
     /// Дата конца мероприятия
     /// </summary>
     [Required(ErrorMessageResourceType = typeof(Resource), ErrorMessageResourceName = nameof(Resource.ErrorEventEndRequired))]
-    public required DateTime EndAt { get; set; }
+    public required DateTime EndAt { get; init; }
 }
+

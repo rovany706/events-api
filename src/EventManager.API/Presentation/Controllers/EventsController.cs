@@ -2,6 +2,9 @@
 
 using EventManager.API.Application.Interfaces;
 using EventManager.API.Models;
+using EventManager.API.Models.Mapping;
+using EventManager.API.Models.Request;
+using EventManager.API.Models.Response;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,12 +30,12 @@ public class EventsController : ControllerBase
     /// </summary>
     /// <response code="200">Возвращается список мероприятий</response>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<EventDto>), StatusCodes.Status200OK)]
-    public ActionResult<IEnumerable<EventDto>> GetAllEvents()
+    [ProducesResponseType(typeof(IEnumerable<EventResponse>), StatusCodes.Status200OK)]
+    public ActionResult<IEnumerable<EventResponse>> GetAllEvents()
     {
         _logger.LogDebug("Получен запрос на получение всех мероприятий");
 
-        var events = _eventService.GetAllEvents();
+        var events = _eventService.GetEvents().Select(x => x.ToEventResponse());
 
         return Ok(events);
     }
@@ -44,9 +47,9 @@ public class EventsController : ControllerBase
     /// <response code="200">Возвращается мероприятие</response>
     /// <response code="404">Мероприятие не найдено</response>
     [HttpGet("{id:int}")]
-    [ProducesResponseType(typeof(EventDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(EventResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<EventDto> GetEventById(int id)
+    public ActionResult<EventResponse> GetEventById(int id)
     {
         _logger.LogDebug("Получен запрос на получение мероприятия по идентификатору");
 
@@ -57,43 +60,43 @@ public class EventsController : ControllerBase
             return NotFound(GetEventNotFoundErrorMessage(id));
         }
 
-        return Ok(eventToSend);
+        return Ok(eventToSend.ToEventResponse());
     }
 
     /// <summary>
     /// Создание мероприятия
     /// </summary>
-    /// <param name="eventDto">Мероприятие</param>
+    /// <param name="createEventRequest">Запрос на создание мероприятия</param>
     /// <response code="201">Мероприятие создано</response>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    public IActionResult CreateEvent(EventDto eventDto)
+    public IActionResult CreateEvent(CreateEventRequest createEventRequest)
     {
         _logger.LogDebug("Получен запрос на создание мероприятия");
 
-        var eventId = _eventService.AddEvent(eventDto);
+        var eventId = _eventService.AddEvent(createEventRequest.ToEvent());
 
-        return CreatedAtAction(nameof(GetEventById), new { id = eventId }, eventDto);
+        return CreatedAtAction(nameof(GetEventById), new { id = eventId }, createEventRequest);
     }
 
     /// <summary>
     /// Обновление информации о мероприятии
     /// </summary>
-    /// <param name="eventDto">Мероприятие</param>
+    /// <param name="updateEventRequest">Запрос на обновление мероприятия</param>
     /// <response code="204">Мероприятие обновлено</response>
     /// <response code="404">Мероприятие не найдено</response>
     [HttpPut]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult UpdateEvent(EventDto eventDto)
+    public IActionResult UpdateEvent(UpdateEventRequest updateEventRequest)
     {
         _logger.LogDebug("Получен запрос на обновление информации о мероприятии");
 
-        var updateResult = _eventService.TryUpdateEvent(eventDto);
+        var updateResult = _eventService.TryUpdateEvent(updateEventRequest.ToEvent());
 
         if (updateResult == false)
         {
-            return NotFound(GetEventNotFoundErrorMessage(eventDto.Id));
+            return NotFound(GetEventNotFoundErrorMessage(updateEventRequest.Id));
         }
 
         return NoContent();

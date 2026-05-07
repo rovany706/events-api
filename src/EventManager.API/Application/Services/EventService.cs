@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 
 using EventManager.API.Application.Interfaces;
+using EventManager.API.Domain.Interfaces;
 using EventManager.API.Models;
 
 namespace EventManager.API.Application.Services;
@@ -10,29 +11,31 @@ namespace EventManager.API.Application.Services;
 /// </summary>
 public class EventService : IEventService
 {
-    private static readonly List<EventDto> _events = [];
+    private readonly IEventRepository _eventRepository;
+
+    public EventService(IEventRepository eventRepository)
+    {
+        _eventRepository = eventRepository;
+    }
 
     /// <inheritdoc />
-    public int AddEvent(EventDto eventDto)
+    public int AddEvent(Event eventToAdd)
     {
-        var newId = _events.Any() ? _events.Max(x => x.Id) + 1 : 1;
-
-        eventDto.Id = newId;
-        _events.Add(eventDto);
+        var newId = _eventRepository.AddEvent(eventToAdd);
 
         return newId;
     }
 
     /// <inheritdoc />
-    public ReadOnlyCollection<EventDto> GetAllEvents()
+    public ReadOnlyCollection<Event> GetEvents()
     {
-        return _events.AsReadOnly();
+        return _eventRepository.GetEvents();
     }
 
     /// <inheritdoc />
-    public EventDto? GetEventById(int id)
+    public Event? GetEventById(int id)
     {
-        return _events.FirstOrDefault(x => x.Id == id);
+        return _eventRepository.GetEventById(id);
     }
 
     /// <inheritdoc />
@@ -45,25 +48,20 @@ public class EventService : IEventService
             return false;
         }
 
-        _events.Remove(eventToRemove);
-
-        return true;
+        return _eventRepository.RemoveEvent(eventToRemove);
     }
 
     /// <inheritdoc />
-    public bool TryUpdateEvent(EventDto eventDto)
+    public bool TryUpdateEvent(Event eventToUpdate)
     {
-        var eventToUpdate = GetEventById(eventDto.Id);
+        var isEventExist = GetEventById(eventToUpdate.Id) != null;
 
-        if (eventToUpdate == null)
+        if (!isEventExist)
         {
             return false;
         }
 
-        eventToUpdate.Title = eventDto.Title;
-        eventToUpdate.Description = eventDto.Description;
-        eventToUpdate.StartAt = eventDto.StartAt;
-        eventToUpdate.EndAt = eventDto.EndAt;
+        _eventRepository.UpdateEvent(eventToUpdate);
 
         return true;
     }

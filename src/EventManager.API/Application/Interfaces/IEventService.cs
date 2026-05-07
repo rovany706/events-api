@@ -13,28 +13,28 @@ public interface IEventService
     /// Получение всех мероприятий
     /// </summary>
     /// <returns>Коллекция мероприятий</returns>
-    ReadOnlyCollection<EventDto> GetAllEvents();
+    ReadOnlyCollection<Event> GetEvents();
 
     /// <summary>
     /// Получение мероприятия по идентификатору
     /// </summary>
     /// <param name="id">Идентификатор мероприятия</param>
-    /// <returns>null, если мероприятие не найдено, иначе <see cref="EventDto" /></returns>
-    EventDto? GetEventById(int id);
+    /// <returns>null, если мероприятие не найдено, иначе <see cref="Event" /></returns>
+    Event? GetEventById(int id);
 
     /// <summary>
     /// Добавление мероприятия
     /// </summary>
     /// <param name="eventDto">Мероприятие</param>
     /// <returns>Идентификатор, присвоенный мероприятию</returns>
-    int AddEvent(EventDto eventDto);
+    int AddEvent(Event eventDto);
 
     /// <summary>
     /// Обновление информации о мероприятии
     /// </summary>
     /// <param name="eventDto">Мероприятие</param>
     /// <returns>false, если мероприятие не найдено, иначе true</returns>
-    bool TryUpdateEvent(EventDto eventDto);
+    bool TryUpdateEvent(Event eventDto);
 
     /// <summary>
     /// Удаление мероприятия

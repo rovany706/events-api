@@ -123,8 +123,11 @@
   <data name="ErrorEventEndRequired" xml:space="preserve">
     <value>Не указана дата конца мероприятия.</value>
   </data>
+  <data name="ErrorEventIdRequired" xml:space="preserve">
+    <value>Не указан идентификатор мероприятия.</value>
+  </data>
   <data name="ErrorEventNotFound" xml:space="preserve">
-    <value>Мероприятние с id {0} не найдено.</value>
+    <value>Мероприятие с id {0} не найдено.</value>
   </data>
   <data name="ErrorEventStartRequired" xml:space="preserve">
     <value>Не указана дата начала мероприятия.</value>
