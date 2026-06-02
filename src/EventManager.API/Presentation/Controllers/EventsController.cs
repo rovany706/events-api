@@ -1,7 +1,8 @@
 ﻿using System.Globalization;
 
+using Asp.Versioning;
+
 using EventManager.API.Application.Interfaces;
-using EventManager.API.Models;
 using EventManager.API.Models.Mapping;
 using EventManager.API.Models.Request;
 using EventManager.API.Models.Response;
@@ -86,10 +87,10 @@ public class EventsController : ControllerBase
     /// <param name="updateEventRequest">Запрос на обновление мероприятия</param>
     /// <response code="204">Мероприятие обновлено</response>
     /// <response code="404">Мероприятие не найдено</response>
-    [HttpPut]
+    [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult UpdateEvent(int id, [FromBody]UpdateEventRequest updateEventRequest)
+    public IActionResult UpdateEvent(int id, [FromBody] UpdateEventRequest updateEventRequest)
     {
         _logger.LogDebug("Получен запрос на обновление информации о мероприятии (id = {Id})", id);
 
