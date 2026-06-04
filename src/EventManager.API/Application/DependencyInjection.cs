@@ -1,5 +1,4 @@
-﻿using EventManager.API.Application.Interfaces;
-using EventManager.API.Application.Services;
+﻿using EventManager.API.Application.Services.EventService;
 
 namespace EventManager.API.Application;
 

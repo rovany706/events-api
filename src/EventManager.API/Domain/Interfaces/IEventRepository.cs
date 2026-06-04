@@ -12,7 +12,7 @@ public interface IEventRepository
     /// <summary>
     /// Получить все мероприятия
     /// </summary>
-    ReadOnlyCollection<Event> GetEvents();
+    IEnumerable<Event> GetEvents();
 
     /// <summary>
     /// Получить мероприятие по идентификатору

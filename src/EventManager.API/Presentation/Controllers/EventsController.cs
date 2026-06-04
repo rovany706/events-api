@@ -2,7 +2,8 @@
 
 using Asp.Versioning;
 
-using EventManager.API.Application.Interfaces;
+using EventManager.API.Application.Services.EventService;
+using EventManager.API.Application.Services.EventService.Models;
 using EventManager.API.Models.Mapping;
 using EventManager.API.Models.Request;
 using EventManager.API.Models.Response;
@@ -31,14 +32,28 @@ public class EventsController : ControllerBase
     /// </summary>
     /// <response code="200">Возвращается список мероприятий</response>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<EventResponse>), StatusCodes.Status200OK)]
-    public ActionResult<IEnumerable<EventResponse>> GetAllEvents()
+    [ProducesResponseType(typeof(PaginatedResult<EventResponse>), StatusCodes.Status200OK)]
+    public ActionResult<PaginatedResult<EventResponse>> GetAllEvents([FromQuery] GetEventsFilterParams filters, [FromQuery] PaginatonParams paginatonParams)
     {
         _logger.LogDebug("Получен запрос на получение всех мероприятий");
+        _logger.LogDebug("Filters: {0}", filters);
+        _logger.LogDebug("Pagination params: {0}", paginatonParams);
 
-        var events = _eventService.GetEvents().Select(x => x.ToEventResponse());
+        var filterDto = new EventFilterDto
+        {
+            Title = filters.Title,
+            From = filters.From,
+            To = filters.To
+        };
 
-        return Ok(events);
+        var events = _eventService.GetEvents(filterDto, paginatonParams);
+        return Ok(new PaginatedResult<EventResponse>(
+            events.Items.Select(x => x.ToEventResponse()).ToList(),
+            events.ItemCount,
+            events.CurrentPage,
+            events.TotalPages,
+            events.TotalItems
+        ));
     }
 
     /// <summary>
