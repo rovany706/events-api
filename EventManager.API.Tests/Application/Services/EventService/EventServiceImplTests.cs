@@ -5,6 +5,8 @@ using EventManager.API.Models;
 using EventManager.API.Models.Request;
 using EventManager.API.Tests.Models;
 
+using FluentAssertions;
+
 using Moq;
 
 namespace EventManager.API.Tests.Application.Services.EventService;
@@ -29,9 +31,8 @@ public class EventServiceImplTests
 
         var events = _eventService.GetEvents(new EventFilterDto(), new PaginationParams { PageSize = 100 });
 
-        Assert.NotNull(events);
-        Assert.NotEmpty(events.Items);
-        Assert.True(_mockEvents.SequenceEqual(events.Items));
+        events.Should().NotBeNull();
+        events.Items.Should().NotBeEmpty().And.BeEqualTo(_mockEvents);
     }
 
     [Fact]
@@ -50,7 +51,7 @@ public class EventServiceImplTests
 
         var actualEvent = _eventService.GetEventById(expectedEvent.Id);
 
-        Assert.Equal(expectedEvent, actualEvent);
+        expectedEvent.Should().Be(actualEvent);
     }
 
     [Fact]
@@ -60,7 +61,7 @@ public class EventServiceImplTests
 
         var actualEvent = _eventService.GetEventById(20);
 
-        Assert.Null(actualEvent);
+        actualEvent.Should().BeNull();
     }
 
     [Fact]
@@ -81,8 +82,8 @@ public class EventServiceImplTests
         var actualId = _eventService.AddEvent(newEvent);
         var addedEvent = _eventService.GetEventById(actualId);
 
-        Assert.Equal(expectedId, actualId);
-        Assert.Equal(newEvent with { Id = expectedId }, addedEvent);
+        actualId.Should().Be(expectedId);
+        addedEvent.Should().Be(newEvent with { Id = expectedId });
     }
 
     [Fact]
@@ -100,7 +101,7 @@ public class EventServiceImplTests
 
         var updateResult = _eventService.TryUpdateEvent(updatedEvent);
 
-        Assert.True(updateResult);
+        updateResult.Should().BeTrue();
         _eventRepositoryMock.Verify(x => x.UpdateEvent(updatedEvent), Times.Once);
     }
 
@@ -119,7 +120,7 @@ public class EventServiceImplTests
 
         var updateResult = _eventService.TryUpdateEvent(updatedEvent);
 
-        Assert.False(updateResult);
+        updateResult.Should().BeFalse();
         _eventRepositoryMock.Verify(x => x.UpdateEvent(It.IsAny<Event>()), Times.Never);
     }
 
@@ -139,7 +140,7 @@ public class EventServiceImplTests
 
         var removeResult = _eventService.TryRemoveEvent(eventToRemove.Id);
 
-        Assert.True(removeResult);
+        removeResult.Should().BeTrue();
         _eventRepositoryMock.Verify(x => x.RemoveEvent(eventToRemove), Times.Once);
     }
 
@@ -151,7 +152,7 @@ public class EventServiceImplTests
 
         var removeResult = _eventService.TryRemoveEvent(idToRemove);
 
-        Assert.False(removeResult);
+        removeResult.Should().BeFalse();
         _eventRepositoryMock.Verify(x => x.RemoveEvent(It.IsAny<Event>()), Times.Never);
     }
 
@@ -171,7 +172,7 @@ public class EventServiceImplTests
 
         var removeResult = _eventService.TryRemoveEvent(eventToRemove.Id);
 
-        Assert.False(removeResult);
+        removeResult.Should().BeFalse();
         _eventRepositoryMock.Verify(x => x.RemoveEvent(eventToRemove), Times.Once);
     }
 
@@ -190,7 +191,7 @@ public class EventServiceImplTests
         var events = _eventService.GetEvents(new EventFilterDto { Title = titleFilter },
             new PaginationParams { PageSize = 100 });
 
-        Assert.Equal(expectedCount, events.ItemCount);
+        events.ItemCount.Should().Be(expectedCount);
     }
 
     [Theory]
@@ -208,7 +209,7 @@ public class EventServiceImplTests
             new PaginationParams { PageSize = 100 }
         );
 
-        Assert.Equal(expectedCount, events.ItemCount);
+        events.ItemCount.Should().Be(expectedCount);
     }
 
     [Theory]
@@ -226,7 +227,7 @@ public class EventServiceImplTests
             new PaginationParams { PageSize = 100 }
         );
 
-        Assert.Equal(expectedCount, events.ItemCount);
+        events.ItemCount.Should().Be(expectedCount);
     }
 
     [Theory]
@@ -248,10 +249,10 @@ public class EventServiceImplTests
             new PaginationParams { Page = page, PageSize = pageSize }
         );
 
-        Assert.Equal(expectedItemCount, pagedEvents.ItemCount);
-        Assert.Equal(expectedPage, pagedEvents.CurrentPage);
-        Assert.Equal(expectedTotalPages, pagedEvents.TotalPages);
-        Assert.Equal(expectedTotalItems, pagedEvents.TotalItems);
+        pagedEvents.ItemCount.Should().Be(expectedItemCount);
+        pagedEvents.CurrentPage.Should().Be(expectedPage);
+        pagedEvents.TotalPages.Should().Be(expectedTotalPages);
+        pagedEvents.TotalItems.Should().Be(expectedTotalItems);
     }
 
     [Theory]
@@ -265,13 +266,13 @@ public class EventServiceImplTests
 
         var filteredEvents = _eventService.GetEvents(filter, new PaginationParams { PageSize = 100 });
 
-        Assert.Equal(expectedCount, filteredEvents.ItemCount);
+        filteredEvents.ItemCount.Should().Be(expectedCount);
     }
 
     public static IEnumerable<TheoryDataRow<string, DateTime, DateTime, int>> TestEventFilters()
     {
         var now = EventTestDataGenerator.Now;
-        
+
         return
         [
             new TheoryDataRow<string, DateTime, DateTime, int>(
