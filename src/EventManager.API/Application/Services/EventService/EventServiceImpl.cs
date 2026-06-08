@@ -1,6 +1,4 @@
-﻿using System.Collections.ObjectModel;
-
-using EventManager.API.Application.Services.EventService.Models;
+﻿using EventManager.API.Application.Services.EventService.Models;
 using EventManager.API.Domain.Interfaces;
 using EventManager.API.Models;
 using EventManager.API.Models.Request;
@@ -11,21 +9,21 @@ namespace EventManager.API.Application.Services.EventService;
 /// <summary>
 /// Сервис для работы с мероприятиями
 /// </summary>
-public class EventService : IEventService
+public class EventServiceImpl : IEventService
 {
     private readonly IEventRepository _eventRepository;
 
-    public EventService(IEventRepository eventRepository)
+    public EventServiceImpl(IEventRepository eventRepository)
     {
         _eventRepository = eventRepository;
     }
 
     /// <inheritdoc />
-    public PaginatedResult<Event> GetEvents(EventFilterDto filterDto, PaginatonParams paginatonParams)
+    public PaginatedResult<Event> GetEvents(EventFilterDto filterDto, PaginationParams paginationParams)
     {
         var events = _eventRepository.GetEvents();
         var filteredEvents = FilterEvents(events, filterDto);
-        return PaginateResults(filteredEvents, events.Count(), paginatonParams);
+        return PaginateResults(filteredEvents, paginationParams);
     }
 
     private static IEnumerable<Event> FilterEvents(IEnumerable<Event> events, EventFilterDto filterDto)
@@ -48,16 +46,16 @@ public class EventService : IEventService
         return events;
     }
 
-    private static PaginatedResult<Event> PaginateResults(IEnumerable<Event> filteredEvents, int totalEventCount, PaginatonParams paginatonParams)
+    private static PaginatedResult<Event> PaginateResults(IEnumerable<Event> filteredEvents, PaginationParams paginationParams)
     {
         var filteredCount = filteredEvents.Count();
-        var totalPages = (int)Math.Ceiling((double)filteredCount / paginatonParams.PageSize);
+        var totalPages = (int)Math.Ceiling((double)filteredCount / paginationParams.PageSize);
         var eventPage = filteredEvents
-            .Skip((paginatonParams.Page - 1) * paginatonParams.PageSize)
-            .Take(paginatonParams.PageSize)
+            .Skip((paginationParams.Page - 1) * paginationParams.PageSize)
+            .Take(paginationParams.PageSize)
             .ToList();
 
-        return new PaginatedResult<Event>(eventPage, eventPage.Count, paginatonParams.Page, totalPages, totalEventCount);
+        return new PaginatedResult<Event>(eventPage, eventPage.Count, paginationParams.Page, totalPages, filteredCount);
     }
 
     /// <inheritdoc />

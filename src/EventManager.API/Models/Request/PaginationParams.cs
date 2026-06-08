@@ -5,7 +5,7 @@ namespace EventManager.API.Models.Request;
 /// <summary>
 /// Параметры пагинации
 /// </summary>
-public record PaginatonParams
+public record PaginationParams
 {
     /// <summary>
     /// Номер страницы

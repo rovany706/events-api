@@ -14,9 +14,9 @@ public interface IEventService
     /// Получение всех мероприятий
     /// </summary>
     /// <param name="filterDto">Параметры фильтрации</param>
-    /// <param name="paginatonParams">Параметры пагинации</param>
+    /// <param name="paginationParams">Параметры пагинации</param>
     /// <returns>Коллекция мероприятий с пагинацией</returns>
-    PaginatedResult<Event> GetEvents(EventFilterDto filterDto, PaginatonParams paginatonParams);
+    PaginatedResult<Event> GetEvents(EventFilterDto filterDto, PaginationParams paginationParams);
 
     /// <summary>
     /// Получение мероприятия по идентификатору

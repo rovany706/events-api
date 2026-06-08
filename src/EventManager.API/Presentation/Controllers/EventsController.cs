@@ -33,11 +33,11 @@ public class EventsController : ControllerBase
     /// <response code="200">Возвращается список мероприятий</response>
     [HttpGet]
     [ProducesResponseType(typeof(PaginatedResult<EventResponse>), StatusCodes.Status200OK)]
-    public ActionResult<PaginatedResult<EventResponse>> GetAllEvents([FromQuery] GetEventsFilterParams filters, [FromQuery] PaginatonParams paginatonParams)
+    public ActionResult<PaginatedResult<EventResponse>> GetAllEvents([FromQuery] GetEventsFilterParams filters, [FromQuery] PaginationParams paginationParams)
     {
         _logger.LogDebug("Получен запрос на получение всех мероприятий");
         _logger.LogDebug("Filters: {0}", filters);
-        _logger.LogDebug("Pagination params: {0}", paginatonParams);
+        _logger.LogDebug("Pagination params: {0}", paginationParams);
 
         var filterDto = new EventFilterDto
         {
@@ -46,7 +46,7 @@ public class EventsController : ControllerBase
             To = filters.To
         };
 
-        var events = _eventService.GetEvents(filterDto, paginatonParams);
+        var events = _eventService.GetEvents(filterDto, paginationParams);
         return Ok(new PaginatedResult<EventResponse>(
             events.Items.Select(x => x.ToEventResponse()).ToList(),
             events.ItemCount,
