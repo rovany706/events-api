@@ -19,7 +19,7 @@ public class InMemoryEventRepository : IEventRepository
         [
             new() {
                 Id = 1,
-                Title = "Tech Summit 2026",
+                Title = "Tech Workshop 2026",
                 Description = "Annual gathering of tech leaders discussing AI, cloud computing, and the future of software development.",
                 StartAt = new DateTime(2026, 3, 10, 9, 0, 0),
                 EndAt = new DateTime(2026, 3, 12, 18, 0, 0)
