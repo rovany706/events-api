@@ -18,6 +18,14 @@ dotnet run --project ./src/EventManager.API/EventManager.API.csproj
 dotnet publish ./src/EventManager.API/EventManager.API.csproj -c Release -o publish
 ```
 
+## Тестирование
+
+Тестирование можно запустить с помощью команды:
+
+```bash
+dotnet test
+```
+
 ## Описание API
 
 После запуска сервер доступен по адресу http://localhost:5080 (HTTP), https://localhost:5443 (HTTPS)
@@ -36,31 +44,45 @@ GET /api/v1/events
 
 ```bash
 curl -X 'GET' \
-  'http://localhost:5080/api/v1/Events' \
+  'http://localhost:5080/api/v1/Events?Title=Workshop&From=2026-01-01&To=2026-06-01&Page=1&PageSize=10' \
   -H 'accept: text/plain'
 ```
 
+Параметры запроса:
+
+- Title (опциональный) - фильтр по названию мероприятия (регистронезависимый, частичное совпадение)
+- From (опциональный) - фильтр мероприятий, которые начинаются не раньше указанной даты (в формате RFC 3339)
+- To (опциональный) - фильтр мероприятий, которые заканчиваются не позже указанной даты (в формате RFC 3339)
+- Page (опциональный) - номер страницы результатов
+- PageSize (опциональный) - размер страницы
+
 Ответ:
 
-- `HTTP 200` - мероприятия
+- `HTTP 200` - страница меротприятий
 
 ```json
-[
-  {
-    "id": 1,
-    "title": "Rock Concert",
-    "description": "Metallica in Moscow",
-    "startAt": "2026-05-07T15:00:00Z",
-    "endAt": "2026-05-07T17:00:00Z"
-  },
-  {
-    "id": 2,
-    "title": "New Year 2026",
-    "description": "",
-    "startAt": "2025-12-31T22:00:00Z",
-    "endAt": "2026-01-01T17:01:00Z"
-  }
-]
+{
+  "items": [
+    {
+      "id": 1,
+      "title": "Tech Workshop 2026",
+      "description": "Annual gathering of tech leaders discussing AI, cloud computing, and the future of software development.",
+      "startAt": "2026-03-10T09:00:00",
+      "endAt": "2026-03-12T18:00:00"
+    },
+    {
+      "id": 6,
+      "title": "Photography Workshop",
+      "description": "Hands-on workshop covering portrait, landscape, and street photography techniques.",
+      "startAt": "2026-05-08T10:00:00",
+      "endAt": "2026-05-08T16:00:00"
+    }
+  ],
+  "itemCount": 2,
+  "currentPage": 1,
+  "totalPages": 1,
+  "totalItems": 2
+}
 ```
 
 ### `GET /api/v1/events/{id}`
@@ -180,3 +202,15 @@ curl -X 'DELETE' \
 
 - `HTTP 204` - Мероприятие удалено
 - `HTTP 404` - Мероприятие не найдено
+
+### Ошибки
+
+Ошибки возвращаются в формате ProblemDetails (RFC 7807):
+
+```json
+{
+  "title": "An error occurred",
+  "status": 500,
+  "detail": "Fail"
+}
+```

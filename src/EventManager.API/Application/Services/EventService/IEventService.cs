@@ -1,8 +1,9 @@
-﻿using EventManager.API.Models;
+﻿using EventManager.API.Application.Services.EventService.Models;
+using EventManager.API.Models;
+using EventManager.API.Models.Request;
+using EventManager.API.Models.Response;
 
-using System.Collections.ObjectModel;
-
-namespace EventManager.API.Application.Interfaces;
+namespace EventManager.API.Application.Services.EventService;
 
 /// <summary>
 /// Интерфейс сервиса для работы с мероприятиями
@@ -12,8 +13,10 @@ public interface IEventService
     /// <summary>
     /// Получение всех мероприятий
     /// </summary>
-    /// <returns>Коллекция мероприятий</returns>
-    ReadOnlyCollection<Event> GetEvents();
+    /// <param name="filterDto">Параметры фильтрации</param>
+    /// <param name="paginationParams">Параметры пагинации</param>
+    /// <returns>Коллекция мероприятий с пагинацией</returns>
+    PaginatedResult<Event> GetEvents(EventFilterDto filterDto, PaginationParams paginationParams);
 
     /// <summary>
     /// Получение мероприятия по идентификатору

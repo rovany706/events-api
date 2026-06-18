@@ -1,5 +1,6 @@
 using EventManager.API.Application;
 using EventManager.API.Domain;
+using EventManager.API.Middlewares;
 using EventManager.API.Presentation;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,8 +20,12 @@ builder.Services.AddPresentation();
 
 var app = builder.Build();
 
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
+    app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {

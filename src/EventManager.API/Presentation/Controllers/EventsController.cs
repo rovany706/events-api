@@ -1,7 +1,9 @@
 ﻿using System.Globalization;
 
-using EventManager.API.Application.Interfaces;
-using EventManager.API.Models;
+using Asp.Versioning;
+
+using EventManager.API.Application.Services.EventService;
+using EventManager.API.Application.Services.EventService.Models;
 using EventManager.API.Models.Mapping;
 using EventManager.API.Models.Request;
 using EventManager.API.Models.Response;
@@ -30,14 +32,28 @@ public class EventsController : ControllerBase
     /// </summary>
     /// <response code="200">Возвращается список мероприятий</response>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<EventResponse>), StatusCodes.Status200OK)]
-    public ActionResult<IEnumerable<EventResponse>> GetAllEvents()
+    [ProducesResponseType(typeof(PaginatedResult<EventResponse>), StatusCodes.Status200OK)]
+    public ActionResult<PaginatedResult<EventResponse>> GetAllEvents([FromQuery] GetEventsFilterParams filters, [FromQuery] PaginationParams paginationParams)
     {
         _logger.LogDebug("Получен запрос на получение всех мероприятий");
+        _logger.LogDebug("Filters: {0}", filters);
+        _logger.LogDebug("Pagination params: {0}", paginationParams);
 
-        var events = _eventService.GetEvents().Select(x => x.ToEventResponse());
+        var filterDto = new EventFilterDto
+        {
+            Title = filters.Title,
+            From = filters.From,
+            To = filters.To
+        };
 
-        return Ok(events);
+        var events = _eventService.GetEvents(filterDto, paginationParams);
+        return Ok(new PaginatedResult<EventResponse>(
+            events.Items.Select(x => x.ToEventResponse()).ToList(),
+            events.ItemCount,
+            events.CurrentPage,
+            events.TotalPages,
+            events.TotalItems
+        ));
     }
 
     /// <summary>
@@ -86,10 +102,10 @@ public class EventsController : ControllerBase
     /// <param name="updateEventRequest">Запрос на обновление мероприятия</param>
     /// <response code="204">Мероприятие обновлено</response>
     /// <response code="404">Мероприятие не найдено</response>
-    [HttpPut]
+    [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult UpdateEvent(int id, [FromBody]UpdateEventRequest updateEventRequest)
+    public IActionResult UpdateEvent(int id, [FromBody] UpdateEventRequest updateEventRequest)
     {
         _logger.LogDebug("Получен запрос на обновление информации о мероприятии (id = {Id})", id);
 
