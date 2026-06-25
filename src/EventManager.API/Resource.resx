@@ -135,4 +135,7 @@
   <data name="ErrorEventTitleRequired" xml:space="preserve">
     <value>Не указано название мероприятия.</value>
   </data>
+  <data name="ErrorBookingNotFound" xml:space="preserve">
+      <value>Бронирование с id {0} не найдено.</value>
+  </data>
 </root>
