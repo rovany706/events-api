@@ -203,6 +203,64 @@ curl -X 'DELETE' \
 - `HTTP 204` - Мероприятие удалено
 - `HTTP 404` - Мероприятие не найдено
 
+### POST /api/v1/events/{id}/book
+
+Бронирование мероприятия
+
+Запрос:
+
+```
+GET /api/v1/events/1/book
+```
+
+```bash
+curl -X 'POST' \
+  'http://localhost:5080/api/v1/Events/1/book' \
+  -H 'accept: */*'
+```
+
+Ответы:
+
+- `HTTP 202` - Бронь зарегистрирована
+```json
+{
+  "id": 1,
+  "eventId": 1,
+  "status": "Pending"
+}
+```
+- `HTTP 404` - Мероприятие не найдено
+
+### GET /api/v1/bookings/{id}
+
+Получение бронирования по идентификатору
+
+Запрос:
+
+```
+GET /api/v1/bookings/1
+```
+
+```bash
+curl -X 'POST' \
+  'http://localhost:5080/api/v1/Bookings/1' \
+  -H 'accept: */*'
+```
+
+Ответы:
+
+- `HTTP 200` - Возвращается бронирование
+```json
+{
+  "id": 2,
+  "eventId": 2,
+  "status": "Confirmed",
+  "createdAt": "2026-06-25T22:56:10.7207025Z",
+  "processedAt": "2026-06-25T22:56:16.8534174Z"
+}
+```
+- `HTTP 404` - Бронирование не найдено
+
 ### Ошибки
 
 Ошибки возвращаются в формате ProblemDetails (RFC 7807):
