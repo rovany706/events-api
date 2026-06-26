@@ -44,7 +44,7 @@ public class BookingServiceImplTests
         var bookingResult = await _bookingService.CreateBookingAsync(eventId, TestContext.Current.CancellationToken);
 
         bookingResult.IsSuccess.Should().BeTrue();
-        var actualBookingId = bookingResult.Value;
+        var actualBookingId = bookingResult.Value!.Id;
         actualBookingId.Should().Be(expectedBookingId);
         _bookingRepositoryMock.Verify(x => x.AddBooking(It.Is<Booking>(b => b.EventId == eventId)), Times.Once);
         _bookingTaskQueueMock.Verify(x => x.Enqueue(It.Is<BookingTask>(task => task.BookingId == expectedBookingId)),
@@ -84,8 +84,8 @@ public class BookingServiceImplTests
 
         bookingResult1.IsSuccess.Should().BeTrue();
         bookingResult2.IsSuccess.Should().BeTrue();
-        var actualBookingId1 = bookingResult1.Value;
-        var actualBookingId2 = bookingResult2.Value;
+        var actualBookingId1 = bookingResult1.Value!.Id;
+        var actualBookingId2 = bookingResult2.Value!.Id;
         actualBookingId1.Should().Be(expectedBookingId1);
         actualBookingId2.Should().Be(expectedBookingId2);
         _bookingRepositoryMock.Verify(x => x.AddBooking(It.Is<Booking>(b => b.EventId == eventId)), Times.Exactly(2));

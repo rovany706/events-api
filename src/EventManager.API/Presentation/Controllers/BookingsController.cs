@@ -45,6 +45,15 @@ public class BookingsController : ControllerBase
                 statusCode: StatusCodes.Status404NotFound);
         }
 
-        return Ok(result.Value);
+        var response = new BookingResponse
+        {
+            Id = result.Value!.Id,
+            EventId = result.Value.EventId,
+            Status = result.Value.Status,
+            CreatedAt = result.Value.CreatedAt,
+            ProcessedAt = result.Value.ProcessedAt
+        };
+
+        return Ok(response);
     }
 }

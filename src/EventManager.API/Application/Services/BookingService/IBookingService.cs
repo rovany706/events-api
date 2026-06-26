@@ -13,8 +13,8 @@ public interface IBookingService
     /// </summary>
     /// <param name="eventId">Идентификатор мероприятия</param>
     /// <param name="cancellationToken">Токен отмены</param>
-    /// <returns>Идентификатор, присвоенный бронированию</returns>
-    Task<Result<int>> CreateBookingAsync(int eventId, CancellationToken cancellationToken = default);
+    /// <returns>Созданное бронирование</returns>
+    Task<Result<Booking?>> CreateBookingAsync(int eventId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Получение брони по идентификатору

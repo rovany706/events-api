@@ -164,10 +164,10 @@ public class EventsController : ControllerBase
             return Problem(detail: GetEventNotFoundErrorMessage(id), statusCode: StatusCodes.Status404NotFound);
         }
 
-        var bookingId = result.Value;
+        var newBooking = result.Value!;
 
         return AcceptedAtAction(nameof(BookingsController.GetBookingById), "Bookings",
-            new { id = bookingId }, new { Id = bookingId, EventId = id, Status = BookingStatus.Pending });
+            new { id = newBooking.Id }, newBooking);
     }
 
     private static string GetEventNotFoundErrorMessage(int id)

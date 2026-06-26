@@ -29,14 +29,14 @@ public class BookingServiceImpl : IBookingService
     }
 
     /// <inheritdoc />
-    public async Task<Result<int>> CreateBookingAsync(int eventId, CancellationToken cancellationToken = default)
+    public async Task<Result<Booking?>> CreateBookingAsync(int eventId, CancellationToken cancellationToken = default)
     {
         var result = _eventService.GetEventById(eventId);
 
         if (!result.IsSuccess && result.Error!.ErrorType == ErrorType.NotFound)
         {
             _logger.LogDebug("Booking failed. Event with {eventId} not found.", eventId);
-            return Result<int>.Failure(Error.NotFound($"Booking failed. Event with {eventId} not found."));
+            return Result<Booking?>.Failure(Error.NotFound($"Booking failed. Event with {eventId} not found."));
         }
 
         var booking = new Booking
@@ -47,7 +47,7 @@ public class BookingServiceImpl : IBookingService
         var newId = _repository.AddBooking(booking);
         _bookingTaskQueue.Enqueue(new BookingTask(newId, DateTime.UtcNow));
 
-        return Result<int>.Success(newId);
+        return Result<Booking?>.Success(booking with { Id = newId });
     }
 
     /// <inheritdoc />
