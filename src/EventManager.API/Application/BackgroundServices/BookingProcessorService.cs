@@ -12,6 +12,7 @@ public class BookingProcessorService : BackgroundService
     private readonly IBookingTaskQueue _bookingTaskQueue;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<BookingProcessorService> _logger;
+    private readonly Random _rnd = new();
 
     public BookingProcessorService(IBookingTaskQueue bookingTaskQueue,
         IServiceScopeFactory scopeFactory,
@@ -33,9 +34,7 @@ public class BookingProcessorService : BackgroundService
             {
                 if (_bookingTaskQueue.TryDequeue(out var bookingTask))
                 {
-                    _logger.LogInformation("Processing booking {Id}", bookingTask.BookingId);
                     await ProcessBookingAsync(bookingTask, stoppingToken);
-                    _logger.LogInformation("Processed booking {Id}", bookingTask.BookingId);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -46,15 +45,17 @@ public class BookingProcessorService : BackgroundService
             {
                 _logger.LogError(e, $"Unhandled exception in {nameof(BookingProcessorService)}");
             }
-            
+
             await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
         }
-        
+
         _logger.LogInformation($"{nameof(BookingProcessorService)} stopped.");
     }
 
     private async Task ProcessBookingAsync(BookingTask bookingTask, CancellationToken ct)
     {
+        _logger.LogInformation("Processing booking {Id}", bookingTask.BookingId);
+
         using var scope = _scopeFactory.CreateScope();
         var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
 
@@ -67,7 +68,10 @@ public class BookingProcessorService : BackgroundService
 
         await Task.Delay(TimeSpan.FromSeconds(2), ct); // working...
 
-        var processedBooking = booking with { Status = BookingStatus.Confirmed, ProcessedAt = DateTime.UtcNow };
+        var bookingStatus = _rnd.Next(0, 2) == 0 ? BookingStatus.Confirmed : BookingStatus.Rejected;
+        var processedBooking = booking with { Status = bookingStatus, ProcessedAt = DateTime.UtcNow };
         bookingRepository.UpdateBooking(processedBooking);
+
+        _logger.LogInformation("Processed booking {Id} ({BookingStatus})", bookingTask.BookingId, bookingStatus);
     }
 }
