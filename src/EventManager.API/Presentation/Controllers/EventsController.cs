@@ -148,7 +148,7 @@ public class EventsController : ControllerBase
     /// <summary>
     /// Бронирование мероприятия
     /// </summary>
-    /// <param name="id">Идентификатор мероприятния</param>
+    /// <param name="id">Идентификатор мероприятия</param>
     /// <param name="ct">Токен отмены</param>
     /// <response code="202">Бронь зарегистрирована</response>
     /// <response code="404">Мероприятие не найдено</response>
