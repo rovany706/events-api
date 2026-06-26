@@ -226,7 +226,9 @@ curl -X 'POST' \
 {
   "id": 1,
   "eventId": 1,
-  "status": "Pending"
+  "status": "Pending",
+  "createdAt": "2026-06-26T20:45:18.6447899Z",
+  "processedAt": null
 }
 ```
 - `HTTP 404` - Мероприятие не найдено
