@@ -2,7 +2,6 @@
 using EventManager.API.Domain.Interfaces;
 using EventManager.API.Models.Entities;
 using EventManager.API.Models.Results;
-using EventManager.API.Models.Tasks;
 
 namespace EventManager.API.Application.Services.BookingService;
 
@@ -13,18 +12,15 @@ public class BookingServiceImpl : IBookingService
 {
     private readonly IBookingRepository _repository;
     private readonly IEventService _eventService;
-    private readonly IBookingTaskQueue _bookingTaskQueue;
     private readonly ILogger<BookingServiceImpl> _logger;
 
     public BookingServiceImpl(
         IBookingRepository repository,
         IEventService eventService,
-        IBookingTaskQueue bookingTaskQueue,
         ILogger<BookingServiceImpl> logger)
     {
         _repository = repository;
         _eventService = eventService;
-        _bookingTaskQueue = bookingTaskQueue;
         _logger = logger;
     }
 
@@ -45,7 +41,6 @@ public class BookingServiceImpl : IBookingService
         };
 
         var newId = _repository.AddBooking(booking);
-        _bookingTaskQueue.Enqueue(new BookingTask(newId, DateTime.UtcNow));
 
         return Result<Booking?>.Success(booking with { Id = newId });
     }

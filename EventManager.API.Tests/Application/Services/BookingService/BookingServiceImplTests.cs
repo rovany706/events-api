@@ -3,7 +3,6 @@ using EventManager.API.Application.Services.EventService;
 using EventManager.API.Domain.Interfaces;
 using EventManager.API.Models.Entities;
 using EventManager.API.Models.Results;
-using EventManager.API.Models.Tasks;
 
 using FluentAssertions;
 
@@ -18,15 +17,13 @@ public class BookingServiceImplTests
     private readonly IBookingService _bookingService;
     private readonly Mock<IBookingRepository> _bookingRepositoryMock;
     private readonly Mock<IEventService> _eventServiceMock;
-    private readonly Mock<IBookingTaskQueue> _bookingTaskQueueMock;
 
     public BookingServiceImplTests()
     {
         _bookingRepositoryMock = new Mock<IBookingRepository>();
         _eventServiceMock = new Mock<IEventService>();
-        _bookingTaskQueueMock = new Mock<IBookingTaskQueue>();
         _bookingService = new BookingServiceImpl(_bookingRepositoryMock.Object, _eventServiceMock.Object,
-            _bookingTaskQueueMock.Object, NullLogger<BookingServiceImpl>.Instance);
+            NullLogger<BookingServiceImpl>.Instance);
     }
 
     [Fact]
@@ -47,8 +44,6 @@ public class BookingServiceImplTests
         var actualBookingId = bookingResult.Value!.Id;
         actualBookingId.Should().Be(expectedBookingId);
         _bookingRepositoryMock.Verify(x => x.AddBooking(It.Is<Booking>(b => b.EventId == eventId)), Times.Once);
-        _bookingTaskQueueMock.Verify(x => x.Enqueue(It.Is<BookingTask>(task => task.BookingId == expectedBookingId)),
-            Times.Once);
     }
 
     [Fact]
@@ -62,7 +57,6 @@ public class BookingServiceImplTests
         bookingResult.IsSuccess.Should().BeFalse();
         bookingResult.Error!.ErrorType.Should().Be(ErrorType.NotFound);
         _bookingRepositoryMock.Verify(x => x.AddBooking(It.IsAny<Booking>()), Times.Never);
-        _bookingTaskQueueMock.Verify(x => x.Enqueue(It.IsAny<BookingTask>()), Times.Never);
     }
 
     [Fact]

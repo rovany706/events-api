@@ -1,6 +1,5 @@
 ﻿using EventManager.API.Domain.Interfaces;
 using EventManager.API.Models.Entities;
-using EventManager.API.Models.Tasks;
 
 namespace EventManager.API.Application.BackgroundServices;
 
@@ -9,16 +8,13 @@ namespace EventManager.API.Application.BackgroundServices;
 /// </summary>
 public class BookingProcessorService : BackgroundService
 {
-    private readonly IBookingTaskQueue _bookingTaskQueue;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<BookingProcessorService> _logger;
     private readonly Random _rnd = new();
 
-    public BookingProcessorService(IBookingTaskQueue bookingTaskQueue,
-        IServiceScopeFactory scopeFactory,
+    public BookingProcessorService(IServiceScopeFactory scopeFactory,
         ILogger<BookingProcessorService> logger)
     {
-        _bookingTaskQueue = bookingTaskQueue;
         _scopeFactory = scopeFactory;
         _logger = logger;
     }
@@ -32,9 +28,18 @@ public class BookingProcessorService : BackgroundService
         {
             try
             {
-                if (_bookingTaskQueue.TryDequeue(out var bookingTask))
+                using var scope = _scopeFactory.CreateScope();
+                var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
+                
+                var bookings = bookingRepository.GetBookings();
+                
+                _logger.LogInformation("Checking for pending bookings...");
+                var pendingBookings = bookings.Where(b => b.Status == BookingStatus.Pending).ToList();
+                _logger.LogInformation("Found {pendingCount} pending bookings.", pendingBookings.Count);
+                
+                foreach (var booking in pendingBookings)
                 {
-                    await ProcessBookingAsync(bookingTask, stoppingToken);
+                    await ProcessBookingAsync(booking, bookingRepository, stoppingToken);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -52,19 +57,9 @@ public class BookingProcessorService : BackgroundService
         _logger.LogInformation($"{nameof(BookingProcessorService)} stopped.");
     }
 
-    private async Task ProcessBookingAsync(BookingTask bookingTask, CancellationToken ct)
+    private async Task ProcessBookingAsync(Booking booking, IBookingRepository bookingRepository, CancellationToken ct)
     {
-        _logger.LogInformation("Processing booking {Id}", bookingTask.BookingId);
-
-        using var scope = _scopeFactory.CreateScope();
-        var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
-
-        var booking = bookingRepository.GetBookingById(bookingTask.BookingId);
-        if (booking == null)
-        {
-            _logger.LogWarning("Skipping booking {Id}. Not found.", bookingTask.BookingId);
-            return;
-        }
+        _logger.LogInformation("Processing booking {Id}", booking.Id);
 
         await Task.Delay(TimeSpan.FromSeconds(2), ct); // working...
 
@@ -72,6 +67,6 @@ public class BookingProcessorService : BackgroundService
         var processedBooking = booking with { Status = bookingStatus, ProcessedAt = DateTime.UtcNow };
         bookingRepository.UpdateBooking(processedBooking);
 
-        _logger.LogInformation("Processed booking {Id} ({BookingStatus})", bookingTask.BookingId, bookingStatus);
+        _logger.LogInformation("Processed booking {Id} ({BookingStatus})", booking.Id, bookingStatus);
     }
 }
