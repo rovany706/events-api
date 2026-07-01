@@ -1,7 +1,8 @@
 ﻿using EventManager.API.Application.Services.EventService.Models;
-using EventManager.API.Models;
+using EventManager.API.Models.Entities;
 using EventManager.API.Models.Request;
 using EventManager.API.Models.Response;
+using EventManager.API.Models.Results;
 
 namespace EventManager.API.Application.Services.EventService;
 
@@ -23,7 +24,7 @@ public interface IEventService
     /// </summary>
     /// <param name="id">Идентификатор мероприятия</param>
     /// <returns>null, если мероприятие не найдено, иначе <see cref="Event" /></returns>
-    Event? GetEventById(int id);
+    Result<Event?> GetEventById(int id);
 
     /// <summary>
     /// Добавление мероприятия

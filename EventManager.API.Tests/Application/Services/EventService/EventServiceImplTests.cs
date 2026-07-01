@@ -1,11 +1,14 @@
 ﻿using EventManager.API.Application.Services.EventService;
 using EventManager.API.Application.Services.EventService.Models;
 using EventManager.API.Domain.Interfaces;
-using EventManager.API.Models;
+using EventManager.API.Models.Entities;
 using EventManager.API.Models.Request;
+using EventManager.API.Models.Results;
 using EventManager.API.Tests.Models;
 
 using FluentAssertions;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
@@ -14,13 +17,16 @@ namespace EventManager.API.Tests.Application.Services.EventService;
 public class EventServiceImplTests
 {
     private readonly Mock<IEventRepository> _eventRepositoryMock;
+    private readonly Mock<IBookingRepository> _bookingRepositoryMock;
     private readonly EventServiceImpl _eventService;
     private readonly IEnumerable<Event> _mockEvents = EventTestDataGenerator.GetTestEvents();
 
     public EventServiceImplTests()
     {
         _eventRepositoryMock = new Mock<IEventRepository>();
-        _eventService = new EventServiceImpl(_eventRepositoryMock.Object);
+        _bookingRepositoryMock = new Mock<IBookingRepository>();
+        _eventService = new EventServiceImpl(_eventRepositoryMock.Object, _bookingRepositoryMock.Object,
+            NullLogger<EventServiceImpl>.Instance);
     }
 
     [Fact]
@@ -49,8 +55,10 @@ public class EventServiceImplTests
 
         _eventRepositoryMock.Setup(x => x.GetEventById(expectedEvent.Id)).Returns(expectedEvent);
 
-        var actualEvent = _eventService.GetEventById(expectedEvent.Id);
-
+        var result = _eventService.GetEventById(expectedEvent.Id);
+        
+        result.IsSuccess.Should().BeTrue();
+        var actualEvent = result.Value;
         expectedEvent.Should().Be(actualEvent);
     }
 
@@ -59,9 +67,10 @@ public class EventServiceImplTests
     {
         _eventRepositoryMock.Setup(x => x.GetEventById(It.IsAny<int>())).Returns((Event?)null);
 
-        var actualEvent = _eventService.GetEventById(20);
+        var result = _eventService.GetEventById(20);
 
-        actualEvent.Should().BeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.ErrorType.Should().Be(ErrorType.NotFound);
     }
 
     [Fact]
@@ -80,8 +89,10 @@ public class EventServiceImplTests
         _eventRepositoryMock.Setup(x => x.GetEventById(expectedId)).Returns(newEvent with { Id = expectedId });
 
         var actualId = _eventService.AddEvent(newEvent);
-        var addedEvent = _eventService.GetEventById(actualId);
-
+        var eventResult = _eventService.GetEventById(expectedId);
+        
+        eventResult.IsSuccess.Should().BeTrue();
+        var addedEvent = eventResult.Value;
         actualId.Should().Be(expectedId);
         addedEvent.Should().Be(newEvent with { Id = expectedId });
     }
@@ -154,6 +165,59 @@ public class EventServiceImplTests
 
         removeResult.Should().BeFalse();
         _eventRepositoryMock.Verify(x => x.RemoveEvent(It.IsAny<Event>()), Times.Never);
+    }
+
+    [Fact]
+    public void TryRemoveEvent_WhenEventHasBookings_ShouldRemoveBookings()
+    {
+        var eventToRemove = new Event
+        {
+            Id = 20,
+            Title = "Test",
+            StartAt = new DateTime(2026, 1, 1, 13, 00, 00),
+            EndAt = new DateTime(2026, 1, 1, 15, 00, 00),
+            Description = "Test"
+        };
+
+        var bookings = new[]
+        {
+            new()
+            {
+                Id = 1,
+                EventId = eventToRemove.Id,
+                Status = BookingStatus.Confirmed,
+                CreatedAt = DateTime.UtcNow,
+                ProcessedAt = DateTime.UtcNow
+            },
+            new Booking
+            {
+                Id = 2,
+                EventId = eventToRemove.Id,
+                Status = BookingStatus.Rejected,
+                CreatedAt = DateTime.UtcNow,
+                ProcessedAt = DateTime.UtcNow
+            },
+            new Booking
+            {
+                Id = 2,
+                EventId = eventToRemove.Id + 1, // different event
+                Status = BookingStatus.Rejected,
+                CreatedAt = DateTime.UtcNow,
+                ProcessedAt = DateTime.UtcNow
+            }
+        };
+
+
+        _eventRepositoryMock.Setup(x => x.GetEventById(eventToRemove.Id)).Returns(eventToRemove);
+        _eventRepositoryMock.Setup(x => x.RemoveEvent(eventToRemove)).Returns(true);
+        _bookingRepositoryMock.Setup(x => x.GetBookings()).Returns(bookings);
+        _bookingRepositoryMock.Setup(x => x.RemoveBooking(It.IsIn(bookings))).Returns(true);
+
+        var removeResult = _eventService.TryRemoveEvent(eventToRemove.Id);
+
+        removeResult.Should().BeTrue();
+        _eventRepositoryMock.Verify(x => x.RemoveEvent(It.IsAny<Event>()), Times.Once);
+        _bookingRepositoryMock.Verify(x => x.RemoveBooking(It.IsIn(bookings)), Times.Exactly(2));
     }
 
     [Fact]

@@ -1,4 +1,5 @@
-﻿using EventManager.API.Models.Request;
+﻿using EventManager.API.Models.Entities;
+using EventManager.API.Models.Request;
 using EventManager.API.Models.Response;
 
 namespace EventManager.API.Models.Mapping;

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-using EventManager.API.Models;
+﻿using EventManager.API.Models.Entities;
 
 namespace EventManager.API.Tests.Models;
 

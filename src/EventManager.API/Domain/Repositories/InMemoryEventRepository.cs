@@ -1,7 +1,5 @@
-﻿using System.Collections.ObjectModel;
-
-using EventManager.API.Domain.Interfaces;
-using EventManager.API.Models;
+﻿using EventManager.API.Domain.Interfaces;
+using EventManager.API.Models.Entities;
 
 namespace EventManager.API.Domain.Repositories;
 

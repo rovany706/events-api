@@ -1,4 +1,4 @@
-﻿namespace EventManager.API.Models;
+﻿namespace EventManager.API.Models.Entities;
 
 /// <summary>
 /// Мероприятие

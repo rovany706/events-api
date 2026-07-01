@@ -203,6 +203,66 @@ curl -X 'DELETE' \
 - `HTTP 204` - Мероприятие удалено
 - `HTTP 404` - Мероприятие не найдено
 
+### POST /api/v1/events/{id}/book
+
+Бронирование мероприятия
+
+Запрос:
+
+```
+POST /api/v1/events/1/book
+```
+
+```bash
+curl -X 'POST' \
+  'http://localhost:5080/api/v1/Events/1/book' \
+  -H 'accept: */*'
+```
+
+Ответы:
+
+- `HTTP 202` - Бронь зарегистрирована
+```json
+{
+  "id": 1,
+  "eventId": 1,
+  "status": "Pending",
+  "createdAt": "2026-06-26T20:45:18.6447899Z",
+  "processedAt": null
+}
+```
+- `HTTP 404` - Мероприятие не найдено
+
+### GET /api/v1/bookings/{id}
+
+Получение бронирования по идентификатору
+
+Запрос:
+
+```
+GET /api/v1/bookings/1
+```
+
+```bash
+curl -X 'GET' \
+  'http://localhost:5080/api/v1/Bookings/1' \
+  -H 'accept: */*'
+```
+
+Ответы:
+
+- `HTTP 200` - Возвращается бронирование
+```json
+{
+  "id": 2,
+  "eventId": 2,
+  "status": "Confirmed",
+  "createdAt": "2026-06-25T22:56:10.7207025Z",
+  "processedAt": "2026-06-25T22:56:16.8534174Z"
+}
+```
+- `HTTP 404` - Бронирование не найдено
+
 ### Ошибки
 
 Ошибки возвращаются в формате ProblemDetails (RFC 7807):
@@ -213,4 +273,27 @@ curl -X 'DELETE' \
   "status": 500,
   "detail": "Fail"
 }
+```
+
+## Бронирование мероприятий
+
+Обработка бронирований на мероприятия осуществляется в фоновом режиме сервисом `BookingProcessorService`.
+Он периодически опрашивает очередь задач на наличие новых бронирований, забирает задачу и приступает к её обработке.
+Далее, если бронирование не было удалено, пока задача стояла в очереди, сервис присваевает брони статус "Confirmed" или "Rejected" и сохраняет её в хранилище.
+
+### Сценарий: создание события, бронирование, проверка статуса брони
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant API
+    User->>API: Создание события<br/>POST /api/v1/events
+    API-->>User: HTTP 200: Мероприятие создано
+    User->>API: Бронирование события<br/>POST /api/v1/events/1/book
+    API-->>User: HTTP 202: Бронирование зарегистрировано (BookingStatus = Pending)
+    loop booking.Status != Confirmed || booking.Status != Rejected
+        User ->> User: Подождать некоторое время
+        User->>API: Получение информации о брони<br/>GET /api/v1/bookings/1
+        API-->>User: HTTP 200: booking (id, eventId, status, createdAt, processedAt)
+    end
 ```

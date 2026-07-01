@@ -1,6 +1,4 @@
-﻿using System.Collections.ObjectModel;
-
-using EventManager.API.Models;
+﻿using EventManager.API.Models.Entities;
 
 namespace EventManager.API.Domain.Interfaces;
 
