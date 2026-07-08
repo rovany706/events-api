@@ -6,15 +6,19 @@ namespace EventManager.API.Models.Mapping;
 
 public static class EventMapping
 {
+    private const int UndefinedId = 0;
+    private const int UndefinedTotalSeats = 0;
+
     public static Event ToEvent(this CreateEventRequest createEventRequest)
     {
-        return new Event
+        return new Event()
         {
-            Id = 0,
+            Id = UndefinedId,
             Title = createEventRequest.Title,
             Description = createEventRequest.Description,
             StartAt = createEventRequest.StartAt,
-            EndAt = createEventRequest.EndAt
+            EndAt = createEventRequest.EndAt,
+            TotalSeats = createEventRequest.TotalSeats
         };
     }
 
@@ -26,19 +30,22 @@ public static class EventMapping
             Title = updateEventRequest.Title,
             Description = updateEventRequest.Description,
             StartAt = updateEventRequest.StartAt,
-            EndAt = updateEventRequest.EndAt
+            EndAt = updateEventRequest.EndAt,
+            TotalSeats = UndefinedTotalSeats
         };
     }
 
-    public static EventResponse ToEventResponse(this Event eventInfo)
+    public static EventInfoResponse ToEventResponse(this Event eventInfo)
     {
-        return new EventResponse
+        return new EventInfoResponse
         {
             Id = eventInfo.Id,
             Title = eventInfo.Title,
             Description = eventInfo.Description,
             StartAt = eventInfo.StartAt,
-            EndAt = eventInfo.EndAt
+            EndAt = eventInfo.EndAt,
+            TotalSeats = eventInfo.TotalSeats,
+            AvailableSeats = eventInfo.AvailableSeats
         };
     }
 }

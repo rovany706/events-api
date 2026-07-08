@@ -136,6 +136,9 @@
     <value>Не указано название мероприятия.</value>
   </data>
   <data name="ErrorBookingNotFound" xml:space="preserve">
-      <value>Бронирование с id {0} не найдено.</value>
+    <value>Бронирование с id {0} не найдено.</value>
+  </data>
+  <data name="ErrorTotalSeatsRequired" xml:space="preserve">
+    <value>Не указано общее количество мест на мероприятии.</value>
   </data>
 </root>

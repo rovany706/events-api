@@ -11,6 +11,8 @@ public class BookingProcessorService : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<BookingProcessorService> _logger;
     private readonly Random _rnd = new();
+    private const int ProcessingDelayInSeconds = 2;
+    private const int PollingIntervalInSeconds = 5;
 
     public BookingProcessorService(IServiceScopeFactory scopeFactory,
         ILogger<BookingProcessorService> logger)
@@ -51,7 +53,7 @@ public class BookingProcessorService : BackgroundService
                 _logger.LogError(e, $"Unhandled exception in {nameof(BookingProcessorService)}");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(PollingIntervalInSeconds), stoppingToken);
         }
 
         _logger.LogInformation($"{nameof(BookingProcessorService)} stopped.");
@@ -61,7 +63,7 @@ public class BookingProcessorService : BackgroundService
     {
         _logger.LogInformation("Processing booking {Id}", booking.Id);
 
-        await Task.Delay(TimeSpan.FromSeconds(2), ct); // working...
+        await Task.Delay(TimeSpan.FromSeconds(ProcessingDelayInSeconds), ct); // working...
 
         var bookingStatus = _rnd.Next(0, 2) == 0 ? BookingStatus.Confirmed : BookingStatus.Rejected;
         var processedBooking = booking with { Status = bookingStatus, ProcessedAt = DateTime.UtcNow };

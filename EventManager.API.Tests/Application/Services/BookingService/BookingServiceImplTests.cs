@@ -33,7 +33,7 @@ public class BookingServiceImplTests
         const int expectedBookingId = 10;
         _eventServiceMock.Setup(x => x.GetEventById(eventId)).Returns(Result<Event?>.Success(new Event
         {
-            Id = eventId, Title = "Test Event", StartAt = DateTime.Now, EndAt = DateTime.Now
+            Id = eventId, Title = "Test Event", StartAt = DateTime.Now, EndAt = DateTime.Now, TotalSeats = 20
         }));
         _bookingRepositoryMock.Setup(x => x.AddBooking(It.Is<Booking>(b => b.EventId == eventId)))
             .Returns(expectedBookingId);
@@ -67,7 +67,7 @@ public class BookingServiceImplTests
         const int expectedBookingId2 = 11;
         _eventServiceMock.Setup(x => x.GetEventById(eventId)).Returns(Result<Event?>.Success(new Event
         {
-            Id = eventId, Title = "Test Event", StartAt = DateTime.Now, EndAt = DateTime.Now
+            Id = eventId, Title = "Test Event", StartAt = DateTime.Now, EndAt = DateTime.Now, TotalSeats = 20
         }));
         _bookingRepositoryMock.SetupSequence(x => x.AddBooking(It.Is<Booking>(b => b.EventId == eventId)))
             .Returns(expectedBookingId1)

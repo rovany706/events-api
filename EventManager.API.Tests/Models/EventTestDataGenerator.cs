@@ -5,19 +5,20 @@ namespace EventManager.API.Tests.Models;
 internal static class EventTestDataGenerator
 {
     public static readonly DateTime Now = new DateTime(2026, 6, 7, 12, 0, 0);
-    
+
     public static IEnumerable<Event> GetTestEvents()
     {
         return new List<Event>
         {
-            // Уже законченные мероприятия 
+            // Уже законченные мероприятия
             new()
             {
                 Id = 1,
                 Title = "Past Conference",
                 Description = "Already over",
                 StartAt = Now.AddDays(-10),
-                EndAt = Now.AddDays(-8)
+                EndAt = Now.AddDays(-8),
+                TotalSeats = 1
             },
             new()
             {
@@ -25,7 +26,8 @@ internal static class EventTestDataGenerator
                 Title = "Old Conference",
                 Description = null,
                 StartAt = Now.AddDays(-5),
-                EndAt = Now.AddDays(-4)
+                EndAt = Now.AddDays(-4),
+                TotalSeats = 2
             },
             new()
             {
@@ -33,7 +35,8 @@ internal static class EventTestDataGenerator
                 Title = "Last Week Meetup",
                 Description = "Ended recently",
                 StartAt = Now.AddDays(-3),
-                EndAt = Now.AddDays(-2)
+                EndAt = Now.AddDays(-2),
+                TotalSeats = 3
             },
 
             // Начавшиеся мероприятия (StartAt <= Now < EndAt)
@@ -43,7 +46,8 @@ internal static class EventTestDataGenerator
                 Title = "Running Festival",
                 Description = "Ongoing right Now",
                 StartAt = Now.AddDays(-1),
-                EndAt = Now.AddDays(1)
+                EndAt = Now.AddDays(1),
+                TotalSeats = 4
             },
             new()
             {
@@ -51,7 +55,8 @@ internal static class EventTestDataGenerator
                 Title = "Week-Long Expo",
                 Description = null,
                 StartAt = Now.AddDays(-2),
-                EndAt = Now.AddDays(5)
+                EndAt = Now.AddDays(5),
+                TotalSeats = 5
             },
             new()
             {
@@ -59,9 +64,9 @@ internal static class EventTestDataGenerator
                 Title = "Multi-Day Summit 2026",
                 Description = "Started yesterday",
                 StartAt = Now.AddHours(-6),
-                EndAt = Now.AddHours(18)
+                EndAt = Now.AddHours(18),
+                TotalSeats = 6
             },
-
 
             // Мероприятие, начинающееся сейчас
             new()
@@ -70,9 +75,9 @@ internal static class EventTestDataGenerator
                 Title = "Starting Now",
                 Description = "Edge: starts at Now",
                 StartAt = Now,
-                EndAt = Now.AddHours(4)
+                EndAt = Now.AddHours(4),
+                TotalSeats = 7
             },
-
 
             // Будущие мероприятия (StartAt > Now)
             new()
@@ -81,7 +86,8 @@ internal static class EventTestDataGenerator
                 Title = "Tomorrow Talk",
                 Description = null,
                 StartAt = Now.AddDays(1),
-                EndAt = Now.AddDays(1).AddHours(3)
+                EndAt = Now.AddDays(1).AddHours(3),
+                TotalSeats = 8
             },
             new()
             {
@@ -89,7 +95,8 @@ internal static class EventTestDataGenerator
                 Title = "Upcoming Hackathon",
                 Description = "Next weekend",
                 StartAt = Now.AddDays(3),
-                EndAt = Now.AddDays(4)
+                EndAt = Now.AddDays(4),
+                TotalSeats = 9
             },
             new()
             {
@@ -97,7 +104,8 @@ internal static class EventTestDataGenerator
                 Title = "Tech Symposium",
                 Description = null,
                 StartAt = Now.AddDays(7),
-                EndAt = Now.AddDays(9)
+                EndAt = Now.AddDays(9),
+                TotalSeats = 10
             },
             new()
             {
@@ -105,7 +113,8 @@ internal static class EventTestDataGenerator
                 Title = "Summer Fair 2026",
                 Description = "Family friendly",
                 StartAt = Now.AddDays(14),
-                EndAt = Now.AddDays(14).AddHours(8)
+                EndAt = Now.AddDays(14).AddHours(8),
+                TotalSeats = 100
             },
             new()
             {
@@ -113,7 +122,8 @@ internal static class EventTestDataGenerator
                 Title = "Annual Gala",
                 Description = null,
                 StartAt = Now.AddDays(30),
-                EndAt = Now.AddDays(30).AddHours(5)
+                EndAt = Now.AddDays(30).AddHours(5),
+                TotalSeats = 1000
             },
 
             // Сегодняшние мероприятия, 1 в прошлом, 1 в будущем
@@ -123,7 +133,8 @@ internal static class EventTestDataGenerator
                 Title = "Flash Meetup",
                 Description = "1 hour, past",
                 StartAt = Now.AddHours(-2),
-                EndAt = Now.AddHours(-1)
+                EndAt = Now.AddHours(-1),
+                TotalSeats = 30
             },
             new()
             {
@@ -131,9 +142,9 @@ internal static class EventTestDataGenerator
                 Title = "Quick Briefing",
                 Description = "1 hour, future",
                 StartAt = Now.AddHours(1),
-                EndAt = Now.AddHours(2)
+                EndAt = Now.AddHours(2),
+                TotalSeats = 40
             },
-
 
             // Заканчивающееся прямо сейчас
             new()
@@ -142,8 +153,9 @@ internal static class EventTestDataGenerator
                 Title = "Ending Now",
                 Description = "Edge: ends at Now",
                 StartAt = Now.AddDays(-1),
-                EndAt = Now
-            },
+                EndAt = Now,
+                TotalSeats = 100
+            }
         };
     }
 }

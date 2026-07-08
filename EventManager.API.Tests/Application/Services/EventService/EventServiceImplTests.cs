@@ -29,6 +29,19 @@ public class EventServiceImplTests
             NullLogger<EventServiceImpl>.Instance);
     }
 
+    private Event GetTestEvent()
+    {
+        return new Event
+        {
+            Id = 20,
+            Title = "Test",
+            StartAt = new DateTime(2026, 1, 1, 13, 00, 00),
+            EndAt = new DateTime(2026, 1, 1, 15, 00, 00),
+            Description = "Test",
+            TotalSeats = 10
+        };
+    }
+
     [Fact]
     [Trait("Category", "Filters")]
     public void GetEvents_WhenFiltersAreEmpty_ReturnsAllEvents()
@@ -44,14 +57,7 @@ public class EventServiceImplTests
     [Fact]
     public void GetEventById_WhenEventExists_ReturnsEvent()
     {
-        var expectedEvent = new Event
-        {
-            Id = 20,
-            Title = "Test",
-            StartAt = new DateTime(2026, 1, 1, 13, 00, 00),
-            EndAt = new DateTime(2026, 1, 1, 15, 00, 00),
-            Description = "Test"
-        };
+        var expectedEvent = GetTestEvent();
 
         _eventRepositoryMock.Setup(x => x.GetEventById(expectedEvent.Id)).Returns(expectedEvent);
 
@@ -77,14 +83,7 @@ public class EventServiceImplTests
     public void AddEvent_ShouldAddEventAndReturnNewId()
     {
         const int expectedId = 20;
-        var newEvent = new Event
-        {
-            Id = 0,
-            Title = "Test",
-            StartAt = new DateTime(2026, 1, 1, 13, 00, 00),
-            EndAt = new DateTime(2026, 1, 1, 15, 00, 00),
-            Description = "Test"
-        };
+        var newEvent = GetTestEvent();
         _eventRepositoryMock.Setup(x => x.AddEvent(newEvent)).Returns(expectedId);
         _eventRepositoryMock.Setup(x => x.GetEventById(expectedId)).Returns(newEvent with { Id = expectedId });
 
@@ -100,14 +99,7 @@ public class EventServiceImplTests
     [Fact]
     public void TryUpdateEvent_WhenEventExists_ReturnTrueAndUpdate()
     {
-        var updatedEvent = new Event
-        {
-            Id = 20,
-            Title = "Test",
-            StartAt = new DateTime(2026, 1, 1, 13, 00, 00),
-            EndAt = new DateTime(2026, 1, 1, 15, 00, 00),
-            Description = "Test"
-        };
+        var updatedEvent = GetTestEvent();
         _eventRepositoryMock.Setup(x => x.GetEventById(updatedEvent.Id)).Returns(updatedEvent);
 
         var updateResult = _eventService.TryUpdateEvent(updatedEvent);
@@ -119,14 +111,7 @@ public class EventServiceImplTests
     [Fact]
     public void TryUpdateEvent_WhenEventNotExists_ReturnFalse()
     {
-        var updatedEvent = new Event
-        {
-            Id = 20,
-            Title = "Test",
-            StartAt = new DateTime(2026, 1, 1, 13, 00, 00),
-            EndAt = new DateTime(2026, 1, 1, 15, 00, 00),
-            Description = "Test"
-        };
+        var updatedEvent = GetTestEvent();
         _eventRepositoryMock.Setup(x => x.GetEventById(It.IsAny<int>())).Returns((Event?)null);
 
         var updateResult = _eventService.TryUpdateEvent(updatedEvent);
@@ -138,14 +123,7 @@ public class EventServiceImplTests
     [Fact]
     public void TryRemoveEvent_WhenEventExists_ReturnTrueAndRemove()
     {
-        var eventToRemove = new Event
-        {
-            Id = 20,
-            Title = "Test",
-            StartAt = new DateTime(2026, 1, 1, 13, 00, 00),
-            EndAt = new DateTime(2026, 1, 1, 15, 00, 00),
-            Description = "Test"
-        };
+        var eventToRemove = GetTestEvent();
         _eventRepositoryMock.Setup(x => x.GetEventById(eventToRemove.Id)).Returns(eventToRemove);
         _eventRepositoryMock.Setup(x => x.RemoveEvent(eventToRemove)).Returns(true);
 
@@ -170,14 +148,7 @@ public class EventServiceImplTests
     [Fact]
     public void TryRemoveEvent_WhenEventHasBookings_ShouldRemoveBookings()
     {
-        var eventToRemove = new Event
-        {
-            Id = 20,
-            Title = "Test",
-            StartAt = new DateTime(2026, 1, 1, 13, 00, 00),
-            EndAt = new DateTime(2026, 1, 1, 15, 00, 00),
-            Description = "Test"
-        };
+        var eventToRemove = GetTestEvent();
 
         var bookings = new[]
         {
@@ -223,14 +194,7 @@ public class EventServiceImplTests
     [Fact]
     public void TryRemoveEvent_WhenEventExistsAndRemoveFailed_ReturnFalse()
     {
-        var eventToRemove = new Event
-        {
-            Id = 20,
-            Title = "Test",
-            StartAt = new DateTime(2026, 1, 1, 13, 00, 00),
-            EndAt = new DateTime(2026, 1, 1, 15, 00, 00),
-            Description = "Test"
-        };
+        var eventToRemove = GetTestEvent();
         _eventRepositoryMock.Setup(x => x.GetEventById(eventToRemove.Id)).Returns(eventToRemove);
         _eventRepositoryMock.Setup(x => x.RemoveEvent(eventToRemove)).Returns(false);
 

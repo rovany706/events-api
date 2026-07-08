@@ -38,8 +38,8 @@ public class EventsController : ControllerBase
     /// </summary>
     /// <response code="200">Возвращается список мероприятий</response>
     [HttpGet]
-    [ProducesResponseType(typeof(PaginatedResult<EventResponse>), StatusCodes.Status200OK)]
-    public ActionResult<PaginatedResult<EventResponse>> GetAllEvents([FromQuery] GetEventsFilterParams filters,
+    [ProducesResponseType(typeof(PaginatedResult<EventInfoResponse>), StatusCodes.Status200OK)]
+    public ActionResult<PaginatedResult<EventInfoResponse>> GetAllEvents([FromQuery] GetEventsFilterParams filters,
         [FromQuery] PaginationParams paginationParams)
     {
         _logger.LogDebug("Получен запрос на получение всех мероприятий");
@@ -49,7 +49,7 @@ public class EventsController : ControllerBase
         var filterDto = new EventFilterDto { Title = filters.Title, From = filters.From, To = filters.To };
 
         var events = _eventService.GetEvents(filterDto, paginationParams);
-        return Ok(new PaginatedResult<EventResponse>(
+        return Ok(new PaginatedResult<EventInfoResponse>(
             events.Items.Select(x => x.ToEventResponse()).ToList(),
             events.ItemCount,
             events.CurrentPage,
@@ -65,9 +65,9 @@ public class EventsController : ControllerBase
     /// <response code="200">Возвращается мероприятие</response>
     /// <response code="404">Мероприятие не найдено</response>
     [HttpGet("{id:int}")]
-    [ProducesResponseType(typeof(EventResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(EventInfoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public ActionResult<EventResponse> GetEventById(int id)
+    public ActionResult<EventInfoResponse> GetEventById(int id)
     {
         _logger.LogDebug("Получен запрос на получение мероприятия по идентификатору (id = {Id})", id);
 
