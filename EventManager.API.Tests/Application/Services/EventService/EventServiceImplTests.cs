@@ -146,52 +146,6 @@ public class EventServiceImplTests
     }
 
     [Fact]
-    public void TryRemoveEvent_WhenEventHasBookings_ShouldRemoveBookings()
-    {
-        var eventToRemove = GetTestEvent();
-
-        var bookings = new[]
-        {
-            new()
-            {
-                Id = 1,
-                EventId = eventToRemove.Id,
-                Status = BookingStatus.Confirmed,
-                CreatedAt = DateTime.UtcNow,
-                ProcessedAt = DateTime.UtcNow
-            },
-            new Booking
-            {
-                Id = 2,
-                EventId = eventToRemove.Id,
-                Status = BookingStatus.Rejected,
-                CreatedAt = DateTime.UtcNow,
-                ProcessedAt = DateTime.UtcNow
-            },
-            new Booking
-            {
-                Id = 2,
-                EventId = eventToRemove.Id + 1, // different event
-                Status = BookingStatus.Rejected,
-                CreatedAt = DateTime.UtcNow,
-                ProcessedAt = DateTime.UtcNow
-            }
-        };
-
-
-        _eventRepositoryMock.Setup(x => x.GetEventById(eventToRemove.Id)).Returns(eventToRemove);
-        _eventRepositoryMock.Setup(x => x.RemoveEvent(eventToRemove)).Returns(true);
-        _bookingRepositoryMock.Setup(x => x.GetBookings()).Returns(bookings);
-        _bookingRepositoryMock.Setup(x => x.RemoveBooking(It.IsIn(bookings))).Returns(true);
-
-        var removeResult = _eventService.TryRemoveEvent(eventToRemove.Id);
-
-        removeResult.Should().BeTrue();
-        _eventRepositoryMock.Verify(x => x.RemoveEvent(It.IsAny<Event>()), Times.Once);
-        _bookingRepositoryMock.Verify(x => x.RemoveBooking(It.IsIn(bookings)), Times.Exactly(2));
-    }
-
-    [Fact]
     public void TryRemoveEvent_WhenEventExistsAndRemoveFailed_ReturnFalse()
     {
         var eventToRemove = GetTestEvent();

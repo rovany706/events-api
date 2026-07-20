@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-using EventManager.API.Models.Entities;
+﻿using EventManager.API.Models.Entities;
 
 using FluentAssertions;
 
@@ -152,5 +148,35 @@ public class EventTests
         eventInfo.ReleaseSeats(seatCount);
 
         eventInfo.AvailableSeats.Should().Be(expectedAvailableCount);
+    }
+
+    [Fact]
+    public async Task TryReserveSeats_WhenConcurrent_ShouldReturnValidResults()
+    {
+        const int requestCount = 20;
+        const int totalSeats = 5;
+        const int expectedSuccessfulRequestCount = totalSeats;
+        const int expectedUnsuccessfulRequestCount = requestCount - totalSeats;
+
+        var eventToBook = new Event
+        {
+            Id = 1,
+            Title = "Test",
+            StartAt = DateTime.UtcNow,
+            EndAt = DateTime.UtcNow.AddDays(1),
+            TotalSeats = totalSeats
+        };
+
+        var tasks = new Task<bool>[requestCount];
+        for (var i = 0; i < requestCount; i++)
+        {
+            tasks[i] = Task.Run(() => eventToBook.TryReserveSeats());
+        }
+
+        await Task.WhenAll(tasks);
+
+        tasks.Where(x => x.Result == true).Should().HaveCount(expectedSuccessfulRequestCount);
+        tasks.Where(x => x.Result == false).Should().HaveCount(expectedUnsuccessfulRequestCount);
+        eventToBook.AvailableSeats.Should().Be(0);
     }
 }
