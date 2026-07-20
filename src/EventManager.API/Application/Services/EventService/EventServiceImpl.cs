@@ -113,22 +113,6 @@ public class EventServiceImpl : IEventService
         }
 
         var eventToRemove = eventResult.Value!;
-        var result = _eventRepository.RemoveEvent(eventToRemove);
-        result &= RemoveEventBookings(id);
-
-        return result;
-    }
-
-    private bool RemoveEventBookings(int eventId)
-    {
-        var result = true;
-        var bookings = _bookingRepository.GetBookings().Where(x => x.EventId == eventId).ToList();
-
-        foreach (var booking in bookings)
-        {
-            result &= _bookingRepository.RemoveBooking(booking);
-        }
-
-        return result;
+        return _eventRepository.RemoveEvent(eventToRemove);
     }
 }

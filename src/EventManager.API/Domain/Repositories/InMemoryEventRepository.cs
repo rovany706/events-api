@@ -9,7 +9,7 @@ namespace EventManager.API.Domain.Repositories;
 public class InMemoryEventRepository : IEventRepository
 {
     private static readonly List<Event> _events = SeedEvents();
-    private int _nextId = 1;
+    private int _currentId = 15;
 
     private static List<Event> SeedEvents()
     {
@@ -21,7 +21,7 @@ public class InMemoryEventRepository : IEventRepository
                 Description = "Annual gathering of tech leaders discussing AI, cloud computing, and the future of software development.",
                 StartAt = new DateTime(2026, 3, 10, 9, 0, 0),
                 EndAt = new DateTime(2026, 3, 12, 18, 0, 0),
-                TotalSeats = 100
+                TotalSeats = 3
             },
             new() {
                 Id = 2,
@@ -153,7 +153,8 @@ public class InMemoryEventRepository : IEventRepository
     /// <inheritdoc />
     public int AddEvent(Event eventToAdd)
     {
-        eventToAdd.Id = _nextId++;
+        var id = Interlocked.Increment(ref _currentId);
+        eventToAdd.Id = id;
         _events.Add(eventToAdd);
 
         return eventToAdd.Id;

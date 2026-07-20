@@ -10,8 +10,9 @@ public class BookingProcessorService : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<BookingProcessorService> _logger;
-    private readonly Random _rnd = new();
-    private const int ProcessingDelayInSeconds = 2;
+    private readonly SemaphoreSlim _bookingSemaphore = new(1, 1);
+
+    private const int ProcessingDelayInSeconds = 5;
     private const int PollingIntervalInSeconds = 5;
 
     public BookingProcessorService(IServiceScopeFactory scopeFactory,
@@ -32,17 +33,14 @@ public class BookingProcessorService : BackgroundService
             {
                 using var scope = _scopeFactory.CreateScope();
                 var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
-                
-                var bookings = bookingRepository.GetBookings();
-                
+                var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+
                 _logger.LogInformation("Checking for pending bookings...");
-                var pendingBookings = bookings.Where(b => b.Status == BookingStatus.Pending).ToList();
+                var pendingBookings = bookingRepository.GetPendingBookings().ToList();
                 _logger.LogInformation("Found {pendingCount} pending bookings.", pendingBookings.Count);
-                
-                foreach (var booking in pendingBookings)
-                {
-                    await ProcessBookingAsync(booking, bookingRepository, stoppingToken);
-                }
+
+                var processingTasks = pendingBookings.Select(b => ProcessBookingAsync(b, bookingRepository, eventRepository, stoppingToken));
+                await Task.WhenAll(processingTasks);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -59,16 +57,52 @@ public class BookingProcessorService : BackgroundService
         _logger.LogInformation($"{nameof(BookingProcessorService)} stopped.");
     }
 
-    private async Task ProcessBookingAsync(Booking booking, IBookingRepository bookingRepository, CancellationToken ct)
+    private async Task ProcessBookingAsync(Booking booking, IBookingRepository bookingRepository, IEventRepository eventRepository, CancellationToken ct)
     {
         _logger.LogInformation("Processing booking {Id}", booking.Id);
 
         await Task.Delay(TimeSpan.FromSeconds(ProcessingDelayInSeconds), ct); // working...
 
-        var bookingStatus = _rnd.Next(0, 2) == 0 ? BookingStatus.Confirmed : BookingStatus.Rejected;
-        var processedBooking = booking with { Status = bookingStatus, ProcessedAt = DateTime.UtcNow };
-        bookingRepository.UpdateBooking(processedBooking);
+        var eventToBook = eventRepository.GetEventById(booking.EventId);
 
-        _logger.LogInformation("Processed booking {Id} ({BookingStatus})", booking.Id, bookingStatus);
+        await _bookingSemaphore.WaitAsync(ct);
+
+        try
+        {
+            if (eventToBook == null)
+            {
+                booking.Reject();
+                _logger.LogWarning("Event {eventId} is not found for booking {bookingId}", booking.EventId, booking.Id);
+            }
+            else
+            {
+                booking.Confirm();
+            }
+
+            bookingRepository.UpdateBooking(booking);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error when processing booking {bookingId}", booking.Id);
+            ReleaseBooking(booking, eventToBook, bookingRepository, eventRepository);
+        }
+        finally
+        {
+            _bookingSemaphore.Release();
+            _logger.LogInformation("Processed booking {Id} ({BookingStatus})", booking.Id, booking.Status);
+        }
+    }
+
+    private static void ReleaseBooking(Booking booking, Event? eventToBook,
+        IBookingRepository bookingRepository, IEventRepository eventRepository)
+    {
+        booking.Reject();
+        bookingRepository.UpdateBooking(booking);
+
+        if (eventToBook != null)
+        {
+            eventToBook.ReleaseSeats();
+            eventRepository.UpdateEvent(eventToBook);
+        }
     }
 }

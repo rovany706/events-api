@@ -16,5 +16,7 @@ public class Error
 
     public static Error NotFound(string errorMessage) => new(errorMessage, ErrorType.NotFound);
 
+    public static Error Conflict(string errorMessage) => new(errorMessage, ErrorType.Conflict);
+
     public static Error ValidationError(string errorMessage) => new(errorMessage, ErrorType.ValidationError);
 }

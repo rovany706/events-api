@@ -13,6 +13,7 @@ public class BookingServiceImpl : IBookingService
     private readonly IBookingRepository _repository;
     private readonly IEventService _eventService;
     private readonly ILogger<BookingServiceImpl> _logger;
+    private readonly Lock _bookingLock = new();
 
     public BookingServiceImpl(
         IBookingRepository repository,
@@ -27,22 +28,36 @@ public class BookingServiceImpl : IBookingService
     /// <inheritdoc />
     public async Task<Result<Booking?>> CreateBookingAsync(int eventId, CancellationToken cancellationToken = default)
     {
-        var result = _eventService.GetEventById(eventId);
-
-        if (!result.IsSuccess && result.Error!.ErrorType == ErrorType.NotFound)
+        lock (_bookingLock)
         {
-            _logger.LogDebug("Booking failed. Event with {eventId} not found.", eventId);
-            return Result<Booking?>.Failure(Error.NotFound($"Booking failed. Event with {eventId} not found."));
+            var result = _eventService.GetEventById(eventId);
+
+            if (!result.IsSuccess && result.Error!.ErrorType == ErrorType.NotFound)
+            {
+                _logger.LogDebug("Booking failed. Event with {eventId} not found.", eventId);
+                return Result<Booking?>.Failure(Error.NotFound($"Booking failed. Event with {eventId} not found."));
+            }
+
+            var eventToBook = result.Value!;
+            var bookResult = eventToBook.TryReserveSeats();
+
+            if (!bookResult)
+            {
+                return Result<Booking?>.Failure(Error.Conflict($"No available seats available for event {eventId}"));
+            }
+
+            var booking = new Booking
+            {
+                Id = 0,
+                EventId = eventId,
+                Status = BookingStatus.Pending,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var newId = _repository.AddBooking(booking);
+
+            return Result<Booking?>.Success(booking with { Id = newId });
         }
-
-        var booking = new Booking
-        {
-            Id = 0, EventId = eventId, Status = BookingStatus.Pending, CreatedAt = DateTime.UtcNow
-        };
-
-        var newId = _repository.AddBooking(booking);
-
-        return Result<Booking?>.Success(booking with { Id = newId });
     }
 
     /// <inheritdoc />

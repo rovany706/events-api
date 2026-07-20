@@ -5,7 +5,6 @@ using Asp.Versioning;
 using EventManager.API.Application.Services.BookingService;
 using EventManager.API.Application.Services.EventService;
 using EventManager.API.Application.Services.EventService.Models;
-using EventManager.API.Models.Entities;
 using EventManager.API.Models.Mapping;
 using EventManager.API.Models.Request;
 using EventManager.API.Models.Response;
@@ -152,16 +151,24 @@ public class EventsController : ControllerBase
     /// <param name="ct">Токен отмены</param>
     /// <response code="202">Бронь зарегистрирована</response>
     /// <response code="404">Мероприятие не найдено</response>
+    /// <response code="409">Мест для бронирования нет</response>
     [HttpPost("{id:int}/book")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> BookEventAsync([FromRoute] int id, CancellationToken ct)
     {
         var result = await _bookingService.CreateBookingAsync(id, ct);
 
         if (!result.IsSuccess && result.Error!.ErrorType == ErrorType.NotFound)
         {
-            return Problem(detail: GetEventNotFoundErrorMessage(id), statusCode: StatusCodes.Status404NotFound);
+            var errorType = result.Error!.ErrorType;
+            return errorType switch
+            {
+                ErrorType.NotFound => Problem(detail: GetEventNotFoundErrorMessage(id), statusCode: StatusCodes.Status404NotFound),
+                ErrorType.Conflict => Problem(detail: result.Error.ErrorMessage, statusCode: StatusCodes.Status409Conflict),
+                _ => throw new Exception($"Unknown error {errorType}. Message: {result.Error.ErrorMessage}")
+            };
         }
 
         var newBooking = result.Value!;
