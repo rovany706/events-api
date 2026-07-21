@@ -13,14 +13,11 @@ namespace EventManager.API.Application.Services.EventService;
 public class EventServiceImpl : IEventService
 {
     private readonly IEventRepository _eventRepository;
-    private readonly IBookingRepository _bookingRepository;
     private readonly ILogger<EventServiceImpl> _logger;
 
-    public EventServiceImpl(IEventRepository eventRepository, IBookingRepository bookingRepository,
-        ILogger<EventServiceImpl> logger)
+    public EventServiceImpl(IEventRepository eventRepository, ILogger<EventServiceImpl> logger)
     {
         _eventRepository = eventRepository;
-        _bookingRepository = bookingRepository;
         _logger = logger;
     }
 
@@ -97,7 +94,7 @@ public class EventServiceImpl : IEventService
             return false;
         }
 
-        _eventRepository.UpdateEvent(eventToUpdate);
+        _eventRepository.UpdateEvent(eventToUpdate with { TotalSeats = eventResult.Value!.TotalSeats });
 
         return true;
     }

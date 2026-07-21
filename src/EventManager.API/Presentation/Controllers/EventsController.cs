@@ -10,6 +10,7 @@ using EventManager.API.Models.Request;
 using EventManager.API.Models.Response;
 using EventManager.API.Models.Results;
 
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventManager.API.Presentation.Controllers;
@@ -71,9 +72,10 @@ public class EventsController : ControllerBase
         _logger.LogDebug("Получен запрос на получение мероприятия по идентификатору (id = {Id})", id);
 
         var result = _eventService.GetEventById(id);
-        if (!result.IsSuccess && result.Error!.ErrorType == ErrorType.NotFound)
+
+        if (!result.IsSuccess)
         {
-            return Problem(detail: GetEventNotFoundErrorMessage(id), statusCode: StatusCodes.Status404NotFound);
+            return GetProblem(result.Error!, id);
         }
 
         var eventToSend = result.Value!;
@@ -160,15 +162,9 @@ public class EventsController : ControllerBase
     {
         var result = await _bookingService.CreateBookingAsync(id, ct);
 
-        if (!result.IsSuccess && result.Error!.ErrorType == ErrorType.NotFound)
+        if (!result.IsSuccess)
         {
-            var errorType = result.Error!.ErrorType;
-            return errorType switch
-            {
-                ErrorType.NotFound => Problem(detail: GetEventNotFoundErrorMessage(id), statusCode: StatusCodes.Status404NotFound),
-                ErrorType.Conflict => Problem(detail: result.Error.ErrorMessage, statusCode: StatusCodes.Status409Conflict),
-                _ => throw new Exception($"Unknown error {errorType}. Message: {result.Error.ErrorMessage}")
-            };
+            return GetProblem(result.Error!, id);
         }
 
         var newBooking = result.Value!;
@@ -177,7 +173,17 @@ public class EventsController : ControllerBase
             new { id = newBooking.Id }, newBooking);
     }
 
-    private static string GetEventNotFoundErrorMessage(int id)
+    private ObjectResult GetProblem(Error error, params object[] errorMessageFormatParams)
+    {
+        return error.ErrorType switch
+        {
+            ErrorType.NotFound => Problem(detail: GetEventNotFoundErrorMessage(errorMessageFormatParams[0]), statusCode: StatusCodes.Status404NotFound),
+            ErrorType.Conflict => Problem(detail: error.ErrorMessage, statusCode: StatusCodes.Status409Conflict),
+            _ => throw new Exception($"Unknown error {error.ErrorType}. Message: {error.ErrorMessage}")
+        };
+    }
+
+    private static string GetEventNotFoundErrorMessage(object id)
     {
         return string.Format(CultureInfo.InvariantCulture, Resource.ErrorEventNotFound, id);
     }

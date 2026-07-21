@@ -17,16 +17,13 @@ namespace EventManager.API.Tests.Application.Services.EventService;
 public class EventServiceImplTests
 {
     private readonly Mock<IEventRepository> _eventRepositoryMock;
-    private readonly Mock<IBookingRepository> _bookingRepositoryMock;
     private readonly EventServiceImpl _eventService;
     private readonly IEnumerable<Event> _mockEvents = EventTestDataGenerator.GetTestEvents();
 
     public EventServiceImplTests()
     {
         _eventRepositoryMock = new Mock<IEventRepository>();
-        _bookingRepositoryMock = new Mock<IBookingRepository>();
-        _eventService = new EventServiceImpl(_eventRepositoryMock.Object, _bookingRepositoryMock.Object,
-            NullLogger<EventServiceImpl>.Instance);
+        _eventService = new EventServiceImpl(_eventRepositoryMock.Object, NullLogger<EventServiceImpl>.Instance);
     }
 
     private Event GetTestEvent()

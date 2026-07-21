@@ -31,7 +31,7 @@ public static class EventMapping
             Description = updateEventRequest.Description,
             StartAt = updateEventRequest.StartAt,
             EndAt = updateEventRequest.EndAt,
-            TotalSeats = UndefinedTotalSeats
+            TotalSeats = 1
         };
     }
 
