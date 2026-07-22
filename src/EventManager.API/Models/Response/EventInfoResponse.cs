@@ -3,7 +3,7 @@
 /// <summary>
 /// Мероприятие
 /// </summary>
-public record EventResponse
+public record EventInfoResponse
 {
     /// <summary>
     /// Идентификатор мероприятия
@@ -29,4 +29,14 @@ public record EventResponse
     /// Дата конца мероприятия
     /// </summary>
     public required DateTime EndAt { get; init; }
+
+    /// <summary>
+    /// Общее количество мест на событии
+    /// </summary>
+    public required int TotalSeats { get; init; }
+
+    /// <summary>
+    /// Текущее количество свободных мест
+    /// </summary>
+    public required int AvailableSeats { get; init; }
 }

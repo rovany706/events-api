@@ -68,14 +68,18 @@ curl -X 'GET' \
       "title": "Tech Workshop 2026",
       "description": "Annual gathering of tech leaders discussing AI, cloud computing, and the future of software development.",
       "startAt": "2026-03-10T09:00:00",
-      "endAt": "2026-03-12T18:00:00"
+      "endAt": "2026-03-12T18:00:00",
+      "totalSeats": 3,
+      "availableSeats": 3
     },
     {
       "id": 6,
       "title": "Photography Workshop",
       "description": "Hands-on workshop covering portrait, landscape, and street photography techniques.",
       "startAt": "2026-05-08T10:00:00",
-      "endAt": "2026-05-08T16:00:00"
+      "endAt": "2026-05-08T16:00:00",
+      "totalSeats": 30,
+      "availableSeats": 25
     }
   ],
   "itemCount": 2,
@@ -111,7 +115,9 @@ curl -X 'GET' \
   "title": "Rock Concert",
   "description": "Metallica in Moscow",
   "startAt": "2026-05-07T15:00:00Z",
-  "endAt": "2026-05-07T17:00:00Z"
+  "endAt": "2026-05-07T17:00:00Z",
+  "totalSeats": 2000,
+  "availableSeats": 1523
 }
 ```
 
@@ -136,7 +142,8 @@ curl -X 'POST' \
   "title": "Rock Concert",
   "description": "Metallica in Moscow",
   "startAt": "2026-05-07T15:00:00.000Z",
-  "endAt": "2026-05-07T17:00:00.000Z"
+  "endAt": "2026-05-07T17:00:00.000Z",
+  "totalSeats": 2000
 }'
 ```
 
@@ -150,7 +157,9 @@ curl -X 'POST' \
   "title": "Rock Concert",
   "description": "Metallica in Moscow",
   "startAt": "2026-05-07T15:00:00Z",
-  "endAt": "2026-05-07T17:00:00Z"
+  "endAt": "2026-05-07T17:00:00Z",
+  "totalSeats": 2000,
+  "availableSeats": 2000
 }
 ```
 
@@ -232,6 +241,7 @@ curl -X 'POST' \
 }
 ```
 - `HTTP 404` - Мероприятие не найдено
+- `HTTP 409` - Мест для бронирования нет
 
 ### GET /api/v1/bookings/{id}
 
@@ -279,17 +289,42 @@ curl -X 'GET' \
 
 Обработка бронирований на мероприятия осуществляется в фоновом режиме сервисом `BookingProcessorService`.
 Он периодически опрашивает очередь задач на наличие новых бронирований, забирает задачу и приступает к её обработке.
-Далее, если бронирование не было удалено, пока задача стояла в очереди, сервис присваевает брони статус "Confirmed" или "Rejected" и сохраняет её в хранилище.
+Далее, если бронирование не было удалено, пока задача стояла в очереди, сервис присваивает брони статус "Confirmed" или "Rejected" (если связанное с ним мероприятие было удалено) и сохраняет её в хранилище.
 
-### Сценарий: создание события, бронирование, проверка статуса брони
+## Использование примитивов синхронизации
+
+1. Получение ID для сущностей.
+
+В качестве ID используются последовательность положительных целых чисел. Для получения нового идентификатора используются атомарные операции класса `Interlocked`
+
+2. Резервирование мест на мероприятии
+
+Логика резервирования мест (получение события, уменьшение счетчика свободных мест, сохранение обновленного события) происходит в рамках блокировки с помощью `lock`.
+
+3. Обработка очереди бронирований
+
+Логика подтверждения/отклонения бронирования (проверка события, обновление статуса бронирования) происходит в рамках блокировки с помощью `SemaphoreSlim`. Выбор в пользу семафора обусловлено использованием асинхронных операций.
+
+## Сценарии использования
+
+### Сценарий: создание события, бронирование, проверка статуса брони, отсутствие мест
 
 ```mermaid
 sequenceDiagram
     participant User
     participant API
-    User->>API: Создание события<br/>POST /api/v1/events
-    API-->>User: HTTP 200: Мероприятие создано
-    User->>API: Бронирование события<br/>POST /api/v1/events/1/book
+    participant EventStore
+
+    User->>API: Создание события event<br/>POST /api/v1/events
+    API ->> EventStore: CreateEvent(event)
+    API-->>User: HTTP 201: Мероприятие создано (eventId = 1)
+    User->>API: Бронирование события eventId = 1<br/>POST /api/v1/events/1/book
+    API ->> EventStore: GetEventById(1)
+    EventStore -->> API: Event(Id = 1, AvailableSeats)
+    break AvailableSeats = 0
+      API -->> User: HTTP 409: Свободных мест для мероприятия 1 нет
+    end
+
     API-->>User: HTTP 202: Бронирование зарегистрировано (BookingStatus = Pending)
     loop booking.Status != Confirmed || booking.Status != Rejected
         User ->> User: Подождать некоторое время

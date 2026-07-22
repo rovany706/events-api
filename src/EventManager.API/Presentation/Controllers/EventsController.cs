@@ -5,12 +5,12 @@ using Asp.Versioning;
 using EventManager.API.Application.Services.BookingService;
 using EventManager.API.Application.Services.EventService;
 using EventManager.API.Application.Services.EventService.Models;
-using EventManager.API.Models.Entities;
 using EventManager.API.Models.Mapping;
 using EventManager.API.Models.Request;
 using EventManager.API.Models.Response;
 using EventManager.API.Models.Results;
 
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventManager.API.Presentation.Controllers;
@@ -38,8 +38,8 @@ public class EventsController : ControllerBase
     /// </summary>
     /// <response code="200">Возвращается список мероприятий</response>
     [HttpGet]
-    [ProducesResponseType(typeof(PaginatedResult<EventResponse>), StatusCodes.Status200OK)]
-    public ActionResult<PaginatedResult<EventResponse>> GetAllEvents([FromQuery] GetEventsFilterParams filters,
+    [ProducesResponseType(typeof(PaginatedResult<EventInfoResponse>), StatusCodes.Status200OK)]
+    public ActionResult<PaginatedResult<EventInfoResponse>> GetAllEvents([FromQuery] GetEventsFilterParams filters,
         [FromQuery] PaginationParams paginationParams)
     {
         _logger.LogDebug("Получен запрос на получение всех мероприятий");
@@ -49,7 +49,7 @@ public class EventsController : ControllerBase
         var filterDto = new EventFilterDto { Title = filters.Title, From = filters.From, To = filters.To };
 
         var events = _eventService.GetEvents(filterDto, paginationParams);
-        return Ok(new PaginatedResult<EventResponse>(
+        return Ok(new PaginatedResult<EventInfoResponse>(
             events.Items.Select(x => x.ToEventResponse()).ToList(),
             events.ItemCount,
             events.CurrentPage,
@@ -65,16 +65,17 @@ public class EventsController : ControllerBase
     /// <response code="200">Возвращается мероприятие</response>
     /// <response code="404">Мероприятие не найдено</response>
     [HttpGet("{id:int}")]
-    [ProducesResponseType(typeof(EventResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(EventInfoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public ActionResult<EventResponse> GetEventById(int id)
+    public ActionResult<EventInfoResponse> GetEventById(int id)
     {
         _logger.LogDebug("Получен запрос на получение мероприятия по идентификатору (id = {Id})", id);
 
         var result = _eventService.GetEventById(id);
-        if (!result.IsSuccess && result.Error!.ErrorType == ErrorType.NotFound)
+
+        if (!result.IsSuccess)
         {
-            return Problem(detail: GetEventNotFoundErrorMessage(id), statusCode: StatusCodes.Status404NotFound);
+            return GetProblem(result.Error!, id);
         }
 
         var eventToSend = result.Value!;
@@ -152,16 +153,18 @@ public class EventsController : ControllerBase
     /// <param name="ct">Токен отмены</param>
     /// <response code="202">Бронь зарегистрирована</response>
     /// <response code="404">Мероприятие не найдено</response>
+    /// <response code="409">Мест для бронирования нет</response>
     [HttpPost("{id:int}/book")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> BookEventAsync([FromRoute] int id, CancellationToken ct)
     {
         var result = await _bookingService.CreateBookingAsync(id, ct);
 
-        if (!result.IsSuccess && result.Error!.ErrorType == ErrorType.NotFound)
+        if (!result.IsSuccess)
         {
-            return Problem(detail: GetEventNotFoundErrorMessage(id), statusCode: StatusCodes.Status404NotFound);
+            return GetProblem(result.Error!, id);
         }
 
         var newBooking = result.Value!;
@@ -170,7 +173,17 @@ public class EventsController : ControllerBase
             new { id = newBooking.Id }, newBooking);
     }
 
-    private static string GetEventNotFoundErrorMessage(int id)
+    private ObjectResult GetProblem(Error error, params object[] errorMessageFormatParams)
+    {
+        return error.ErrorType switch
+        {
+            ErrorType.NotFound => Problem(detail: GetEventNotFoundErrorMessage(errorMessageFormatParams[0]), statusCode: StatusCodes.Status404NotFound),
+            ErrorType.Conflict => Problem(detail: error.ErrorMessage, statusCode: StatusCodes.Status409Conflict),
+            _ => throw new Exception($"Unknown error {error.ErrorType}. Message: {error.ErrorMessage}")
+        };
+    }
+
+    private static string GetEventNotFoundErrorMessage(object id)
     {
         return string.Format(CultureInfo.InvariantCulture, Resource.ErrorEventNotFound, id);
     }

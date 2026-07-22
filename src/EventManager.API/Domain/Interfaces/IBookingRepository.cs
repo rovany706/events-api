@@ -13,16 +13,21 @@ public interface IBookingRepository
     IEnumerable<Booking> GetBookings();
 
     /// <summary>
+    /// Получить неподтвержденные бронирования
+    /// </summary>
+    IEnumerable<Booking> GetPendingBookings();
+
+    /// <summary>
     /// Получить бронирование по идентификатору
     /// </summary>
-    /// <param name="id">Идентификатор мероприятия</param>
+    /// <param name="id">Идентификатор бронирования</param>
     Booking? GetBookingById(int id);
 
     /// <summary>
     /// Добавить бронирование
     /// </summary>
     /// <param name="bookingToAdd">Бронирование</param>
-    /// <returns>Идентификатор, присвоенный мероприятию</returns>
+    /// <returns>Идентификатор, присвоенный бронированию</returns>
     int AddBooking(Booking bookingToAdd);
 
     /// <summary>

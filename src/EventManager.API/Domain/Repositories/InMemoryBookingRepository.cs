@@ -9,7 +9,7 @@ namespace EventManager.API.Domain.Repositories;
 public class InMemoryBookingRepository : IBookingRepository
 {
     private static readonly List<Booking> _bookings = [];
-    private int _nextId = 1;
+    private int _currentId = 0;
 
     /// <inheritdoc />
     public IEnumerable<Booking> GetBookings()
@@ -26,7 +26,8 @@ public class InMemoryBookingRepository : IBookingRepository
     /// <inheritdoc />
     public int AddBooking(Booking bookingToAdd)
     {
-        bookingToAdd.Id = _nextId++;
+        var id = Interlocked.Increment(ref _currentId);
+        bookingToAdd.Id = id;
         _bookings.Add(bookingToAdd);
 
         return bookingToAdd.Id;
@@ -43,5 +44,11 @@ public class InMemoryBookingRepository : IBookingRepository
     public bool RemoveBooking(Booking bookingToRemove)
     {
         return _bookings.Remove(bookingToRemove);
+    }
+
+    /// <inheritdoc />
+    public IEnumerable<Booking> GetPendingBookings()
+    {
+        return _bookings.Where(b => b.Status == BookingStatus.Pending);
     }
 }

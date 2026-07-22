@@ -6,6 +6,7 @@ using EventManager.API.Models.Results;
 
 using FluentAssertions;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
@@ -26,15 +27,24 @@ public class BookingServiceImplTests
             NullLogger<BookingServiceImpl>.Instance);
     }
 
+    private static Event CreateTestEvent(int id = 1, int totalSeats = 10)
+    {
+        return new Event
+        {
+            Id = id,
+            Title = "Test Event",
+            StartAt = DateTime.Now,
+            EndAt = DateTime.Now,
+            TotalSeats = totalSeats
+        };
+    }
+
     [Fact]
     public async Task CreateBookingAsync_WhenEventExists_ShouldReturnNewBookingId()
     {
         const int eventId = 1;
         const int expectedBookingId = 10;
-        _eventServiceMock.Setup(x => x.GetEventById(eventId)).Returns(Result<Event?>.Success(new Event
-        {
-            Id = eventId, Title = "Test Event", StartAt = DateTime.Now, EndAt = DateTime.Now
-        }));
+        _eventServiceMock.Setup(x => x.GetEventById(eventId)).Returns(Result<Event?>.Success(CreateTestEvent(eventId)));
         _bookingRepositoryMock.Setup(x => x.AddBooking(It.Is<Booking>(b => b.EventId == eventId)))
             .Returns(expectedBookingId);
 
@@ -65,10 +75,7 @@ public class BookingServiceImplTests
         const int eventId = 1;
         const int expectedBookingId1 = 10;
         const int expectedBookingId2 = 11;
-        _eventServiceMock.Setup(x => x.GetEventById(eventId)).Returns(Result<Event?>.Success(new Event
-        {
-            Id = eventId, Title = "Test Event", StartAt = DateTime.Now, EndAt = DateTime.Now
-        }));
+        _eventServiceMock.Setup(x => x.GetEventById(eventId)).Returns(Result<Event?>.Success(CreateTestEvent(eventId)));
         _bookingRepositoryMock.SetupSequence(x => x.AddBooking(It.Is<Booking>(b => b.EventId == eventId)))
             .Returns(expectedBookingId1)
             .Returns(expectedBookingId2);
@@ -142,5 +149,65 @@ public class BookingServiceImplTests
 
         result.IsSuccess.Should().BeFalse();
         result.Error!.ErrorType.Should().Be(ErrorType.NotFound);
+    }
+
+    [Fact]
+    public async Task CreateBookingAsync_Always_ShouldDecreaseEventAvailableSeats()
+    {
+        const int eventId = 1;
+        const int expectedAvailableSeats = 2;
+        var eventToBook = CreateTestEvent(eventId, expectedAvailableSeats + 1);
+        _eventServiceMock.Setup(x => x.GetEventById(It.IsAny<int>())).Returns(Result<Event?>.Success(eventToBook));
+
+        var bookingResult = await _bookingService.CreateBookingAsync(eventId, TestContext.Current.CancellationToken);
+
+        bookingResult.IsSuccess.Should().BeTrue();
+        eventToBook.AvailableSeats.Should().Be(expectedAvailableSeats);
+    }
+
+    [Fact]
+    public async Task CreateBookingAsync_WhenNoSeatsAvailable_ShouldReturnConflictError()
+    {
+        const int eventId = 1;
+        var eventToBook = CreateTestEvent(eventId, 1);
+        _eventServiceMock.Setup(x => x.GetEventById(It.IsAny<int>())).Returns(Result<Event?>.Success(eventToBook));
+
+        var successfulBook = await _bookingService.CreateBookingAsync(eventId, TestContext.Current.CancellationToken);
+        var unsuccessfulBook = await _bookingService.CreateBookingAsync(eventId, TestContext.Current.CancellationToken);
+
+        eventToBook.AvailableSeats.Should().Be(0);
+        successfulBook.IsSuccess.Should().BeTrue();
+        unsuccessfulBook.IsSuccess.Should().BeFalse();
+        unsuccessfulBook.Error!.ErrorType.Should().Be(ErrorType.Conflict);
+    }
+
+    [Fact]
+    public async Task CreateBookingAsync_WhenConcurrent_ShouldReturnUniqueIds()
+    {
+        const int eventId = 1;
+        const int totalSeats = 10;
+        var eventToBook = CreateTestEvent(eventId, totalSeats);
+        _eventServiceMock.Setup(x => x.GetEventById(eventId)).Returns(Result<Event?>.Success(eventToBook));
+        var sequenceSetup = _bookingRepositoryMock.SetupSequence(x => x.AddBooking(It.Is<Booking>(b => b.EventId == eventId)));
+        for (int i = 0; i < totalSeats; i++)
+        {
+            sequenceSetup.Returns(i);
+        }
+
+        var tasks = new Task<Result<Booking?>>[totalSeats];
+
+        for (var i = 0; i < totalSeats; i++)
+        {
+            tasks[i] = Task.Run(
+                async () => await _bookingService.CreateBookingAsync(eventId, TestContext.Current.CancellationToken), 
+                TestContext.Current.CancellationToken);
+        }
+
+        await Task.WhenAll(tasks);
+
+        var bookingResults = tasks.Select(x => x.Result);
+
+        bookingResults.All(x => x.IsSuccess).Should().BeTrue();
+        bookingResults.Select(x => x.Value!.Id).Should().BeEquivalentTo(Enumerable.Range(0, totalSeats));
     }
 }
