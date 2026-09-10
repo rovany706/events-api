@@ -2,6 +2,33 @@
 
 ## Запуск
 
+Для запуска API требуются внешние зависимости: 
+
+- PostgreSQL (СУБД для хранения данных)
+
+Для их запуска в виде docker-контейнеров доступен [docker-compose.yml]().
+
+Запуск контейнеров произоводится с помощью команды:
+
+```bash
+docker compose up
+```
+
+### Настройка подключения к PostgreSQL
+
+Для подключения к PostgreSQL нужно задать строку подключения в файле `appsettings.json` (свойство `ConnectionStrings/EventsDb`).
+Пример:
+
+```json
+"ConnectionStrings": {
+  "EventsDb": "Host=localhost;Port=5432;Database=eventapi;Username=postgres;Password=postgres"
+}
+```
+
+Схема базы данных будет создана автоматически (с помощью `EnsureCreated()`), если она не существует.
+
+### Запуск EventManager API
+
 ```bash
 dotnet run --project ./src/EventManager.API/EventManager.API.csproj
 ```
@@ -25,6 +52,8 @@ dotnet publish ./src/EventManager.API/EventManager.API.csproj -c Release -o publ
 ```bash
 dotnet test
 ```
+
+Для тестирования работы с БД используется InMemory-провайдер из пакета `Microsoft.EntityFrameworkCore.InMemory`.
 
 ## Описание API
 
