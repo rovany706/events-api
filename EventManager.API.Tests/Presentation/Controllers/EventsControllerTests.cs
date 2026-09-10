@@ -16,28 +16,22 @@ namespace EventManager.API.Tests.Presentation.Controllers;
 
 public class EventsControllerTests
 {
-    private readonly Mock<IEventService> _eventServiceMock;
     private readonly Mock<IBookingService> _bookingServiceMock;
     private readonly EventsController _controller;
 
     public EventsControllerTests()
     {
-        _eventServiceMock = new Mock<IEventService>();
+        var eventServiceMock = new Mock<IEventService>();
         _bookingServiceMock = new Mock<IBookingService>();
-        _controller = new EventsController(_eventServiceMock.Object, _bookingServiceMock.Object, NullLogger<EventsController>.Instance);
+        _controller = new EventsController(eventServiceMock.Object, _bookingServiceMock.Object, NullLogger<EventsController>.Instance);
     }
 
     [Fact]
     public async Task BookEventAsync_WhenBookingCreated_ShouldReturn202AcceptedAt()
     {
         const int id = 1;
-        var booking = new Booking
-        {
-            Id = 1,
-            CreatedAt = DateTime.UtcNow,
-            EventId = id,
-            Status = BookingStatus.Pending
-        };
+        var booking = Booking.CreateInstance(id);
+        
         _bookingServiceMock.Setup(x => x.CreateBookingAsync(id, It.IsAny<CancellationToken>())).ReturnsAsync(Result<Booking?>.Success(booking));
 
         var actual = await _controller.BookEventAsync(id, TestContext.Current.CancellationToken);

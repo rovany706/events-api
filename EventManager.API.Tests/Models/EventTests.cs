@@ -6,19 +6,17 @@ namespace EventManager.API.Tests.Models;
 
 public class EventTests
 {
+    private static Event CreateTestEvent(int totalSeats)
+    {
+        return Event.CreateInstance(1, "Test", "", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), totalSeats);
+    }
+    
     [Fact]
     public void AvailableSeats_Initially_ReturnsTotalSeats()
     {
         const int expected = 10;
 
-        var eventInfo = new Event
-        {
-            Id = 1,
-            Title = "Test",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = expected
-        };
+        var eventInfo = CreateTestEvent(expected);
 
         eventInfo.AvailableSeats.Should().Be(expected);
     }
@@ -28,14 +26,7 @@ public class EventTests
     [InlineData(-1)]
     public void TryReserveSeats_WhenCountIsNotPositive_ThrowArgumentOutOfRangeException(int count)
     {
-        var eventInfo = new Event
-        {
-            Id = 1,
-            Title = "Test",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = 10
-        };
+        var eventInfo = CreateTestEvent(10);
 
         Action act = () => eventInfo.TryReserveSeats(count);
 
@@ -50,15 +41,8 @@ public class EventTests
     [InlineData(20, false)]
     public void TryReserveSeats_Always_ReturnExpectedResult(int count, bool expected)
     {
-        var eventInfo = new Event
-        {
-            Id = 1,
-            Title = "Test",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = 10
-        };
-
+        var eventInfo = CreateTestEvent(10);
+        
         var actual = eventInfo.TryReserveSeats(count);
 
         actual.Should().Be(expected);
@@ -73,25 +57,18 @@ public class EventTests
     [InlineData(20, 2, 0, 2)]
     public void TryReserveSeats_WhenReservedMultipleTimes_ReturnExpectedResult(int reserveCount, int reserveTimes, int expectedTimesTrue, int expectedTimesFalse)
     {
-        var eventInfo = new Event
-        {
-            Id = 1,
-            Title = "Test",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = 10
-        };
-
+        var eventInfo = CreateTestEvent(10);
+        
         int actualTrue = 0, actualFalse = 0;
         for (var i = 0; i < reserveTimes; i++)
         {
-            var result = eventInfo.TryReserveSeats(reserveCount); ;
-            actualTrue += Convert.ToInt32(result);
-            actualFalse += Convert.ToInt32(result);
+            var result = eventInfo.TryReserveSeats(reserveCount);
+            actualTrue += result ? 1 : 0;
+            actualFalse += result ? 0 : 1;
         }
 
         actualTrue.Should().Be(expectedTimesTrue);
-        expectedTimesFalse.Should().Be(expectedTimesFalse);
+        actualFalse.Should().Be(expectedTimesFalse);
     }
 
     [Theory]
@@ -99,15 +76,8 @@ public class EventTests
     [InlineData(-1)]
     public void ReleaseSeats_WhenCountIsNotPositive_ThrowArgumentOutOfRangeException(int count)
     {
-        var eventInfo = new Event
-        {
-            Id = 1,
-            Title = "Test",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = 10
-        };
-
+        var eventInfo = CreateTestEvent(10);
+        
         Action act = () => eventInfo.ReleaseSeats(count);
 
         act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName(nameof(count)).WithMessage("Count must be positive.*");
@@ -116,15 +86,8 @@ public class EventTests
     [Fact]
     public void ReleaseSeats_WhenCountIsGreaterThanTotalSeatCount_ThrowArgumentOutOfRangeException()
     {
-        var eventInfo = new Event
-        {
-            Id = 1,
-            Title = "Test",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = 10
-        };
-
+        var eventInfo = CreateTestEvent(10);
+        
         Action act = () => eventInfo.ReleaseSeats(eventInfo.TotalSeats + 1);
 
         act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("count").WithMessage("Count must be less or equal to the total seat count.*");
@@ -135,14 +98,7 @@ public class EventTests
     {
         const int seatCount = 5;
         const int expectedAvailableCount = 10;
-        var eventInfo = new Event
-        {
-            Id = 1,
-            Title = "Test",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = expectedAvailableCount
-        };
+        var eventInfo = CreateTestEvent(expectedAvailableCount);
 
         _ = eventInfo.TryReserveSeats(seatCount);
         eventInfo.ReleaseSeats(seatCount);
@@ -157,16 +113,9 @@ public class EventTests
         const int totalSeats = 5;
         const int expectedSuccessfulRequestCount = totalSeats;
         const int expectedUnsuccessfulRequestCount = requestCount - totalSeats;
-
-        var eventToBook = new Event
-        {
-            Id = 1,
-            Title = "Test",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = totalSeats
-        };
-
+        
+        var eventToBook = CreateTestEvent(totalSeats);
+        
         var tasks = new Task<bool>[requestCount];
         for (var i = 0; i < requestCount; i++)
         {

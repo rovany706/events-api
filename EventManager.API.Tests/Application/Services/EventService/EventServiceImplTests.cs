@@ -1,6 +1,6 @@
 ﻿using EventManager.API.Application.Services.EventService;
 using EventManager.API.Application.Services.EventService.Models;
-using EventManager.API.Domain.Interfaces;
+using EventManager.API.Domain.DataAccess;
 using EventManager.API.Models.Entities;
 using EventManager.API.Models.Request;
 using EventManager.API.Models.Results;
@@ -8,151 +8,190 @@ using EventManager.API.Tests.Models;
 
 using FluentAssertions;
 
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-
-using Moq;
 
 namespace EventManager.API.Tests.Application.Services.EventService;
 
-public class EventServiceImplTests
+public class EventServiceImplTests : IDisposable
 {
-    private readonly Mock<IEventRepository> _eventRepositoryMock;
-    private readonly EventServiceImpl _eventService;
+    private readonly IEventService _eventService;
+    private readonly IServiceScope _scope;
+    private readonly ServiceProvider _serviceProvider;
     private readonly IEnumerable<Event> _mockEvents = EventTestDataGenerator.GetTestEvents();
 
     public EventServiceImplTests()
     {
-        _eventRepositoryMock = new Mock<IEventRepository>();
-        _eventService = new EventServiceImpl(_eventRepositoryMock.Object, NullLogger<EventServiceImpl>.Instance);
+        var dbName = Guid.NewGuid().ToString();
+        var services = new ServiceCollection();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase(dbName));
+        services.AddScoped<IEventService, EventServiceImpl>();
+        services.AddLogging(l => l.AddProvider(NullLoggerProvider.Instance));
+
+        _serviceProvider = services.BuildServiceProvider();
+        _scope = _serviceProvider.CreateScope();
+        _eventService = _scope.ServiceProvider.GetRequiredService<IEventService>();
     }
 
-    private Event GetTestEvent()
+    public void Dispose()
     {
-        return new Event
+        _scope.Dispose();
+        _serviceProvider.Dispose();
+    }
+
+    private async Task<int> CreateTestEvent()
+    {
+        var id = await _eventService.AddEvent(
+            new CreateEventRequest
+            {
+                Title = "Test",
+                Description = "Test",
+                StartAt = new DateTime(2026, 1, 1, 13, 00, 00),
+                EndAt = new DateTime(2026, 1, 1, 15, 00, 00),
+                TotalSeats = 10
+            }, TestContext.Current.CancellationToken);
+
+        return id;
+    }
+
+    private async Task FillTestDatabase(int count = 15)
+    {
+        foreach (var mockEvent in _mockEvents.Take(count))
         {
-            Id = 20,
-            Title = "Test",
-            StartAt = new DateTime(2026, 1, 1, 13, 00, 00),
-            EndAt = new DateTime(2026, 1, 1, 15, 00, 00),
-            Description = "Test",
-            TotalSeats = 10
-        };
+            _ = await _eventService.AddEvent(
+                new CreateEventRequest
+                {
+                    Title = mockEvent.Title,
+                    Description = mockEvent.Description,
+                    StartAt = mockEvent.StartAt,
+                    EndAt = mockEvent.EndAt,
+                    TotalSeats = mockEvent.TotalSeats
+                }, TestContext.Current.CancellationToken);
+        }
     }
 
     [Fact]
     [Trait("Category", "Filters")]
-    public void GetEvents_WhenFiltersAreEmpty_ReturnsAllEvents()
+    public async Task GetEvents_WhenFiltersAreEmpty_ReturnsAllEvents()
     {
-        _eventRepositoryMock.Setup(x => x.GetEvents()).Returns(_mockEvents);
+        await FillTestDatabase();
 
-        var events = _eventService.GetEvents(new EventFilterDto(), new PaginationParams { PageSize = 100 });
+        var events = await _eventService.GetEvents(new EventFilterDto(), new PaginationParams { PageSize = 100 },
+            TestContext.Current.CancellationToken);
 
         events.Should().NotBeNull();
-        events.Items.Should().NotBeEmpty().And.BeEqualTo(_mockEvents);
+        events.Items.Should().NotBeEmpty().And.BeEquivalentTo(_mockEvents);
     }
 
     [Fact]
-    public void GetEventById_WhenEventExists_ReturnsEvent()
+    public async Task GetEventById_WhenEventExists_ReturnsEvent()
     {
-        var expectedEvent = GetTestEvent();
+        var expectedEventId = await CreateTestEvent();
 
-        _eventRepositoryMock.Setup(x => x.GetEventById(expectedEvent.Id)).Returns(expectedEvent);
+        var result = await _eventService.GetEventById(expectedEventId, TestContext.Current.CancellationToken);
 
-        var result = _eventService.GetEventById(expectedEvent.Id);
-        
         result.IsSuccess.Should().BeTrue();
-        var actualEvent = result.Value;
-        expectedEvent.Should().Be(actualEvent);
+        var actualEvent = result.Value!;
+        expectedEventId.Should().Be(actualEvent.Id);
     }
 
     [Fact]
-    public void GetEventById_WhenEventNotExists_ReturnsNull()
+    public async Task GetEventById_WhenEventNotExists_ReturnsNull()
     {
-        _eventRepositoryMock.Setup(x => x.GetEventById(It.IsAny<int>())).Returns((Event?)null);
-
-        var result = _eventService.GetEventById(20);
+        var result = await _eventService.GetEventById(20, TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeFalse();
         result.Error!.ErrorType.Should().Be(ErrorType.NotFound);
     }
 
     [Fact]
-    public void AddEvent_ShouldAddEventAndReturnNewId()
+    public async Task AddEvent_ShouldAddEventAndReturnNewId()
     {
-        const int expectedId = 20;
-        var newEvent = GetTestEvent();
-        _eventRepositoryMock.Setup(x => x.AddEvent(newEvent)).Returns(expectedId);
-        _eventRepositoryMock.Setup(x => x.GetEventById(expectedId)).Returns(newEvent with { Id = expectedId });
+        const int expectedEventId = 1;
+        var createEventRequest = new CreateEventRequest
+        {
+            Title = "Test Event",
+            Description = "Test",
+            StartAt = new DateTime(2026, 1, 1, 13, 00, 00),
+            EndAt = new DateTime(2026, 1, 1, 15, 00, 00),
+            TotalSeats = 5
+        };
 
-        var actualId = _eventService.AddEvent(newEvent);
-        var eventResult = _eventService.GetEventById(expectedId);
-        
+        var actualId = await _eventService.AddEvent(createEventRequest, TestContext.Current.CancellationToken);
+        var eventResult = await _eventService.GetEventById(expectedEventId, TestContext.Current.CancellationToken);
+
         eventResult.IsSuccess.Should().BeTrue();
-        var addedEvent = eventResult.Value;
-        actualId.Should().Be(expectedId);
-        addedEvent.Should().Be(newEvent with { Id = expectedId });
+        var addedEvent = eventResult.Value!;
+        actualId.Should().Be(expectedEventId);
+        addedEvent.Id.Should().Be(expectedEventId);
+        addedEvent.Title.Should().Be(createEventRequest.Title);
+        addedEvent.Description.Should().Be(createEventRequest.Description);
+        addedEvent.StartAt.Should().Be(createEventRequest.StartAt);
+        addedEvent.EndAt.Should().Be(createEventRequest.EndAt);
+        addedEvent.TotalSeats.Should().Be(createEventRequest.TotalSeats);
     }
 
     [Fact]
-    public void TryUpdateEvent_WhenEventExists_ReturnTrueAndUpdate()
+    public async Task TryUpdateEvent_WhenEventExists_ReturnTrueAndUpdate()
     {
-        var updatedEvent = GetTestEvent();
-        _eventRepositoryMock.Setup(x => x.GetEventById(updatedEvent.Id)).Returns(updatedEvent);
+        var eventToUpdateId = await CreateTestEvent();
+        var updateRequest = new UpdateEventRequest
+        {
+            Title = "Updated title",
+            Description = "Updated description",
+            StartAt = new DateTime(2027, 1, 2, 3, 4, 5),
+            EndAt = new DateTime(2027, 2, 3, 4, 5, 6)
+        };
 
-        var updateResult = _eventService.TryUpdateEvent(updatedEvent);
-
+        var updateResult =
+            await _eventService.TryUpdateEvent(eventToUpdateId, updateRequest, TestContext.Current.CancellationToken);
+        var updatedEvent = (await _eventService.GetEventById(eventToUpdateId, TestContext.Current.CancellationToken)).Value!;
+        
         updateResult.Should().BeTrue();
-        _eventRepositoryMock.Verify(x => x.UpdateEvent(updatedEvent), Times.Once);
+        updatedEvent.Title.Should().Be(updateRequest.Title);
+        updatedEvent.Description.Should().Be(updateRequest.Description);
+        updatedEvent.StartAt.Should().Be(updateRequest.StartAt);
+        updatedEvent.EndAt.Should().Be(updateRequest.EndAt);
     }
 
     [Fact]
-    public void TryUpdateEvent_WhenEventNotExists_ReturnFalse()
+    public async Task TryUpdateEvent_WhenEventNotExists_ReturnFalse()
     {
-        var updatedEvent = GetTestEvent();
-        _eventRepositoryMock.Setup(x => x.GetEventById(It.IsAny<int>())).Returns((Event?)null);
-
-        var updateResult = _eventService.TryUpdateEvent(updatedEvent);
+        var updateRequest = new UpdateEventRequest
+        {
+            Title = "Updated title",
+            Description = "Updated description",
+            StartAt = new DateTime(2027, 1, 2, 3, 4, 5),
+            EndAt = new DateTime(2027, 2, 3, 4, 5, 6)
+        };
+        
+        var updateResult = await _eventService.TryUpdateEvent(10, updateRequest, TestContext.Current.CancellationToken);
 
         updateResult.Should().BeFalse();
-        _eventRepositoryMock.Verify(x => x.UpdateEvent(It.IsAny<Event>()), Times.Never);
     }
 
     [Fact]
-    public void TryRemoveEvent_WhenEventExists_ReturnTrueAndRemove()
+    public async Task TryRemoveEvent_WhenEventExists_ReturnTrueAndRemove()
     {
-        var eventToRemove = GetTestEvent();
-        _eventRepositoryMock.Setup(x => x.GetEventById(eventToRemove.Id)).Returns(eventToRemove);
-        _eventRepositoryMock.Setup(x => x.RemoveEvent(eventToRemove)).Returns(true);
+        var eventToRemoveId = await CreateTestEvent();
 
-        var removeResult = _eventService.TryRemoveEvent(eventToRemove.Id);
-
+        var removeResult = await _eventService.TryRemoveEvent(eventToRemoveId, TestContext.Current.CancellationToken);
+        var eventResult = await _eventService.GetEventById(eventToRemoveId, TestContext.Current.CancellationToken);
+        
         removeResult.Should().BeTrue();
-        _eventRepositoryMock.Verify(x => x.RemoveEvent(eventToRemove), Times.Once);
+        eventResult.IsSuccess.Should().BeFalse();
+        eventResult.Error!.ErrorType.Should().Be(ErrorType.NotFound);
     }
 
     [Fact]
-    public void TryRemoveEvent_WhenEventNotExists_ReturnFalse()
+    public async Task TryRemoveEvent_WhenEventNotExists_ReturnFalse()
     {
-        var idToRemove = 20;
-        _eventRepositoryMock.Setup(x => x.GetEventById(idToRemove)).Returns((Event?)null);
-
-        var removeResult = _eventService.TryRemoveEvent(idToRemove);
+        var removeResult = await _eventService.TryRemoveEvent(10, TestContext.Current.CancellationToken);
 
         removeResult.Should().BeFalse();
-        _eventRepositoryMock.Verify(x => x.RemoveEvent(It.IsAny<Event>()), Times.Never);
-    }
-
-    [Fact]
-    public void TryRemoveEvent_WhenEventExistsAndRemoveFailed_ReturnFalse()
-    {
-        var eventToRemove = GetTestEvent();
-        _eventRepositoryMock.Setup(x => x.GetEventById(eventToRemove.Id)).Returns(eventToRemove);
-        _eventRepositoryMock.Setup(x => x.RemoveEvent(eventToRemove)).Returns(false);
-
-        var removeResult = _eventService.TryRemoveEvent(eventToRemove.Id);
-
-        removeResult.Should().BeFalse();
-        _eventRepositoryMock.Verify(x => x.RemoveEvent(eventToRemove), Times.Once);
     }
 
     [Theory]
@@ -163,12 +202,12 @@ public class EventServiceImplTests
     [InlineData("2025", 0)]
     [InlineData("", 15)]
     [InlineData("   ", 15)]
-    public void GetEvents_WhenFilteredByTitle_ReturnExpectedResults(string titleFilter, int expectedCount)
+    public async Task GetEvents_WhenFilteredByTitle_ReturnExpectedResults(string titleFilter, int expectedCount)
     {
-        _eventRepositoryMock.Setup(x => x.GetEvents()).Returns(_mockEvents);
+        await FillTestDatabase();
 
-        var events = _eventService.GetEvents(new EventFilterDto { Title = titleFilter },
-            new PaginationParams { PageSize = 100 });
+        var events = await _eventService.GetEvents(new EventFilterDto { Title = titleFilter },
+            new PaginationParams { PageSize = 100 }, TestContext.Current.CancellationToken);
 
         events.ItemCount.Should().Be(expectedCount);
     }
@@ -178,15 +217,14 @@ public class EventServiceImplTests
     [InlineData(2026, 6, 7, 12, 7)]
     [InlineData(2026, 6, 6, 12, 11)] // -1 day
     [InlineData(2026, 6, 8, 12, 5)] // +1 day
-    public void GetEvents_WhenFilteredByFrom_ReturnExpectedResults(int year, int month, int day, int hour,
+    public async Task GetEvents_WhenFilteredByFrom_ReturnExpectedResults(int year, int month, int day, int hour,
         int expectedCount)
     {
-        _eventRepositoryMock.Setup(x => x.GetEvents()).Returns(_mockEvents);
+        await FillTestDatabase();
 
-        var events = _eventService.GetEvents(
+        var events = await _eventService.GetEvents(
             new EventFilterDto { From = new DateTime(year, month, day, hour, 0, 0) },
-            new PaginationParams { PageSize = 100 }
-        );
+            new PaginationParams { PageSize = 100 }, TestContext.Current.CancellationToken);
 
         events.ItemCount.Should().Be(expectedCount);
     }
@@ -196,15 +234,14 @@ public class EventServiceImplTests
     [InlineData(2026, 6, 7, 12, 5)]
     [InlineData(2026, 6, 6, 12, 3)] // -1 day
     [InlineData(2026, 6, 8, 12, 9)] // +1 day
-    public void GetEvents_WhenFilteredByTo_ReturnExpectedResults(int year, int month, int day, int hour,
+    public async Task GetEvents_WhenFilteredByTo_ReturnExpectedResults(int year, int month, int day, int hour,
         int expectedCount)
     {
-        _eventRepositoryMock.Setup(x => x.GetEvents()).Returns(_mockEvents);
+        await FillTestDatabase();
 
-        var events = _eventService.GetEvents(
+        var events = await _eventService.GetEvents(
             new EventFilterDto { To = new DateTime(year, month, day, hour, 0, 0) },
-            new PaginationParams { PageSize = 100 }
-        );
+            new PaginationParams { PageSize = 100 }, TestContext.Current.CancellationToken);
 
         events.ItemCount.Should().Be(expectedCount);
     }
@@ -217,16 +254,14 @@ public class EventServiceImplTests
     [InlineData(1, 20, 15, 15, 1, 1, 15)]
     [InlineData(1, 10, 10, 10, 1, 1, 10)]
     [InlineData(1, 10, 0, 0, 1, 0, 0)]
-    public void GetEvents_WhenPaginated_ReturnExpectedResults(int page, int pageSize, int initialCount,
+    public async Task GetEvents_WhenPaginated_ReturnExpectedResults(int page, int pageSize, int initialCount,
         int expectedItemCount, int expectedPage, int expectedTotalPages, int expectedTotalItems)
     {
-        var events = _mockEvents.Take(initialCount);
-        _eventRepositoryMock.Setup(x => x.GetEvents()).Returns(events);
+        await FillTestDatabase(initialCount);
 
-        var pagedEvents = _eventService.GetEvents(
+        var pagedEvents = await _eventService.GetEvents(
             new EventFilterDto(),
-            new PaginationParams { Page = page, PageSize = pageSize }
-        );
+            new PaginationParams { Page = page, PageSize = pageSize }, TestContext.Current.CancellationToken);
 
         pagedEvents.ItemCount.Should().Be(expectedItemCount);
         pagedEvents.CurrentPage.Should().Be(expectedPage);
@@ -237,13 +272,15 @@ public class EventServiceImplTests
     [Theory]
     [Trait("Category", "Filters")]
     [MemberData(nameof(TestEventFilters))]
-    public void GetEvents_WhenFiltered_ReturnExpectedResults(string title, DateTime from, DateTime to,
+    public async Task GetEvents_WhenFiltered_ReturnExpectedResults(string title, DateTime from, DateTime to,
         int expectedCount)
     {
-        var filter = new EventFilterDto { Title = title, From = from, To = to };
-        _eventRepositoryMock.Setup(x => x.GetEvents()).Returns(_mockEvents);
+        await FillTestDatabase();
 
-        var filteredEvents = _eventService.GetEvents(filter, new PaginationParams { PageSize = 100 });
+        var filter = new EventFilterDto { Title = title, From = from, To = to };
+
+        var filteredEvents = await _eventService.GetEvents(filter, new PaginationParams { PageSize = 100 },
+            TestContext.Current.CancellationToken);
 
         filteredEvents.ItemCount.Should().Be(expectedCount);
     }
