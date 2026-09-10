@@ -3,32 +3,51 @@
 /// <summary>
 /// Бронирование мероприятия
 /// </summary>
-public record Booking
+public class Booking
 {
+    private Booking() { }
+
+    private Booking(int eventId)
+    {
+        EventId = eventId;
+        Status = BookingStatus.Pending;
+        CreatedAt = DateTime.UtcNow;
+    }
+
+    public static Booking CreateInstance(int eventId)
+    {
+        return new Booking(eventId);
+    }
+    
     /// <summary>
     /// Уникальный идентификатор брони
     /// </summary>
-    public required int Id { get; set; }
+    public int Id { get; private set; }
 
     /// <summary>
     /// Идентификатор события, к которому относится бронь
     /// </summary>
-    public required int EventId { get; init; }
+    public int EventId { get; private set; }
 
     /// <summary>
     /// Текущий статус брони
     /// </summary>
-    public required BookingStatus Status { get; set; }
+    public BookingStatus Status { get; private set; }
 
     /// <summary>
     /// Дата и время создания брони
     /// </summary>
-    public required DateTime CreatedAt { get; init; }
+    public DateTime CreatedAt { get; private set; }
 
     /// <summary>
     /// Дата и время обработки брони
     /// </summary>
-    public DateTime? ProcessedAt { get; set; }
+    public DateTime? ProcessedAt { get; private set; }
+
+    /// <summary>
+    /// Мероприятие
+    /// </summary>
+    public Event Event { get; set; }
 
     /// <summary>
     /// Подтвердить бронь

@@ -1,5 +1,6 @@
 using EventManager.API.Application;
 using EventManager.API.Domain;
+using EventManager.API.Domain.DataAccess;
 using EventManager.API.Middlewares;
 using EventManager.API.Presentation;
 
@@ -14,11 +15,21 @@ if (builder.Environment.IsDevelopment())
     });
 }
 
-builder.Services.AddApplication();
-builder.Services.AddDomain();
-builder.Services.AddPresentation();
+var dbConnectionString = builder.Configuration.GetConnectionString("EventsDb") ??
+                         throw new InvalidOperationException("Connection string 'EventsDb' not found.");
+
+builder.Services
+    .AddApplication()
+    .AddDomain(dbConnectionString)
+    .AddPresentation();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
+}
 
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
