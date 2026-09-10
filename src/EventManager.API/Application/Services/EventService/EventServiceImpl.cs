@@ -1,9 +1,11 @@
 ﻿using EventManager.API.Application.Services.EventService.Models;
-using EventManager.API.Domain.Interfaces;
+using EventManager.API.Domain.DataAccess;
 using EventManager.API.Models.Entities;
 using EventManager.API.Models.Request;
 using EventManager.API.Models.Response;
 using EventManager.API.Models.Results;
+
+using Microsoft.EntityFrameworkCore;
 
 namespace EventManager.API.Application.Services.EventService;
 
@@ -12,24 +14,26 @@ namespace EventManager.API.Application.Services.EventService;
 /// </summary>
 public class EventServiceImpl : IEventService
 {
-    private readonly IEventRepository _eventRepository;
+    private readonly AppDbContext _dbContext;
     private readonly ILogger<EventServiceImpl> _logger;
 
-    public EventServiceImpl(IEventRepository eventRepository, ILogger<EventServiceImpl> logger)
+    public EventServiceImpl(AppDbContext dbContext, ILogger<EventServiceImpl> logger)
     {
-        _eventRepository = eventRepository;
+        _dbContext = dbContext;
         _logger = logger;
     }
 
     /// <inheritdoc />
-    public PaginatedResult<Event> GetEvents(EventFilterDto filterDto, PaginationParams paginationParams)
+    public async Task<PaginatedResult<Event>> GetEvents(EventFilterDto filterDto, PaginationParams paginationParams, CancellationToken ct)
     {
-        var events = _eventRepository.GetEvents();
+        var events = _dbContext.Events.AsNoTracking();
         var filteredEvents = FilterEvents(events, filterDto);
-        return PaginateResults(filteredEvents, paginationParams);
+        var page = await PaginateResults(filteredEvents, paginationParams, ct);
+        
+        return page;
     }
 
-    private static IEnumerable<Event> FilterEvents(IEnumerable<Event> events, EventFilterDto filterDto)
+    private static IQueryable<Event> FilterEvents(IQueryable<Event> events, EventFilterDto filterDto)
     {
         if (!string.IsNullOrWhiteSpace(filterDto.Title))
         {
@@ -49,23 +53,24 @@ public class EventServiceImpl : IEventService
         return events;
     }
 
-    private static PaginatedResult<Event> PaginateResults(IEnumerable<Event> filteredEvents,
-        PaginationParams paginationParams)
+    private static async Task<PaginatedResult<Event>> PaginateResults(IQueryable<Event> filteredEvents,
+        PaginationParams paginationParams, CancellationToken ct)
     {
         var filteredCount = filteredEvents.Count();
         var totalPages = (int)Math.Ceiling((double)filteredCount / paginationParams.PageSize);
-        var eventPage = filteredEvents
+        var eventPage = await filteredEvents
+            .OrderBy(e => e.Id)
             .Skip((paginationParams.Page - 1) * paginationParams.PageSize)
             .Take(paginationParams.PageSize)
-            .ToList();
+            .ToListAsync();
 
         return new PaginatedResult<Event>(eventPage, eventPage.Count, paginationParams.Page, totalPages, filteredCount);
     }
 
     /// <inheritdoc />
-    public Result<Event?> GetEventById(int id)
+    public async Task<Result<Event?>> GetEventById(int id, CancellationToken ct)
     {
-        var eventToGet = _eventRepository.GetEventById(id);
+        var eventToGet = await _dbContext.Events.FirstOrDefaultAsync(e => e.Id == id, ct);
 
         if (eventToGet == null)
         {
@@ -77,32 +82,39 @@ public class EventServiceImpl : IEventService
     }
 
     /// <inheritdoc />
-    public int AddEvent(Event eventToAdd)
+    public async Task<int> AddEvent(CreateEventRequest createEventRequest, CancellationToken ct)
     {
-        var newId = _eventRepository.AddEvent(eventToAdd);
+        var newEvent = Event.CreateInstance(createEventRequest.Title, createEventRequest.Description,
+            createEventRequest.StartAt, createEventRequest.EndAt, createEventRequest.TotalSeats);
 
-        return newId;
+        _ = _dbContext.Events.Add(newEvent);
+        _ = await _dbContext.SaveChangesAsync(ct);
+        
+        return newEvent.Id;
     }
 
     /// <inheritdoc />
-    public bool TryUpdateEvent(Event eventToUpdate)
+    public async Task<bool> TryUpdateEvent(int eventId, UpdateEventRequest updateEventRequest, CancellationToken ct)
     {
-        var eventResult = GetEventById(eventToUpdate.Id);
+        var eventResult = await GetEventById(eventId, ct);
 
         if (!eventResult.IsSuccess)
         {
             return false;
         }
 
-        _eventRepository.UpdateEvent(eventToUpdate with { TotalSeats = eventResult.Value!.TotalSeats });
-
+        var eventToUpdate = eventResult.Value!;
+        eventToUpdate.Update(updateEventRequest.Title, updateEventRequest.Description, updateEventRequest.StartAt,
+            updateEventRequest.EndAt);
+        await _dbContext.SaveChangesAsync(ct);
+        
         return true;
     }
 
     /// <inheritdoc />
-    public bool TryRemoveEvent(int id)
+    public async Task<bool> TryRemoveEvent(int id, CancellationToken ct)
     {
-        var eventResult = GetEventById(id);
+        var eventResult = await GetEventById(id, ct);
 
         if (!eventResult.IsSuccess)
         {
@@ -110,6 +122,9 @@ public class EventServiceImpl : IEventService
         }
 
         var eventToRemove = eventResult.Value!;
-        return _eventRepository.RemoveEvent(eventToRemove);
+        _dbContext.Events.Remove(eventToRemove);
+        await _dbContext.SaveChangesAsync(ct);
+
+        return true;
     }
 }

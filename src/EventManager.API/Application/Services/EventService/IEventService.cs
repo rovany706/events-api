@@ -16,34 +16,41 @@ public interface IEventService
     /// </summary>
     /// <param name="filterDto">Параметры фильтрации</param>
     /// <param name="paginationParams">Параметры пагинации</param>
+    /// <param name="ct">Токен отмены</param>
     /// <returns>Коллекция мероприятий с пагинацией</returns>
-    PaginatedResult<Event> GetEvents(EventFilterDto filterDto, PaginationParams paginationParams);
+    Task<PaginatedResult<Event>> GetEvents(EventFilterDto filterDto, PaginationParams paginationParams,
+        CancellationToken ct);
 
     /// <summary>
     /// Получение мероприятия по идентификатору
     /// </summary>
     /// <param name="id">Идентификатор мероприятия</param>
+    /// <param name="ct">Токен отмены</param>
     /// <returns>null, если мероприятие не найдено, иначе <see cref="Event" /></returns>
-    Result<Event?> GetEventById(int id);
+    Task<Result<Event?>> GetEventById(int id, CancellationToken ct);
 
     /// <summary>
     /// Добавление мероприятия
     /// </summary>
-    /// <param name="eventDto">Мероприятие</param>
+    /// <param name="createEventRequest">Информация о создании мероприятия</param>
+    /// <param name="ct">Токен отмены</param>
     /// <returns>Идентификатор, присвоенный мероприятию</returns>
-    int AddEvent(Event eventDto);
+    Task<int> AddEvent(CreateEventRequest createEventRequest, CancellationToken ct);
 
     /// <summary>
     /// Обновление информации о мероприятии
     /// </summary>
-    /// <param name="eventDto">Мероприятие</param>
+    /// <param name="eventId">Идентификатор мероприятия</param>
+    /// <param name="updateEventRequest">Информация об обновлении</param>
+    /// <param name="ct">Токен отмены</param>
     /// <returns>false, если мероприятие не найдено, иначе true</returns>
-    bool TryUpdateEvent(Event eventDto);
+    Task<bool> TryUpdateEvent(int eventId, UpdateEventRequest updateEventRequest, CancellationToken ct);
 
     /// <summary>
     /// Удаление мероприятия
     /// </summary>
     /// <param name="id">Идентификатор мероприятия</param>
+    /// <param name="ct">Токен отмены</param>
     /// <returns>false, если мероприятие не найдено, иначе true</returns>
-    bool TryRemoveEvent(int id);
+    Task<bool> TryRemoveEvent(int id, CancellationToken ct);
 }

@@ -10,11 +10,13 @@ using EventManager.API.Models.Request;
 using EventManager.API.Models.Response;
 using EventManager.API.Models.Results;
 
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventManager.API.Presentation.Controllers;
 
+/// <summary>
+/// Контроллер для работы с мероприятиями
+/// </summary>
 [ApiController]
 [ApiVersion("1.0")]
 [ApiExplorerSettings(GroupName = "v1")]
@@ -39,8 +41,8 @@ public class EventsController : ControllerBase
     /// <response code="200">Возвращается список мероприятий</response>
     [HttpGet]
     [ProducesResponseType(typeof(PaginatedResult<EventInfoResponse>), StatusCodes.Status200OK)]
-    public ActionResult<PaginatedResult<EventInfoResponse>> GetAllEvents([FromQuery] GetEventsFilterParams filters,
-        [FromQuery] PaginationParams paginationParams)
+    public async Task<ActionResult<PaginatedResult<EventInfoResponse>>> GetAllEvents([FromQuery] GetEventsFilterParams filters,
+        [FromQuery] PaginationParams paginationParams, CancellationToken ct)
     {
         _logger.LogDebug("Получен запрос на получение всех мероприятий");
         _logger.LogDebug("Filters: {0}", filters);
@@ -48,7 +50,7 @@ public class EventsController : ControllerBase
 
         var filterDto = new EventFilterDto { Title = filters.Title, From = filters.From, To = filters.To };
 
-        var events = _eventService.GetEvents(filterDto, paginationParams);
+        var events = await _eventService.GetEvents(filterDto, paginationParams, ct);
         return Ok(new PaginatedResult<EventInfoResponse>(
             events.Items.Select(x => x.ToEventResponse()).ToList(),
             events.ItemCount,
@@ -62,16 +64,17 @@ public class EventsController : ControllerBase
     /// Получение мероприятия по идентификатору
     /// </summary>
     /// <param name="id">Идентификатор мероприятия</param>
+    /// <param name="ct">Токен отмены</param>
     /// <response code="200">Возвращается мероприятие</response>
     /// <response code="404">Мероприятие не найдено</response>
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(EventInfoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public ActionResult<EventInfoResponse> GetEventById(int id)
+    public async Task<ActionResult<EventInfoResponse>> GetEventById(int id, CancellationToken ct)
     {
         _logger.LogDebug("Получен запрос на получение мероприятия по идентификатору (id = {Id})", id);
 
-        var result = _eventService.GetEventById(id);
+        var result = await _eventService.GetEventById(id, ct);
 
         if (!result.IsSuccess)
         {
@@ -87,14 +90,15 @@ public class EventsController : ControllerBase
     /// Создание мероприятия
     /// </summary>
     /// <param name="createEventRequest">Запрос на создание мероприятия</param>
+    /// <param name="ct">Токен отмены</param>
     /// <response code="201">Мероприятие создано</response>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    public IActionResult CreateEvent(CreateEventRequest createEventRequest)
+    public async Task<IActionResult> CreateEvent(CreateEventRequest createEventRequest, CancellationToken ct)
     {
         _logger.LogDebug("Получен запрос на создание мероприятия");
 
-        var eventId = _eventService.AddEvent(createEventRequest.ToEvent());
+        var eventId = await _eventService.AddEvent(createEventRequest, ct);
 
         return CreatedAtAction(nameof(GetEventById), new { id = eventId }, createEventRequest);
     }
@@ -104,16 +108,17 @@ public class EventsController : ControllerBase
     /// </summary>
     /// <param name="id">Идентификатор мероприятия</param>
     /// <param name="updateEventRequest">Запрос на обновление мероприятия</param>
+    /// <param name="ct">Токен отмены</param>
     /// <response code="204">Мероприятие обновлено</response>
     /// <response code="404">Мероприятие не найдено</response>
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public IActionResult UpdateEvent(int id, [FromBody] UpdateEventRequest updateEventRequest)
+    public async Task<IActionResult> UpdateEvent(int id, [FromBody] UpdateEventRequest updateEventRequest, CancellationToken ct)
     {
         _logger.LogDebug("Получен запрос на обновление информации о мероприятии (id = {Id})", id);
 
-        var updateResult = _eventService.TryUpdateEvent(updateEventRequest.ToEvent(id));
+        var updateResult = await _eventService.TryUpdateEvent(id, updateEventRequest, ct);
 
         if (!updateResult)
         {
@@ -127,16 +132,17 @@ public class EventsController : ControllerBase
     /// Удаление мероприятия
     /// </summary>
     /// <param name="id">Идентификатор мероприятия</param>
+    /// <param name="ct">Токен отмены</param>
     /// <response code="204">Мероприятие удалено</response>
     /// <response code="404">Мероприятие не найдено</response>
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public IActionResult DeleteEvent(int id)
+    public async Task<IActionResult> DeleteEvent(int id, CancellationToken ct)
     {
         _logger.LogDebug("Получен запрос на удаление мероприятия (id = {Id})", id);
 
-        var removeResult = _eventService.TryRemoveEvent(id);
+        var removeResult = await _eventService.TryRemoveEvent(id, ct);
 
         if (!removeResult)
         {
@@ -168,9 +174,17 @@ public class EventsController : ControllerBase
         }
 
         var newBooking = result.Value!;
+        var bookingResponse = new BookingResponse
+        {
+            Id = newBooking.Id,
+            EventId = newBooking.EventId,
+            Status = newBooking.Status,
+            CreatedAt = newBooking.CreatedAt,
+            ProcessedAt = newBooking.ProcessedAt
+        };
 
         return AcceptedAtAction(nameof(BookingsController.GetBookingById), "Bookings",
-            new { id = newBooking.Id }, newBooking);
+            new { id = newBooking.Id }, bookingResponse);
     }
 
     private ObjectResult GetProblem(Error error, params object[] errorMessageFormatParams)

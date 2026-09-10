@@ -1,7 +1,8 @@
-﻿using EventManager.API.Application.Services.EventService;
-using EventManager.API.Domain.Interfaces;
+﻿using EventManager.API.Domain.DataAccess;
 using EventManager.API.Models.Entities;
 using EventManager.API.Models.Results;
+
+using Microsoft.EntityFrameworkCore;
 
 namespace EventManager.API.Application.Services.BookingService;
 
@@ -10,35 +11,30 @@ namespace EventManager.API.Application.Services.BookingService;
 /// </summary>
 public class BookingServiceImpl : IBookingService
 {
-    private readonly IBookingRepository _repository;
-    private readonly IEventService _eventService;
+    private readonly AppDbContext _dbContext;
     private readonly ILogger<BookingServiceImpl> _logger;
-    private readonly Lock _bookingLock = new();
+    private static readonly SemaphoreSlim BookingSemaphore = new(1, 1);
 
-    public BookingServiceImpl(
-        IBookingRepository repository,
-        IEventService eventService,
-        ILogger<BookingServiceImpl> logger)
+    public BookingServiceImpl(AppDbContext dbContext, ILogger<BookingServiceImpl> logger)
     {
-        _repository = repository;
-        _eventService = eventService;
+        _dbContext = dbContext;
         _logger = logger;
     }
 
     /// <inheritdoc />
-    public async Task<Result<Booking?>> CreateBookingAsync(int eventId, CancellationToken cancellationToken = default)
+    public async Task<Result<Booking?>> CreateBookingAsync(int eventId, CancellationToken cancellationToken)
     {
-        lock (_bookingLock)
+        await BookingSemaphore.WaitAsync(cancellationToken);
+        try
         {
-            var result = _eventService.GetEventById(eventId);
+            var eventToBook = await _dbContext.Events.FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken);
 
-            if (!result.IsSuccess && result.Error!.ErrorType == ErrorType.NotFound)
+            if (eventToBook == null)
             {
                 _logger.LogDebug("Booking failed. Event with {eventId} not found.", eventId);
                 return Result<Booking?>.Failure(Error.NotFound($"Booking failed. Event with {eventId} not found."));
             }
 
-            var eventToBook = result.Value!;
             var bookResult = eventToBook.TryReserveSeats();
 
             if (!bookResult)
@@ -46,25 +42,24 @@ public class BookingServiceImpl : IBookingService
                 return Result<Booking?>.Failure(Error.Conflict($"No available seats available for event {eventId}"));
             }
 
-            var booking = new Booking
-            {
-                Id = 0,
-                EventId = eventId,
-                Status = BookingStatus.Pending,
-                CreatedAt = DateTime.UtcNow
-            };
+            var booking = Booking.CreateInstance(eventId);
 
-            var newId = _repository.AddBooking(booking);
-
-            return Result<Booking?>.Success(booking with { Id = newId });
+            _dbContext.Bookings.Add(booking);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            
+            return Result<Booking?>.Success(booking);
+        }
+        finally
+        {
+            BookingSemaphore.Release();
         }
     }
 
     /// <inheritdoc />
     public async Task<Result<Booking?>> GetBookingByIdAsync(int bookingId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
-        var booking = _repository.GetBookingById(bookingId);
+        var booking = await _dbContext.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, cancellationToken);
 
         if (booking == null)
         {

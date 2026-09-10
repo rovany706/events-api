@@ -14,7 +14,7 @@ public interface IBookingService
     /// <param name="eventId">Идентификатор мероприятия</param>
     /// <param name="cancellationToken">Токен отмены</param>
     /// <returns>Созданное бронирование</returns>
-    Task<Result<Booking?>> CreateBookingAsync(int eventId, CancellationToken cancellationToken = default);
+    Task<Result<Booking?>> CreateBookingAsync(int eventId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Получение брони по идентификатору
@@ -22,5 +22,5 @@ public interface IBookingService
     /// <param name="bookingId">Идентификатор брони</param>
     /// <param name="cancellationToken">Токен отмены</param>
     /// <returns>Бронь</returns>
-    Task<Result<Booking?>> GetBookingByIdAsync(int bookingId, CancellationToken cancellationToken = default);
+    Task<Result<Booking?>> GetBookingByIdAsync(int bookingId, CancellationToken cancellationToken);
 }
