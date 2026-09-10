@@ -1,5 +1,7 @@
-﻿using EventManager.API.Domain.Interfaces;
+﻿using EventManager.API.Domain.DataAccess;
 using EventManager.API.Models.Entities;
+
+using Microsoft.EntityFrameworkCore;
 
 namespace EventManager.API.Application.BackgroundServices;
 
@@ -31,15 +33,21 @@ public class BookingProcessorService : BackgroundService
         {
             try
             {
-                using var scope = _scopeFactory.CreateScope();
-                var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
-                var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+                List<int> pendingBookingIds;
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-                _logger.LogInformation("Checking for pending bookings...");
-                var pendingBookings = bookingRepository.GetPendingBookings().ToList();
-                _logger.LogInformation("Found {pendingCount} pending bookings.", pendingBookings.Count);
+                    _logger.LogInformation("Checking for pending bookings...");
+                    pendingBookingIds = await dbContext.Bookings
+                        .Where(b => b.Status == BookingStatus.Pending)
+                        .Select(b => b.Id)
+                        .ToListAsync(stoppingToken);
+                
+                    _logger.LogInformation("Found {pendingCount} pending bookings.", pendingBookingIds.Count);
+                }
 
-                var processingTasks = pendingBookings.Select(b => ProcessBookingAsync(b, bookingRepository, eventRepository, stoppingToken));
+                var processingTasks = pendingBookingIds.Select(b => ProcessBookingAsync(b, stoppingToken));
                 await Task.WhenAll(processingTasks);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -57,13 +65,23 @@ public class BookingProcessorService : BackgroundService
         _logger.LogInformation($"{nameof(BookingProcessorService)} stopped.");
     }
 
-    private async Task ProcessBookingAsync(Booking booking, IBookingRepository bookingRepository, IEventRepository eventRepository, CancellationToken ct)
+    private async Task ProcessBookingAsync(int bookingId, CancellationToken ct)
     {
-        _logger.LogInformation("Processing booking {Id}", booking.Id);
+        _logger.LogInformation("Processing booking {Id}", bookingId);
 
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var booking = await dbContext.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, ct);
+
+        if (booking == null || booking.Status != BookingStatus.Pending)
+        {
+            _logger.LogDebug("Booking {Id} not found or already processed.", bookingId);
+            return;
+        }
+        
         await Task.Delay(TimeSpan.FromSeconds(ProcessingDelayInSeconds), ct); // working...
-
-        var eventToBook = eventRepository.GetEventById(booking.EventId);
+        
+        var eventToBook = await dbContext.Events.FirstOrDefaultAsync(e => e.Id == booking.EventId, ct);
 
         await _bookingSemaphore.WaitAsync(ct);
 
@@ -79,12 +97,14 @@ public class BookingProcessorService : BackgroundService
                 booking.Confirm();
             }
 
-            bookingRepository.UpdateBooking(booking);
+            await dbContext.SaveChangesAsync(ct);
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Error when processing booking {bookingId}", booking.Id);
-            ReleaseBooking(booking, eventToBook, bookingRepository, eventRepository);
+            ReleaseBooking(booking, eventToBook);
+
+            await dbContext.SaveChangesAsync(ct);
         }
         finally
         {
@@ -93,16 +113,9 @@ public class BookingProcessorService : BackgroundService
         }
     }
 
-    private static void ReleaseBooking(Booking booking, Event? eventToBook,
-        IBookingRepository bookingRepository, IEventRepository eventRepository)
+    private static void ReleaseBooking(Booking booking, Event? eventToBook)
     {
         booking.Reject();
-        bookingRepository.UpdateBooking(booking);
-
-        if (eventToBook != null)
-        {
-            eventToBook.ReleaseSeats();
-            eventRepository.UpdateEvent(eventToBook);
-        }
+        eventToBook?.ReleaseSeats();
     }
 }
