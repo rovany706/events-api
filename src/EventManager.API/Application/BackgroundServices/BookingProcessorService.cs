@@ -1,7 +1,5 @@
-﻿using EventManager.API.Domain.DataAccess;
+﻿using EventManager.API.Domain.Repositories;
 using EventManager.API.Models.Entities;
-
-using Microsoft.EntityFrameworkCore;
 
 namespace EventManager.API.Application.BackgroundServices;
 
@@ -36,13 +34,11 @@ public class BookingProcessorService : BackgroundService
                 List<int> pendingBookingIds;
                 using (var scope = _scopeFactory.CreateScope())
                 {
-                    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
+                    var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
+                    
                     _logger.LogInformation("Checking for pending bookings...");
-                    pendingBookingIds = await dbContext.Bookings
-                        .Where(b => b.Status == BookingStatus.Pending)
-                        .Select(b => b.Id)
-                        .ToListAsync(stoppingToken);
+                    var pendingBookings = await bookingRepository.GetPendingBookingsAsync(stoppingToken);
+                    pendingBookingIds = pendingBookings.Select(b => b.Id).ToList();
                 
                     _logger.LogInformation("Found {pendingCount} pending bookings.", pendingBookingIds.Count);
                 }
@@ -70,8 +66,8 @@ public class BookingProcessorService : BackgroundService
         _logger.LogInformation("Processing booking {Id}", bookingId);
 
         using var scope = _scopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var booking = await dbContext.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, ct);
+        var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
+        var booking = await bookingRepository.GetBookingByIdAsync(bookingId, ct);
 
         if (booking == null || booking.Status != BookingStatus.Pending)
         {
@@ -81,7 +77,7 @@ public class BookingProcessorService : BackgroundService
         
         await Task.Delay(TimeSpan.FromSeconds(ProcessingDelayInSeconds), ct); // working...
         
-        var eventToBook = await dbContext.Events.FirstOrDefaultAsync(e => e.Id == booking.EventId, ct);
+        var eventToBook = booking.Event;
 
         await _bookingSemaphore.WaitAsync(ct);
 
@@ -97,14 +93,14 @@ public class BookingProcessorService : BackgroundService
                 booking.Confirm();
             }
 
-            await dbContext.SaveChangesAsync(ct);
+            await bookingRepository.SaveChangesAsync(ct);
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Error when processing booking {bookingId}", booking.Id);
             ReleaseBooking(booking, eventToBook);
 
-            await dbContext.SaveChangesAsync(ct);
+            await bookingRepository.SaveChangesAsync(ct);
         }
         finally
         {

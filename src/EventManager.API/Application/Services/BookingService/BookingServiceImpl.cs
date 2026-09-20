@@ -1,4 +1,5 @@
 ﻿using EventManager.API.Domain.DataAccess;
+using EventManager.API.Domain.Repositories;
 using EventManager.API.Models.Entities;
 using EventManager.API.Models.Results;
 
@@ -11,13 +12,15 @@ namespace EventManager.API.Application.Services.BookingService;
 /// </summary>
 public class BookingServiceImpl : IBookingService
 {
-    private readonly AppDbContext _dbContext;
+    private readonly IEventRepository _eventRepository;
+    private readonly IBookingRepository _bookingRepository;
     private readonly ILogger<BookingServiceImpl> _logger;
     private static readonly SemaphoreSlim BookingSemaphore = new(1, 1);
 
-    public BookingServiceImpl(AppDbContext dbContext, ILogger<BookingServiceImpl> logger)
+    public BookingServiceImpl(IEventRepository eventRepository, IBookingRepository bookingRepository, ILogger<BookingServiceImpl> logger)
     {
-        _dbContext = dbContext;
+        _eventRepository = eventRepository;
+        _bookingRepository = bookingRepository;
         _logger = logger;
     }
 
@@ -27,7 +30,7 @@ public class BookingServiceImpl : IBookingService
         await BookingSemaphore.WaitAsync(cancellationToken);
         try
         {
-            var eventToBook = await _dbContext.Events.FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken);
+            var eventToBook = await _eventRepository.GetEventByIdAsync(eventId, cancellationToken);
 
             if (eventToBook == null)
             {
@@ -44,8 +47,8 @@ public class BookingServiceImpl : IBookingService
 
             var booking = Booking.CreateInstance(eventId);
 
-            _dbContext.Bookings.Add(booking);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _bookingRepository.AddBookingAsync(booking, cancellationToken);
+            await _bookingRepository.SaveChangesAsync(cancellationToken);
             
             return Result<Booking?>.Success(booking);
         }
@@ -59,7 +62,7 @@ public class BookingServiceImpl : IBookingService
     public async Task<Result<Booking?>> GetBookingByIdAsync(int bookingId,
         CancellationToken cancellationToken)
     {
-        var booking = await _dbContext.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, cancellationToken);
+        var booking = await _bookingRepository.GetBookingByIdAsync(bookingId, cancellationToken);
 
         if (booking == null)
         {

@@ -1,5 +1,6 @@
 ﻿using EventManager.API.Application.Services.EventService.Models;
 using EventManager.API.Domain.DataAccess;
+using EventManager.API.Domain.Repositories;
 using EventManager.API.Models.Entities;
 using EventManager.API.Models.Request;
 using EventManager.API.Models.Response;
@@ -14,19 +15,19 @@ namespace EventManager.API.Application.Services.EventService;
 /// </summary>
 public class EventServiceImpl : IEventService
 {
-    private readonly AppDbContext _dbContext;
+    private readonly IEventRepository _eventRepository;
     private readonly ILogger<EventServiceImpl> _logger;
 
-    public EventServiceImpl(AppDbContext dbContext, ILogger<EventServiceImpl> logger)
+    public EventServiceImpl(IEventRepository eventRepository, ILogger<EventServiceImpl> logger)
     {
-        _dbContext = dbContext;
+        _eventRepository = eventRepository;
         _logger = logger;
     }
 
     /// <inheritdoc />
     public async Task<PaginatedResult<Event>> GetEvents(EventFilterDto filterDto, PaginationParams paginationParams, CancellationToken ct)
     {
-        var events = _dbContext.Events.AsNoTracking();
+        var events = _eventRepository.GetEvents();
         var filteredEvents = FilterEvents(events, filterDto);
         var page = await PaginateResults(filteredEvents, paginationParams, ct);
         
@@ -62,7 +63,7 @@ public class EventServiceImpl : IEventService
             .OrderBy(e => e.Id)
             .Skip((paginationParams.Page - 1) * paginationParams.PageSize)
             .Take(paginationParams.PageSize)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         return new PaginatedResult<Event>(eventPage, eventPage.Count, paginationParams.Page, totalPages, filteredCount);
     }
@@ -70,7 +71,7 @@ public class EventServiceImpl : IEventService
     /// <inheritdoc />
     public async Task<Result<Event?>> GetEventById(int id, CancellationToken ct)
     {
-        var eventToGet = await _dbContext.Events.FirstOrDefaultAsync(e => e.Id == id, ct);
+        var eventToGet = await _eventRepository.GetEventByIdAsync(id, ct);
 
         if (eventToGet == null)
         {
@@ -87,8 +88,8 @@ public class EventServiceImpl : IEventService
         var newEvent = Event.CreateInstance(createEventRequest.Title, createEventRequest.Description,
             createEventRequest.StartAt, createEventRequest.EndAt, createEventRequest.TotalSeats);
 
-        _ = _dbContext.Events.Add(newEvent);
-        _ = await _dbContext.SaveChangesAsync(ct);
+        await _eventRepository.AddEventAsync(newEvent, ct);
+        await _eventRepository.SaveChangesAsync(ct);
         
         return newEvent.Id;
     }
@@ -106,7 +107,7 @@ public class EventServiceImpl : IEventService
         var eventToUpdate = eventResult.Value!;
         eventToUpdate.Update(updateEventRequest.Title, updateEventRequest.Description, updateEventRequest.StartAt,
             updateEventRequest.EndAt);
-        await _dbContext.SaveChangesAsync(ct);
+        await _eventRepository.SaveChangesAsync(ct);
         
         return true;
     }
@@ -122,8 +123,8 @@ public class EventServiceImpl : IEventService
         }
 
         var eventToRemove = eventResult.Value!;
-        _dbContext.Events.Remove(eventToRemove);
-        await _dbContext.SaveChangesAsync(ct);
+        _eventRepository.RemoveEvent(eventToRemove);
+        await _eventRepository.SaveChangesAsync(ct);
 
         return true;
     }

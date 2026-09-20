@@ -1,46 +1,31 @@
 ﻿using EventManager.API.Application.Services.BookingService;
 using EventManager.API.Application.Services.EventService;
 using EventManager.API.Domain.DataAccess;
+using EventManager.API.Domain.Repositories;
 using EventManager.API.Models.Entities;
 using EventManager.API.Models.Request;
 using EventManager.API.Models.Results;
-
 using FluentAssertions;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace EventManager.API.Tests.Application.Services.BookingService;
 
-public class BookingServiceImplTests : IDisposable
+public class BookingServiceImplTests
 {
     private readonly IBookingService _bookingService;
-    private readonly IEventService _eventService;
-    private readonly IServiceScope _scope;
-    private readonly ServiceProvider _serviceProvider;
+    private readonly Mock<IBookingRepository> _bookingRepositoryMock;
+    private readonly Mock<IEventRepository> _eventRepositoryMock;
 
     public BookingServiceImplTests()
     {
-        var dbName = Guid.NewGuid().ToString();
-        var services = new ServiceCollection();
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseInMemoryDatabase(dbName));
-        services.AddScoped<IEventService, EventServiceImpl>();
-        services.AddScoped<IBookingService, BookingServiceImpl>();
-        services.AddLogging(l => l.AddProvider(NullLoggerProvider.Instance));
-
-        _serviceProvider = services.BuildServiceProvider();
-        _scope = _serviceProvider.CreateScope();
-        _eventService = _scope.ServiceProvider.GetRequiredService<IEventService>();
-        _bookingService = _scope.ServiceProvider.GetRequiredService<IBookingService>();
-    }
-
-    public void Dispose()
-    {
-        _scope.Dispose();
-        _serviceProvider.Dispose();
+        _eventRepositoryMock = new Mock<IEventRepository>();
+        _bookingRepositoryMock = new Mock<IBookingRepository>();
+        _bookingService = new BookingServiceImpl(_eventRepositoryMock.Object, _bookingRepositoryMock.Object,
+            NullLogger<BookingServiceImpl>.Instance);
     }
 
     private async Task<int> CreateTestEvent(int totalSeats = 20)
