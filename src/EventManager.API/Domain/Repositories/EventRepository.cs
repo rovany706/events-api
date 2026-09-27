@@ -23,7 +23,7 @@ public class EventRepository : IEventRepository
     /// <inheritdoc />
     public Task<Event?> GetEventByIdAsync(int id, CancellationToken ct)
     {
-        return _dbContext.Events.FirstOrDefaultAsync(e => e.Id == id, ct);
+        return _dbContext.Events.Include(e => e.Bookings).FirstOrDefaultAsync(e => e.Id == id, ct);
     }
 
     /// <inheritdoc />

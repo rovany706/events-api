@@ -107,6 +107,37 @@ public class BookingRepositoryTests : IAsyncLifetime
     }
     
     [Fact]
+    public async Task GetBookingByIdAsync_WhenBookingExists_ShouldReturnBookingWithEvent()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await ResetDatabaseAsync();
+
+        // Arrange
+        await using var context = CreateContext();
+        var testEvent = Event.CreateInstance(
+            "Event 1",
+            "Description",
+            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 0, 1, 2), DateTimeKind.Utc),
+            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 1, 2, 3), DateTimeKind.Utc),
+            10);
+        await context.Events.AddAsync(testEvent, ct);
+        await context.SaveChangesAsync(ct);
+
+        var testBooking = Booking.CreateInstance(testEvent.Id);
+        await context.Bookings.AddAsync(testBooking, ct);
+        await context.SaveChangesAsync(ct);
+        
+        // Act
+        await using var verifyContext = CreateContext();
+        var repository = new BookingRepository(verifyContext);
+        var booking = await repository.GetBookingByIdAsync(testBooking.Id, ct);
+        
+        // Assert
+        booking.Should().NotBeNull();
+        booking.Event.Should().NotBeNull();
+    }
+    
+    [Fact]
     public async Task GetBookingByIdAsync_WhenBookingDoNotExist_ShouldReturnNull()
     {
         // Arrange

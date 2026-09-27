@@ -31,7 +31,7 @@ public class BookingRepository : IBookingRepository
     /// <inheritdoc />
     public Task<Booking?> GetBookingByIdAsync(int id, CancellationToken ct)
     {
-        return _dbContext.Bookings.FirstOrDefaultAsync(b => b.Id == id, ct);
+        return _dbContext.Bookings.Include(b => b.Event).FirstOrDefaultAsync(b => b.Id == id, ct);
     }
 
     /// <inheritdoc />

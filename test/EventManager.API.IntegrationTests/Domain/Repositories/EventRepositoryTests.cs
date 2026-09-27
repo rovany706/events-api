@@ -103,6 +103,40 @@ public class EventRepositoryTests : IAsyncLifetime
         actualEvent.Should().NotBeNull();
         actualEvent.Title.Should().Be(testEvent.Title);
     }
+    
+    [Fact]
+    public async Task GetEventByIdAsync_WhenEventExists_ShouldReturnEventWithBookings()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await ResetDatabaseAsync();
+
+        // Arrange
+        await using var context = CreateContext();
+
+        var testEvent = Event.CreateInstance(
+            "Event 1",
+            "Description",
+            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 0, 1, 2), DateTimeKind.Utc),
+            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 1, 2, 3), DateTimeKind.Utc),
+            10);
+        await context.Events.AddAsync(testEvent, ct);
+        await context.SaveChangesAsync(ct);
+        
+        context.Bookings.AddRange(
+            Booking.CreateInstance(testEvent.Id),
+            Booking.CreateInstance(testEvent.Id)
+        );
+        await context.SaveChangesAsync(ct);
+        
+        // Act
+        await using var actContext = CreateContext();
+        var repository = new EventRepository(actContext);
+        var actualEvent = await repository.GetEventByIdAsync(testEvent.Id, ct);
+
+        // Assert
+        actualEvent.Should().NotBeNull();
+        actualEvent.Bookings.Should().HaveCount(2);
+    }
 
     [Fact]
     public async Task GetEventByIdAsync_WhenEventDoNotExist_ShouldReturnNull()
