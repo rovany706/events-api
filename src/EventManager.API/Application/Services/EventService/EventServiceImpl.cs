@@ -37,7 +37,7 @@ public class EventServiceImpl : IEventService
     {
         if (!string.IsNullOrWhiteSpace(filterDto.Title))
         {
-            events = events.Where(e => e.Title.Contains(filterDto.Title, StringComparison.OrdinalIgnoreCase));
+            events = events.Where(e => e.Title.Contains(filterDto.Title));
         }
 
         if (filterDto.From.HasValue)
