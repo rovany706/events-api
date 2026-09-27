@@ -18,6 +18,7 @@ namespace EventManager.API.IntegrationTests.Application.Services.BookingService;
 public class BookingServiceImplTests : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine")
+        .WithDatabase("test_db")
         .Build();
     
     public async ValueTask InitializeAsync()
@@ -36,17 +37,14 @@ public class BookingServiceImplTests : IAsyncLifetime
             .UseNpgsql(_postgres.GetConnectionString())
             .Options;
 
-        var context = new AppDbContext(options);
-        context.Database.EnsureCreated();
-        return context;
+        return new AppDbContext(options);
     }
-    
+
     private async Task ResetDatabaseAsync()
     {
-        NpgsqlConnection.ClearAllPools();
         await using var context = CreateContext();
-        //await context.Database.EnsureDeletedAsync(); // somehow trows exception, idk why...
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.EnsureDeletedAsync();
+        await context.Database.MigrateAsync();
     }
     
     [Fact]
