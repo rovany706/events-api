@@ -1,9 +1,6 @@
-﻿using EventManager.API.Domain.DataAccess;
-using EventManager.API.Domain.Repositories;
+﻿using EventManager.API.Domain.Repositories.Interfaces;
 using EventManager.API.Models.Entities;
 using EventManager.API.Models.Results;
-
-using Microsoft.EntityFrameworkCore;
 
 namespace EventManager.API.Application.Services.BookingService;
 

@@ -1,4 +1,4 @@
-﻿using EventManager.API.Domain.Repositories;
+﻿using EventManager.API.Domain.Repositories.Interfaces;
 using EventManager.API.Models.Entities;
 
 namespace EventManager.API.Application.BackgroundServices;

@@ -1,6 +1,6 @@
 using EventManager.API.Models.Entities;
 
-namespace EventManager.API.Domain.Repositories;
+namespace EventManager.API.Domain.Repositories.Interfaces;
 
 /// <summary>
 /// Интерфейс репозитория бронирований

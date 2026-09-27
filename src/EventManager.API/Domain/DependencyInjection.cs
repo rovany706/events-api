@@ -1,5 +1,7 @@
 ﻿using EventManager.API.Domain.DataAccess;
 using EventManager.API.Domain.Repositories;
+using EventManager.API.Domain.Repositories.Interfaces;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace EventManager.API.Domain;

@@ -1,6 +1,5 @@
 ﻿using EventManager.API.Application.Services.EventService.Models;
-using EventManager.API.Domain.DataAccess;
-using EventManager.API.Domain.Repositories;
+using EventManager.API.Domain.Repositories.Interfaces;
 using EventManager.API.Models.Entities;
 using EventManager.API.Models.Request;
 using EventManager.API.Models.Response;
