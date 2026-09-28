@@ -122,10 +122,10 @@ public class EventTests
             tasks[i] = Task.Run(() => eventToBook.TryReserveSeats());
         }
 
-        await Task.WhenAll(tasks);
+        var results = await Task.WhenAll(tasks);
 
-        tasks.Where(x => x.Result == true).Should().HaveCount(expectedSuccessfulRequestCount);
-        tasks.Where(x => x.Result == false).Should().HaveCount(expectedUnsuccessfulRequestCount);
+        results.Where(x => x).Should().HaveCount(expectedSuccessfulRequestCount);
+        results.Where(x => !x).Should().HaveCount(expectedUnsuccessfulRequestCount);
         eventToBook.AvailableSeats.Should().Be(0);
     }
 }

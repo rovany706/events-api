@@ -1,10 +1,10 @@
-﻿using EventManager.API.Models.Entities;
+using EventManager.API.Models.Entities;
 
-namespace EventManager.API.Tests.Models;
+namespace EventManager.API.IntegrationTests.Application.Services.EventService.TestHelpers;
 
 internal static class EventTestDataGenerator
 {
-    public static readonly DateTime Now = new DateTime(2026, 6, 7, 12, 0, 0);
+    public static readonly DateTime Now = DateTime.SpecifyKind(new DateTime(2026, 6, 7, 12, 0, 0), DateTimeKind.Utc);
 
     public static IEnumerable<Event> GetTestEvents()
     {

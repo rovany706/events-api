@@ -11,7 +11,6 @@ public class Booking
     {
         EventId = eventId;
         Status = BookingStatus.Pending;
-        CreatedAt = DateTime.UtcNow;
     }
 
     public static Booking CreateInstance(int eventId)
@@ -22,7 +21,7 @@ public class Booking
     /// <summary>
     /// Уникальный идентификатор брони
     /// </summary>
-    public int Id { get; private set; }
+    public int Id { get; set; }
 
     /// <summary>
     /// Идентификатор события, к которому относится бронь
