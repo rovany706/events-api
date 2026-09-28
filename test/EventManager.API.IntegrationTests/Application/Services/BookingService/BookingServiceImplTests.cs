@@ -8,9 +8,6 @@ using FluentAssertions;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-
-using Npgsql;
-
 using Testcontainers.PostgreSql;
 
 namespace EventManager.API.IntegrationTests.Application.Services.BookingService;
@@ -135,25 +132,32 @@ public class BookingServiceImplTests : IAsyncLifetime
         await eventRepository.AddEventAsync(testEvent, ct);
         await eventRepository.SaveChangesAsync(ct);
         
-        var bookingRepository = new BookingRepository(context);
-        var bookingService =
-            new BookingServiceImpl(eventRepository, bookingRepository, NullLogger<BookingServiceImpl>.Instance);
-
         // Act
         var tasks = new Task<Result<Booking?>>[totalSeats];
 
         for (var i = 0; i < totalSeats; i++)
         {
             tasks[i] = Task.Run(
-                async () => await bookingService.CreateBookingAsync(testEvent.Id, ct), 
+                async () =>
+                {
+                    await using var taskContext = CreateContext();
+                    var taskEventRepository = new EventRepository(taskContext);
+                    var taskBookingRepository = new BookingRepository(taskContext);
+                    var bookingService =
+                        new BookingServiceImpl(taskEventRepository, taskBookingRepository, NullLogger<BookingServiceImpl>.Instance);
+
+                    return await bookingService.CreateBookingAsync(testEvent.Id, ct);
+                }, 
                 ct);
         }
 
-        await Task.WhenAll(tasks);
+        var bookingResults = await Task.WhenAll(tasks);
 
         // Assert
-        var bookingResults = tasks.Select(x => x.Result).ToList();
+        await using var verifyContext = CreateContext();
+        var bookedEvent = await verifyContext.Events.FirstAsync(e => e.Id == testEvent.Id, ct);
         bookingResults.All(x => x.IsSuccess).Should().BeTrue();
         bookingResults.Select(x => x.Value!.Id).Should().BeEquivalentTo(Enumerable.Range(1, totalSeats));
+        bookedEvent.AvailableSeats.Should().Be(0);
     }
 }

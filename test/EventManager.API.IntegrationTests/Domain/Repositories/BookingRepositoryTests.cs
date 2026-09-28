@@ -5,9 +5,6 @@ using EventManager.API.Models.Entities;
 using FluentAssertions;
 
 using Microsoft.EntityFrameworkCore;
-
-using Npgsql;
-
 using Testcontainers.PostgreSql;
 
 namespace EventManager.API.IntegrationTests.Domain.Repositories;
