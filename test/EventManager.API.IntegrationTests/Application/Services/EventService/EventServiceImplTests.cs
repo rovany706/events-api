@@ -107,7 +107,7 @@ public class EventServiceImplTests : IAsyncLifetime
     [Theory]
     [Trait("Category", "Filters")]
     [InlineData("Conference", 2)]
-    [InlineData("Tech", 1)]
+    [InlineData("TECH", 1)]
     [InlineData("2026", 2)]
     [InlineData("2025", 0)]
     [InlineData("", 15)]
@@ -260,7 +260,7 @@ public class EventServiceImplTests : IAsyncLifetime
                 2 // Ids: 1,2
             ),
             new TheoryDataRow<string, DateTime, DateTime, int>(
-                "Now",
+                "now",
                 now,
                 now.AddHours(4),
                 1 // Ids: 7

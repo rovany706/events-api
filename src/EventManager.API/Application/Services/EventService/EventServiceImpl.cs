@@ -37,7 +37,7 @@ public class EventServiceImpl : IEventService
     {
         if (!string.IsNullOrWhiteSpace(filterDto.Title))
         {
-            events = events.Where(e => e.Title.Contains(filterDto.Title));
+            events = events.Where(e => EF.Functions.ILike(e.Title, $"%{filterDto.Title}%"));
         }
 
         if (filterDto.From.HasValue)
