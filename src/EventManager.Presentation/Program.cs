@@ -1,4 +1,4 @@
-using EventManager.Presentation.Application;
+using EventManager.Application;
 using EventManager.Presentation.Domain;
 using EventManager.Presentation.Domain.DataAccess;
 using EventManager.Presentation.Middlewares;

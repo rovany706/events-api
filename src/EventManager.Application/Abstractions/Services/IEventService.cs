@@ -1,10 +1,9 @@
-﻿using EventManager.Domain.Entities;
-using EventManager.Presentation.Application.Services.EventService.Models;
-using EventManager.Presentation.Models.Request;
-using EventManager.Presentation.Models.Response;
-using EventManager.Presentation.Models.Results;
+﻿using EventManager.Application.Abstractions.Services.Dto;
+using EventManager.Domain.Common.Pagination;
+using EventManager.Domain.Common.Results;
+using EventManager.Domain.Entities;
 
-namespace EventManager.Presentation.Application.Services.EventService;
+namespace EventManager.Application.Abstractions.Services;
 
 /// <summary>
 /// Интерфейс сервиса для работы с мероприятиями

@@ -1,8 +1,9 @@
-﻿using EventManager.Domain.Entities;
-using EventManager.Presentation.Domain.Repositories.Interfaces;
-using EventManager.Presentation.Models.Results;
+﻿using EventManager.Application.Abstractions.Persistence.Repositories;
+using EventManager.Application.Abstractions.Services;
+using EventManager.Domain.Common.Results;
+using EventManager.Domain.Entities;
 
-namespace EventManager.Presentation.Application.Services.BookingService;
+namespace EventManager.Presentation.Services.BookingService;
 
 /// <summary>
 /// Сервис бронирования

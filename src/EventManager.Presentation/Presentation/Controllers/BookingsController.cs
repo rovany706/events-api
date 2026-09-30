@@ -2,9 +2,9 @@
 
 using Asp.Versioning;
 
-using EventManager.Presentation.Application.Services.BookingService;
+using EventManager.Application.Abstractions.Services;
+using EventManager.Domain.Common.Results;
 using EventManager.Presentation.Models.Response;
-using EventManager.Presentation.Models.Results;
 
 using Microsoft.AspNetCore.Mvc;
 

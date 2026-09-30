@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace EventManager.Presentation.Models.Request;
+namespace EventManager.Domain.Common.Pagination;
 
 /// <summary>
 /// Параметры пагинации

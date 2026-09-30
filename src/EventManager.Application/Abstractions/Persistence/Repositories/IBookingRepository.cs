@@ -1,6 +1,6 @@
 using EventManager.Domain.Entities;
 
-namespace EventManager.Presentation.Domain.Repositories.Interfaces;
+namespace EventManager.Application.Abstractions.Persistence.Repositories;
 
 /// <summary>
 /// Интерфейс репозитория бронирований

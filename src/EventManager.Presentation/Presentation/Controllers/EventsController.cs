@@ -2,13 +2,13 @@
 
 using Asp.Versioning;
 
+using EventManager.Application.Abstractions.Services;
+using EventManager.Application.Abstractions.Services.Dto;
+using EventManager.Domain.Common.Pagination;
+using EventManager.Domain.Common.Results;
 using EventManager.Presentation.Models.Mapping;
-using EventManager.Presentation.Application.Services.BookingService;
-using EventManager.Presentation.Application.Services.EventService;
-using EventManager.Presentation.Application.Services.EventService.Models;
 using EventManager.Presentation.Models.Request;
 using EventManager.Presentation.Models.Response;
-using EventManager.Presentation.Models.Results;
 
 using Microsoft.AspNetCore.Mvc;
 

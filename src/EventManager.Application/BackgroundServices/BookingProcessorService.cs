@@ -1,7 +1,11 @@
-﻿using EventManager.Domain.Entities;
-using EventManager.Presentation.Domain.Repositories.Interfaces;
+﻿using EventManager.Application.Abstractions.Persistence.Repositories;
+using EventManager.Domain.Entities;
 
-namespace EventManager.Presentation.Application.BackgroundServices;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+namespace EventManager.Application.BackgroundServices;
 
 /// <summary>
 /// Фоновый сервис обработки бронирований

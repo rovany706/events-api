@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace EventManager.Presentation.Validation;
+namespace EventManager.Application.Validation;
 
 /// <summary>
 /// Атрибут для валидации того, что дата конца мероприятия (EndAt) не раньше даты начала (StartAt)

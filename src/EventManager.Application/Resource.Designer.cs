@@ -7,11 +7,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace EventManager.Presentation {
+namespace EventManager.Application {
     using System;
     
     
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resource {
@@ -28,7 +28,7 @@ namespace EventManager.Presentation {
         internal static System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.Equals(null, resourceMan)) {
-                    System.Resources.ResourceManager temp = new System.Resources.ResourceManager("EventManager.Presentation.Resource", typeof(Resource).Assembly);
+                    System.Resources.ResourceManager temp = new System.Resources.ResourceManager("EventManager.Application.Resource", typeof(Resource).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -45,15 +45,33 @@ namespace EventManager.Presentation {
             }
         }
         
-        internal static string ErrorEventNotFound {
+        internal static string ErrorEventEndBeforeStart {
             get {
-                return ResourceManager.GetString("ErrorEventNotFound", resourceCulture);
+                return ResourceManager.GetString("ErrorEventEndBeforeStart", resourceCulture);
             }
         }
         
-        internal static string ErrorBookingNotFound {
+        internal static string ErrorEventEndRequired {
             get {
-                return ResourceManager.GetString("ErrorBookingNotFound", resourceCulture);
+                return ResourceManager.GetString("ErrorEventEndRequired", resourceCulture);
+            }
+        }
+        
+        internal static string ErrorEventStartRequired {
+            get {
+                return ResourceManager.GetString("ErrorEventStartRequired", resourceCulture);
+            }
+        }
+        
+        internal static string ErrorEventTitleRequired {
+            get {
+                return ResourceManager.GetString("ErrorEventTitleRequired", resourceCulture);
+            }
+        }
+        
+        internal static string ErrorTotalSeatsRequired {
+            get {
+                return ResourceManager.GetString("ErrorTotalSeatsRequired", resourceCulture);
             }
         }
     }

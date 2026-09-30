@@ -1,4 +1,4 @@
-﻿namespace EventManager.Presentation.Application.Services.EventService.Models;
+﻿namespace EventManager.Application.Abstractions.Services.Dto;
 
 /// <summary>
 /// Параметры фильтрации

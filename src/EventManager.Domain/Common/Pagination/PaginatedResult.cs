@@ -1,4 +1,4 @@
-﻿namespace EventManager.Presentation.Models.Response;
+﻿namespace EventManager.Domain.Common.Pagination;
 
 /// <summary>
 /// Страница результатов

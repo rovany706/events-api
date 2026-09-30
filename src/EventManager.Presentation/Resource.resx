@@ -117,28 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ErrorEventEndBeforeStart" xml:space="preserve">
-    <value>Дата конца мероприятия не должна быть раньше начала.</value>
-  </data>
-  <data name="ErrorEventEndRequired" xml:space="preserve">
-    <value>Не указана дата конца мероприятия.</value>
-  </data>
-  <data name="ErrorEventIdRequired" xml:space="preserve">
-    <value>Не указан идентификатор мероприятия.</value>
-  </data>
   <data name="ErrorEventNotFound" xml:space="preserve">
     <value>Мероприятие с id {0} не найдено.</value>
   </data>
-  <data name="ErrorEventStartRequired" xml:space="preserve">
-    <value>Не указана дата начала мероприятия.</value>
-  </data>
-  <data name="ErrorEventTitleRequired" xml:space="preserve">
-    <value>Не указано название мероприятия.</value>
-  </data>
   <data name="ErrorBookingNotFound" xml:space="preserve">
     <value>Бронирование с id {0} не найдено.</value>
-  </data>
-  <data name="ErrorTotalSeatsRequired" xml:space="preserve">
-    <value>Не указано общее количество мест на мероприятии.</value>
   </data>
 </root>

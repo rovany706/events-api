@@ -1,4 +1,4 @@
-﻿namespace EventManager.Presentation.Models.Results;
+﻿namespace EventManager.Domain.Common.Results;
 
 public class Error
 {

@@ -1,8 +1,8 @@
-﻿using EventManager.Domain.Entities;
-using EventManager.Presentation.Application.Services.EventService;
-using EventManager.Presentation.Domain.Repositories.Interfaces;
-using EventManager.Presentation.Models.Request;
-using EventManager.Presentation.Models.Results;
+﻿using EventManager.Application.Abstractions.Persistence.Repositories;
+using EventManager.Application.Abstractions.Services.Dto;
+using EventManager.Domain.Common.Results;
+using EventManager.Domain.Entities;
+using EventManager.Presentation.Services.EventService;
 
 using FluentAssertions;
 

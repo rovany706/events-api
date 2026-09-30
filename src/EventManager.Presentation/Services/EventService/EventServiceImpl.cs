@@ -1,13 +1,13 @@
-﻿using EventManager.Domain.Entities;
-using EventManager.Presentation.Application.Services.EventService.Models;
-using EventManager.Presentation.Domain.Repositories.Interfaces;
-using EventManager.Presentation.Models.Request;
-using EventManager.Presentation.Models.Response;
-using EventManager.Presentation.Models.Results;
+﻿using EventManager.Application.Abstractions.Persistence.Repositories;
+using EventManager.Application.Abstractions.Services;
+using EventManager.Application.Abstractions.Services.Dto;
+using EventManager.Domain.Common.Pagination;
+using EventManager.Domain.Common.Results;
+using EventManager.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace EventManager.Presentation.Application.Services.EventService;
+namespace EventManager.Presentation.Services.EventService;
 
 /// <summary>
 /// Сервис для работы с мероприятиями

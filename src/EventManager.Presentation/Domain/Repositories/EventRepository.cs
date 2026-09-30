@@ -1,6 +1,6 @@
+using EventManager.Application.Abstractions.Persistence.Repositories;
 using EventManager.Domain.Entities;
 using EventManager.Presentation.Domain.DataAccess;
-using EventManager.Presentation.Domain.Repositories.Interfaces;
 
 using Microsoft.EntityFrameworkCore;
 

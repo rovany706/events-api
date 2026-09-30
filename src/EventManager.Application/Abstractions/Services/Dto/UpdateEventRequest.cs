@@ -1,14 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-using EventManager.Presentation.Validation;
+using EventManager.Application.Validation;
 
-namespace EventManager.Presentation.Models.Request;
+namespace EventManager.Application.Abstractions.Services.Dto;
 
 /// <summary>
-/// Запрос на создание мероприятия
+/// Запрос на обновление информации о мероприятии
 /// </summary>
 [EventEndNotBeforeStart(nameof(StartAt), nameof(EndAt))]
-public record CreateEventRequest
+public record UpdateEventRequest
 {
     /// <summary>
     /// Название мероприятия
@@ -32,11 +32,4 @@ public record CreateEventRequest
     /// </summary>
     [Required(ErrorMessageResourceType = typeof(Resource), ErrorMessageResourceName = nameof(Resource.ErrorEventEndRequired))]
     public required DateTime EndAt { get; init; }
-
-    /// <summary>
-    /// Общее количество мест на мероприятии
-    /// </summary>
-    [Required(ErrorMessageResourceType = typeof(Resource), ErrorMessageResourceName = nameof(Resource.ErrorTotalSeatsRequired))]
-    [Range(1, int.MaxValue)]
-    public required int TotalSeats { get; init; }
 }

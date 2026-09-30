@@ -1,7 +1,7 @@
-﻿using EventManager.Domain.Entities;
-using EventManager.Presentation.Models.Results;
+﻿using EventManager.Domain.Common.Results;
+using EventManager.Domain.Entities;
 
-namespace EventManager.Presentation.Application.Services.BookingService;
+namespace EventManager.Application.Abstractions.Services;
 
 /// <summary>
 /// Интерфейс сервиса бронирования
