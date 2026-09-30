@@ -2,7 +2,7 @@
 using EventManager.Application.Abstractions.Services;
 using EventManager.Domain.Common.Results;
 using EventManager.Domain.Entities;
-using EventManager.Presentation.Services.BookingService;
+using EventManager.Infrastructure.Services.BookingService;
 
 using FluentAssertions;
 

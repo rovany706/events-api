@@ -1,9 +1,9 @@
 using EventManager.API.IntegrationTests.Application.Services.EventService.TestHelpers;
 using EventManager.Application.Abstractions.Services.Dto;
 using EventManager.Domain.Common.Pagination;
-using EventManager.Presentation.Domain.DataAccess;
-using EventManager.Presentation.Domain.Repositories;
-using EventManager.Presentation.Services.EventService;
+using EventManager.Infrastructure.Persistence;
+using EventManager.Infrastructure.Persistence.Repositories;
+using EventManager.Infrastructure.Services.EventService;
 
 using FluentAssertions;
 

@@ -2,7 +2,7 @@ using EventManager.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace EventManager.Presentation.Domain.DataAccess;
+namespace EventManager.Infrastructure.Persistence;
 
 public class AppDbContext : DbContext
 {

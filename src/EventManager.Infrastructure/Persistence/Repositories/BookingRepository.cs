@@ -1,10 +1,9 @@
 using EventManager.Application.Abstractions.Persistence.Repositories;
 using EventManager.Domain.Entities;
-using EventManager.Presentation.Domain.DataAccess;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace EventManager.Presentation.Domain.Repositories;
+namespace EventManager.Infrastructure.Persistence.Repositories;
 
 public class BookingRepository : IBookingRepository
 {

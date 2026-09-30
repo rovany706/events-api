@@ -1,6 +1,5 @@
-using EventManager.Application;
-using EventManager.Presentation.Domain;
-using EventManager.Presentation.Domain.DataAccess;
+using EventManager.Infrastructure;
+using EventManager.Infrastructure.Persistence;
 using EventManager.Presentation.Middlewares;
 using EventManager.Presentation.Presentation;
 using Microsoft.EntityFrameworkCore;
@@ -20,8 +19,7 @@ var dbConnectionString = builder.Configuration.GetConnectionString("EventsDb") ?
                          throw new InvalidOperationException("Connection string 'EventsDb' not found.");
 
 builder.Services
-    .AddApplication()
-    .AddDomain(dbConnectionString)
+    .AddInfrastructure(dbConnectionString)
     .AddPresentation();
 
 var app = builder.Build();

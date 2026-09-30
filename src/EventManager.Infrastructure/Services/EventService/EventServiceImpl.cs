@@ -6,8 +6,9 @@ using EventManager.Domain.Common.Results;
 using EventManager.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
-namespace EventManager.Presentation.Services.EventService;
+namespace EventManager.Infrastructure.Services.EventService;
 
 /// <summary>
 /// Сервис для работы с мероприятиями

@@ -3,7 +3,9 @@ using EventManager.Application.Abstractions.Services;
 using EventManager.Domain.Common.Results;
 using EventManager.Domain.Entities;
 
-namespace EventManager.Presentation.Services.BookingService;
+using Microsoft.Extensions.Logging;
+
+namespace EventManager.Infrastructure.Services.BookingService;
 
 /// <summary>
 /// Сервис бронирования

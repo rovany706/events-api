@@ -2,7 +2,7 @@
 using EventManager.Application.Abstractions.Services.Dto;
 using EventManager.Domain.Common.Results;
 using EventManager.Domain.Entities;
-using EventManager.Presentation.Services.EventService;
+using EventManager.Infrastructure.Services.EventService;
 
 using FluentAssertions;
 

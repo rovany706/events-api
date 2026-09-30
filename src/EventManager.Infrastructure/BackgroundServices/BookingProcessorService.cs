@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace EventManager.Application.BackgroundServices;
+namespace EventManager.Infrastructure.BackgroundServices;
 
 /// <summary>
 /// Фоновый сервис обработки бронирований
