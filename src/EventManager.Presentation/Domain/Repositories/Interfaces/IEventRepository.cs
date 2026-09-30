@@ -1,4 +1,4 @@
-using EventManager.Presentation.Models.Entities;
+using EventManager.Domain.Entities;
 
 namespace EventManager.Presentation.Domain.Repositories.Interfaces;
 

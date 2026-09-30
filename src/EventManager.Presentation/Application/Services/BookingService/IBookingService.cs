@@ -1,4 +1,4 @@
-﻿using EventManager.Presentation.Models.Entities;
+﻿using EventManager.Domain.Entities;
 using EventManager.Presentation.Models.Results;
 
 namespace EventManager.Presentation.Application.Services.BookingService;

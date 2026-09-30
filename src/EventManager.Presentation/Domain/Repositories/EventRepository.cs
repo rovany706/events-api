@@ -1,6 +1,6 @@
+using EventManager.Domain.Entities;
 using EventManager.Presentation.Domain.DataAccess;
 using EventManager.Presentation.Domain.Repositories.Interfaces;
-using EventManager.Presentation.Models.Entities;
 
 using Microsoft.EntityFrameworkCore;
 

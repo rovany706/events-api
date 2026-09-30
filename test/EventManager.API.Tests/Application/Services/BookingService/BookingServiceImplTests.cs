@@ -1,6 +1,6 @@
-﻿using EventManager.Presentation.Application.Services.BookingService;
+﻿using EventManager.Domain.Entities;
+using EventManager.Presentation.Application.Services.BookingService;
 using EventManager.Presentation.Domain.Repositories.Interfaces;
-using EventManager.Presentation.Models.Entities;
 using EventManager.Presentation.Models.Results;
 
 using FluentAssertions;

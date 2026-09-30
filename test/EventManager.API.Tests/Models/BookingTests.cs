@@ -1,4 +1,4 @@
-﻿using EventManager.Presentation.Models.Entities;
+﻿using EventManager.Domain.Entities;
 
 using FluentAssertions;
 

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace EventManager.Presentation.Models.Entities;
+namespace EventManager.Domain.Entities;
 
 /// <summary>
 /// Мероприятие

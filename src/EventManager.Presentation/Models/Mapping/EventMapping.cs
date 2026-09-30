@@ -1,4 +1,4 @@
-﻿using EventManager.Presentation.Models.Entities;
+﻿using EventManager.Domain.Entities;
 using EventManager.Presentation.Models.Response;
 
 namespace EventManager.Presentation.Models.Mapping;

@@ -1,6 +1,6 @@
-﻿using EventManager.Presentation.Application.Services.EventService;
+﻿using EventManager.Domain.Entities;
+using EventManager.Presentation.Application.Services.EventService;
 using EventManager.Presentation.Domain.Repositories.Interfaces;
-using EventManager.Presentation.Models.Entities;
 using EventManager.Presentation.Models.Request;
 using EventManager.Presentation.Models.Results;
 

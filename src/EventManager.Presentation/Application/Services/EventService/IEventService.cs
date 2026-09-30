@@ -1,5 +1,5 @@
-﻿using EventManager.Presentation.Application.Services.EventService.Models;
-using EventManager.Presentation.Models.Entities;
+﻿using EventManager.Domain.Entities;
+using EventManager.Presentation.Application.Services.EventService.Models;
 using EventManager.Presentation.Models.Request;
 using EventManager.Presentation.Models.Response;
 using EventManager.Presentation.Models.Results;

@@ -1,4 +1,4 @@
-﻿namespace EventManager.Presentation.Models.Entities;
+﻿namespace EventManager.Domain.Entities;
 
 /// <summary>
 /// Бронирование мероприятия
