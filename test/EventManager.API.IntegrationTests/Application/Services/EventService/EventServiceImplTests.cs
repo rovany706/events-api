@@ -1,9 +1,9 @@
-using EventManager.API.Application.Services.EventService;
-using EventManager.API.Application.Services.EventService.Models;
-using EventManager.API.Domain.DataAccess;
-using EventManager.API.Domain.Repositories;
 using EventManager.API.IntegrationTests.Application.Services.EventService.TestHelpers;
-using EventManager.API.Models.Request;
+using EventManager.Presentation.Application.Services.EventService;
+using EventManager.Presentation.Application.Services.EventService.Models;
+using EventManager.Presentation.Domain.DataAccess;
+using EventManager.Presentation.Domain.Repositories;
+using EventManager.Presentation.Models.Request;
 
 using FluentAssertions;
 

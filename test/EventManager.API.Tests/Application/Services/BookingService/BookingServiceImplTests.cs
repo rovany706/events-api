@@ -1,7 +1,7 @@
-﻿using EventManager.API.Application.Services.BookingService;
-using EventManager.API.Domain.Repositories.Interfaces;
-using EventManager.API.Models.Entities;
-using EventManager.API.Models.Results;
+﻿using EventManager.Presentation.Application.Services.BookingService;
+using EventManager.Presentation.Domain.Repositories.Interfaces;
+using EventManager.Presentation.Models.Entities;
+using EventManager.Presentation.Models.Results;
 
 using FluentAssertions;
 

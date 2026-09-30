@@ -1,4 +1,4 @@
-using EventManager.API.Domain.DataAccess;
+using EventManager.Presentation.Domain.DataAccess;
 
 using FluentAssertions;
 

@@ -1,4 +1,4 @@
-using EventManager.API.Models.Entities;
+using EventManager.Presentation.Models.Entities;
 
 namespace EventManager.API.IntegrationTests.Application.Services.EventService.TestHelpers;
 

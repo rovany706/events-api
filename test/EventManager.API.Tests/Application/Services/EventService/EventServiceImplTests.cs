@@ -1,8 +1,8 @@
-﻿using EventManager.API.Application.Services.EventService;
-using EventManager.API.Domain.Repositories.Interfaces;
-using EventManager.API.Models.Entities;
-using EventManager.API.Models.Request;
-using EventManager.API.Models.Results;
+﻿using EventManager.Presentation.Application.Services.EventService;
+using EventManager.Presentation.Domain.Repositories.Interfaces;
+using EventManager.Presentation.Models.Entities;
+using EventManager.Presentation.Models.Request;
+using EventManager.Presentation.Models.Results;
 
 using FluentAssertions;
 

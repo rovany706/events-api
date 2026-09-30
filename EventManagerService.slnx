@@ -1,7 +1,10 @@
 <Solution>
   <Folder Name="/test/">
     <Project Path="test/EventManager.API.IntegrationTests/EventManager.API.IntegrationTests.csproj" />
-    <Project Path="test/EventManager.API.Tests/EventManager.API.Tests.csproj" Id="2d7c736e-3867-45ff-9b60-51ed96050714" />
+    <Project Path="test/EventManager.API.Tests/EventManager.API.Tests.csproj" />
   </Folder>
-  <Project Path="src/EventManager.API/EventManager.API.csproj" />
+  <Project Path="src/EventManager.Application/EventManager.Application.csproj" />
+  <Project Path="src/EventManager.Domain/EventManager.Domain.csproj" />
+  <Project Path="src/EventManager.Infrastructure/EventManager.Infrastructure.csproj" />
+  <Project Path="src/EventManager.Presentation/EventManager.Presentation.csproj" />
 </Solution>

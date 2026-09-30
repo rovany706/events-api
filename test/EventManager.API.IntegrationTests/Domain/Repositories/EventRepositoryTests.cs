@@ -1,6 +1,6 @@
-using EventManager.API.Domain.DataAccess;
-using EventManager.API.Domain.Repositories;
-using EventManager.API.Models.Entities;
+using EventManager.Presentation.Domain.DataAccess;
+using EventManager.Presentation.Domain.Repositories;
+using EventManager.Presentation.Models.Entities;
 
 using FluentAssertions;
 
