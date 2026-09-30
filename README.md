@@ -8,7 +8,7 @@
 
 Для их запуска в виде docker-контейнеров доступен [docker-compose.yml]().
 
-Запуск контейнеров произоводится с помощью команды:
+Запуск контейнеров производится с помощью команды:
 
 ```bash
 docker compose up
@@ -52,7 +52,7 @@ dotnet ef database update <название_миграции>
 ### Запуск EventManager API
 
 ```bash
-dotnet run --project ./src/EventManager.API/EventManager.API.csproj
+dotnet run --project ./src/EventManager.Presentation/EventManager.Presentation.csproj
 ```
 
 После запуска Swagger будет доступен по адресу: http://localhost:5080/swagger
@@ -64,7 +64,7 @@ dotnet run --project ./src/EventManager.API/EventManager.API.csproj
 - .NET 10
 
 ```bash
-dotnet publish ./src/EventManager.API/EventManager.API.csproj -c Release -o publish
+dotnet publish ./src/EventManager.Presentation/EventManager.Presentation.csproj -c Release -o publish
 ```
 
 ## Тестирование
@@ -82,7 +82,7 @@ dotnet test
 - Проверка схемы базы данных, связи, ограничения.
 
 Для этого используется библиотека TestContainers, которая запускает контейнер с СУБД PostgreSQL.
-Поэтому для запуска тестов в проекте `test/EventManager.API.IntegrationTests` потребуется установленный Docker.
+Поэтому для запуска тестов в проекте `test/EventManager.IntegrationTests` потребуется установленный Docker.
 
 ## Описание API
 
