@@ -5,12 +5,11 @@ using EventManager.Infrastructure.Persistence.Repositories;
 using FluentAssertions;
 
 using Microsoft.EntityFrameworkCore;
-
 using Testcontainers.PostgreSql;
 
-namespace EventManager.API.IntegrationTests.Domain.Repositories;
+namespace EventManager.IntegrationTests.Domain.Repositories;
 
-public class EventRepositoryTests : IAsyncLifetime
+public class BookingRepositoryTests : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine")
         .WithDatabase("test_db")
@@ -43,48 +42,13 @@ public class EventRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task GetEvents_ShouldReturnEvents()
+    public async Task GetBookings_ShouldReturnBookings()
     {
         var ct = TestContext.Current.CancellationToken;
         await ResetDatabaseAsync();
 
         // Arrange
         await using var context = CreateContext();
-
-        var event1 = Event.CreateInstance(
-            "Event 1",
-            "Description",
-            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 0, 1, 2), DateTimeKind.Utc),
-            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 1, 2, 3), DateTimeKind.Utc),
-            10);
-
-        var event2 = Event.CreateInstance(
-            "Event 2",
-            null,
-            DateTime.SpecifyKind(new DateTime(2025, 2, 1, 0, 1, 2), DateTimeKind.Utc),
-            DateTime.SpecifyKind(new DateTime(2025, 2, 2, 1, 2, 3), DateTimeKind.Utc),
-            5);
-        await context.Events.AddRangeAsync(event1, event2);
-        await context.SaveChangesAsync(ct);
-
-        // Act
-        await using var actContext = CreateContext();
-        var repository = new EventRepository(actContext);
-        var events = await repository.GetEvents().ToListAsync(ct);
-
-        // Assert
-        events.Should().BeEquivalentTo([event1, event2]);
-    }
-
-    [Fact]
-    public async Task GetEventByIdAsync_WhenEventExists_ShouldReturnEvent()
-    {
-        var ct = TestContext.Current.CancellationToken;
-        await ResetDatabaseAsync();
-
-        // Arrange
-        await using var context = CreateContext();
-
         var testEvent = Event.CreateInstance(
             "Event 1",
             "Description",
@@ -94,106 +58,59 @@ public class EventRepositoryTests : IAsyncLifetime
         await context.Events.AddAsync(testEvent, ct);
         await context.SaveChangesAsync(ct);
 
+        context.Bookings.AddRange(
+            Booking.CreateInstance(testEvent.Id),
+            Booking.CreateInstance(testEvent.Id)
+        );
+        await context.SaveChangesAsync(ct);
+        
         // Act
-        await using var actContext = CreateContext();
-        var repository = new EventRepository(actContext);
-        var actualEvent = await repository.GetEventByIdAsync(testEvent.Id, ct);
-
+        await using var verifyContext = CreateContext();
+        var repository = new BookingRepository(verifyContext);
+        var bookings = await repository.GetBookings().ToListAsync(ct);
+        
         // Assert
-        actualEvent.Should().NotBeNull();
-        actualEvent.Title.Should().Be(testEvent.Title);
+        bookings.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task GetBookingByIdAsync_WhenBookingExists_ShouldReturnBooking()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await ResetDatabaseAsync();
+
+        // Arrange
+        await using var context = CreateContext();
+        var testEvent = Event.CreateInstance(
+            "Event 1",
+            "Description",
+            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 0, 1, 2), DateTimeKind.Utc),
+            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 1, 2, 3), DateTimeKind.Utc),
+            10);
+        await context.Events.AddAsync(testEvent, ct);
+        await context.SaveChangesAsync(ct);
+
+        var testBooking = Booking.CreateInstance(testEvent.Id);
+        await context.Bookings.AddAsync(testBooking, ct);
+        await context.SaveChangesAsync(ct);
+        
+        // Act
+        await using var verifyContext = CreateContext();
+        var repository = new BookingRepository(verifyContext);
+        var booking = await repository.GetBookingByIdAsync(testBooking.Id, ct);
+        
+        // Assert
+        booking.Should().NotBeNull();
     }
     
     [Fact]
-    public async Task GetEventByIdAsync_WhenEventExists_ShouldReturnEventWithBookings()
+    public async Task GetBookingByIdAsync_WhenBookingExists_ShouldReturnBookingWithEvent()
     {
         var ct = TestContext.Current.CancellationToken;
         await ResetDatabaseAsync();
 
         // Arrange
         await using var context = CreateContext();
-
-        var testEvent = Event.CreateInstance(
-            "Event 1",
-            "Description",
-            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 0, 1, 2), DateTimeKind.Utc),
-            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 1, 2, 3), DateTimeKind.Utc),
-            10);
-        await context.Events.AddAsync(testEvent, ct);
-        await context.SaveChangesAsync(ct);
-        
-        context.Bookings.AddRange(
-            Booking.CreateInstance(testEvent.Id),
-            Booking.CreateInstance(testEvent.Id)
-        );
-        await context.SaveChangesAsync(ct);
-        
-        // Act
-        await using var actContext = CreateContext();
-        var repository = new EventRepository(actContext);
-        var actualEvent = await repository.GetEventByIdAsync(testEvent.Id, ct);
-
-        // Assert
-        actualEvent.Should().NotBeNull();
-        actualEvent.Bookings.Should().HaveCount(2);
-    }
-
-    [Fact]
-    public async Task GetEventByIdAsync_WhenEventDoNotExist_ShouldReturnNull()
-    {
-        // Arrange
-        var ct = TestContext.Current.CancellationToken;
-        await ResetDatabaseAsync();
-
-        // Act
-        await using var actContext = CreateContext();
-        var repository = new EventRepository(actContext);
-        var actualEvent = await repository.GetEventByIdAsync(1, ct);
-
-        // Assert
-        actualEvent.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task AddEventAsync_ShouldAddEventToDatabase()
-    {
-        var ct = TestContext.Current.CancellationToken;
-        await ResetDatabaseAsync();
-
-        // Arrange
-        var testEvent = Event.CreateInstance(
-            "Event 1",
-            "Description",
-            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 0, 1, 2), DateTimeKind.Utc),
-            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 1, 2, 3), DateTimeKind.Utc),
-            10);
-
-        // Act
-        await using var actContext = CreateContext();
-        var repository = new EventRepository(actContext);
-        await repository.AddEventAsync(testEvent, ct);
-        await repository.SaveChangesAsync(ct);
-
-        // Assert
-        await using var verifyContext = CreateContext();
-        var savedEvent = await verifyContext.Events.FirstOrDefaultAsync(e => e.Title == testEvent.Title, ct);
-        savedEvent.Should().NotBeNull();
-        savedEvent.Title.Should().Be(testEvent.Title);
-        savedEvent.Description.Should().Be(testEvent.Description);
-        savedEvent.StartAt.Should().Be(testEvent.StartAt);
-        savedEvent.EndAt.Should().Be(testEvent.EndAt);
-        savedEvent.TotalSeats.Should().Be(testEvent.TotalSeats);
-    }
-
-    [Fact]
-    public async Task RemoveEvent_ShouldRemoveFromDatabase()
-    {
-        var ct = TestContext.Current.CancellationToken;
-        await ResetDatabaseAsync();
-
-        // Arrange
-        await using var context = CreateContext();
-
         var testEvent = Event.CreateInstance(
             "Event 1",
             "Description",
@@ -203,28 +120,44 @@ public class EventRepositoryTests : IAsyncLifetime
         await context.Events.AddAsync(testEvent, ct);
         await context.SaveChangesAsync(ct);
 
+        var testBooking = Booking.CreateInstance(testEvent.Id);
+        await context.Bookings.AddAsync(testBooking, ct);
+        await context.SaveChangesAsync(ct);
+        
         // Act
-        await using var actContext = CreateContext();
-        var repository = new EventRepository(actContext);
-        var eventToRemove = await actContext.Events.FirstAsync(e => e.Title == testEvent.Title, ct);
-        repository.RemoveEvent(eventToRemove);
-        await repository.SaveChangesAsync(ct);
-
-        // Assert
         await using var verifyContext = CreateContext();
-        var removedEvent = await verifyContext.Events.FirstOrDefaultAsync(e => e.Title == testEvent.Title, ct);
-        removedEvent.Should().BeNull();
+        var repository = new BookingRepository(verifyContext);
+        var booking = await repository.GetBookingByIdAsync(testBooking.Id, ct);
+        
+        // Assert
+        booking.Should().NotBeNull();
+        booking.Event.Should().NotBeNull();
     }
     
     [Fact]
-    public async Task RemoveEvent_CascadeDeletesBookings()
+    public async Task GetBookingByIdAsync_WhenBookingDoNotExist_ShouldReturnNull()
+    {
+        // Arrange
+        var ct = TestContext.Current.CancellationToken;
+        await ResetDatabaseAsync();
+
+        // Act
+        await using var verifyContext = CreateContext();
+        var repository = new BookingRepository(verifyContext);
+        var booking = await repository.GetBookingByIdAsync(1, ct);
+        
+        // Assert
+        booking.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetPendingBookingsAsync_ShouldReturnPendingBookings()
     {
         var ct = TestContext.Current.CancellationToken;
         await ResetDatabaseAsync();
 
         // Arrange
         await using var context = CreateContext();
-
         var testEvent = Event.CreateInstance(
             "Event 1",
             "Description",
@@ -234,34 +167,96 @@ public class EventRepositoryTests : IAsyncLifetime
         await context.Events.AddAsync(testEvent, ct);
         await context.SaveChangesAsync(ct);
 
-        context.Bookings.AddRange(
-            Booking.CreateInstance(testEvent.Id),
-            Booking.CreateInstance(testEvent.Id)
-        );
+        var pendingBooking = Booking.CreateInstance(testEvent.Id);
+        var confirmed = Booking.CreateInstance(testEvent.Id);
+        confirmed.Confirm();
+        context.Bookings.AddRange(pendingBooking, confirmed);
+        await context.SaveChangesAsync(ct);
+        
+        // Act
+        await using var verifyContext = CreateContext();
+        var repository = new BookingRepository(verifyContext);
+        var pendingBookings = await repository.GetPendingBookingsAsync(ct);
+        
+        // Assert
+        pendingBookings.Should().HaveCount(1);
+        pendingBookings.Should().AllSatisfy(b => b.Status.Should().Be(BookingStatus.Pending));
+    }
+
+    [Fact]
+    public async Task AddBookingAsync_ShouldAddBookingToDatabase()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await ResetDatabaseAsync();
+
+        // Arrange
+        await using var context = CreateContext();
+        var testEvent = Event.CreateInstance(
+            "Event 1",
+            "Description",
+            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 0, 1, 2), DateTimeKind.Utc),
+            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 1, 2, 3), DateTimeKind.Utc),
+            10);
+        await context.Events.AddAsync(testEvent, ct);
+        await context.SaveChangesAsync(ct);
+
+        // Act
+        await using var actContext = CreateContext();
+        var booking = Booking.CreateInstance(testEvent.Id);
+        
+        var repository = new BookingRepository(actContext);
+        await repository.AddBookingAsync(booking, ct);
+        await repository.SaveChangesAsync(ct);
+        
+        // Assert
+        await using var verifyContext = CreateContext();
+        var addedBooking = await verifyContext.Bookings.FirstOrDefaultAsync(b => b.EventId == testEvent.Id, ct);
+        
+        addedBooking.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task RemoveBooking_ShouldRemoveFromDatabase()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await ResetDatabaseAsync();
+
+        // Arrange
+        await using var context = CreateContext();
+        var testEvent = Event.CreateInstance(
+            "Event 1",
+            "Description",
+            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 0, 1, 2), DateTimeKind.Utc),
+            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 1, 2, 3), DateTimeKind.Utc),
+            10);
+        await context.Events.AddAsync(testEvent, ct);
+        await context.SaveChangesAsync(ct);
+
+        await context.Bookings.AddAsync(Booking.CreateInstance(testEvent.Id), ct);
         await context.SaveChangesAsync(ct);
         
         // Act
         await using var actContext = CreateContext();
-        var repository = new EventRepository(actContext);
-        var eventToRemove = await actContext.Events.FirstAsync(e => e.Title == testEvent.Title, ct);
-        repository.RemoveEvent(eventToRemove);
+        var repository = new BookingRepository(actContext);
+        var bookingToRemove = await repository.GetBookings().FirstAsync(b => b.EventId == testEvent.Id, ct);
+        repository.RemoveBooking(bookingToRemove);
         await repository.SaveChangesAsync(ct);
-
+        
         // Assert
         await using var verifyContext = CreateContext();
-        var bookings = await verifyContext.Bookings.Where(b => b.EventId == testEvent.Id).ToListAsync(ct);
-        bookings.Should().BeEmpty();
+        var removedBooking = await verifyContext.Bookings.FirstOrDefaultAsync(b => b.EventId == testEvent.Id, ct);
+
+        removedBooking.Should().BeNull();
     }
 
     [Fact]
-    public async Task LoadEventWithBookings_ShouldReturnCorrectBookingCount()
+    public async Task AddBookingAsync_ShouldFillCreatedAt()
     {
         var ct = TestContext.Current.CancellationToken;
         await ResetDatabaseAsync();
 
         // Arrange
         await using var context = CreateContext();
-
         var testEvent = Event.CreateInstance(
             "Event 1",
             "Description",
@@ -271,31 +266,30 @@ public class EventRepositoryTests : IAsyncLifetime
         await context.Events.AddAsync(testEvent, ct);
         await context.SaveChangesAsync(ct);
 
-        context.Bookings.AddRange(
-            Booking.CreateInstance(testEvent.Id),
-            Booking.CreateInstance(testEvent.Id)
-        );
-        await context.SaveChangesAsync(ct);
-        
         // Act
-        await using var verifyContext = CreateContext();
-        var loadedEvent = await verifyContext.Events
-            .Include(e => e.Bookings)
-            .FirstAsync(e => e.Title == testEvent.Title, ct);
+        await using var actContext = CreateContext();
+        var booking = Booking.CreateInstance(testEvent.Id);
+        
+        var repository = new BookingRepository(actContext);
+        await repository.AddBookingAsync(booking, ct);
+        await repository.SaveChangesAsync(ct);
         
         // Assert
-        loadedEvent.Bookings.Should().HaveCount(2);
+        await using var verifyContext = CreateContext();
+        var addedBooking = await verifyContext.Bookings.FirstOrDefaultAsync(b => b.EventId == testEvent.Id, ct);
+
+        addedBooking.Should().NotBeNull();
+        addedBooking.CreatedAt.Should().NotBe(default);
     }
-    
+
     [Fact]
-    public async Task LoadEventWithBookings_ShouldReturnOnlyEventBookings()
+    public async Task LoadBookingsWithEvent_ShouldReturnBookingWithEvent()
     {
         var ct = TestContext.Current.CancellationToken;
         await ResetDatabaseAsync();
 
         // Arrange
         await using var context = CreateContext();
-
         var testEvent = Event.CreateInstance(
             "Event 1",
             "Description",
@@ -305,20 +299,15 @@ public class EventRepositoryTests : IAsyncLifetime
         await context.Events.AddAsync(testEvent, ct);
         await context.SaveChangesAsync(ct);
 
-        context.Bookings.AddRange(
-            Booking.CreateInstance(testEvent.Id),
-            Booking.CreateInstance(testEvent.Id)
-        );
+        var testBooking = Booking.CreateInstance(testEvent.Id);
+        await context.Bookings.AddAsync(testBooking, ct);
         await context.SaveChangesAsync(ct);
         
         // Act
         await using var verifyContext = CreateContext();
-        var loadedEvent = await verifyContext.Events
-            .Include(e => e.Bookings)
-            .FirstAsync(e => e.Title == testEvent.Title, ct);
+        var booking = await verifyContext.Bookings.Include(b => b.Event).FirstAsync(b => b.EventId == testEvent.Id, ct);
         
         // Assert
-        loadedEvent.Bookings.Should().HaveCount(2);
-        loadedEvent.Bookings.Should().AllSatisfy(b => b.EventId.Should().Be(testEvent.Id));
+        booking.Event.Should().NotBeNull();
     }
 }

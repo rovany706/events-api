@@ -1,9 +1,9 @@
-using EventManager.API.IntegrationTests.Application.Services.EventService.TestHelpers;
 using EventManager.Application.Abstractions.Services.Dto;
 using EventManager.Domain.Common.Pagination;
 using EventManager.Infrastructure.Persistence;
 using EventManager.Infrastructure.Persistence.Repositories;
 using EventManager.Infrastructure.Services.EventService;
+using EventManager.IntegrationTests.Application.Services.EventService.TestHelpers;
 
 using FluentAssertions;
 
@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Testcontainers.PostgreSql;
 
-namespace EventManager.API.IntegrationTests.Application.Services.EventService;
+namespace EventManager.IntegrationTests.Application.Services.EventService;
 
 public class EventServiceImplTests : IAsyncLifetime
 {

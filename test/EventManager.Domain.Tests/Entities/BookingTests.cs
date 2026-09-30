@@ -2,7 +2,7 @@
 
 using FluentAssertions;
 
-namespace EventManager.API.Tests.Models;
+namespace EventManager.Domain.Tests.Entities;
 
 public class BookingTests
 {

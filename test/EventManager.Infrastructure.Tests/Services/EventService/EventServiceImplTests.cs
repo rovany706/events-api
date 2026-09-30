@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
-namespace EventManager.API.Tests.Application.Services.EventService;
+namespace EventManager.Infrastructure.Tests.Services.EventService;
 
 public class EventServiceImplTests
 {

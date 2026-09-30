@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Testcontainers.PostgreSql;
 
-namespace EventManager.API.IntegrationTests.Application.Services.BookingService;
+namespace EventManager.IntegrationTests.Application.Services.BookingService;
 
 public class BookingServiceImplTests : IAsyncLifetime
 {

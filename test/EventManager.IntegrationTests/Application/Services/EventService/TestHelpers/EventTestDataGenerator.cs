@@ -1,6 +1,6 @@
 using EventManager.Domain.Entities;
 
-namespace EventManager.API.IntegrationTests.Application.Services.EventService.TestHelpers;
+namespace EventManager.IntegrationTests.Application.Services.EventService.TestHelpers;
 
 internal static class EventTestDataGenerator
 {

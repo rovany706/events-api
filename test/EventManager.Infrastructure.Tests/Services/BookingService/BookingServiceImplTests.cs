@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
-namespace EventManager.API.Tests.Application.Services.BookingService;
+namespace EventManager.Infrastructure.Tests.Services.BookingService;
 
 public class BookingServiceImplTests
 {

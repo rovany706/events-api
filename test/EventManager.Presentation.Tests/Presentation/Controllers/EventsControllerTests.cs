@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
-namespace EventManager.API.Tests.Presentation.Controllers;
+namespace EventManager.Presentation.Tests.Presentation.Controllers;
 
 public class EventsControllerTests
 {
