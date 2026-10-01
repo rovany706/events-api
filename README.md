@@ -1,6 +1,25 @@
 # EventManager API (API для управления мероприятиями)
 
-## Запуск
+## Структура проекта
+
+Структура EventManager API делится на несколько проектов, следуя принципам чистой архитектуры:
+
+1. EventManager.Domain - слой домена, содержит бизнес-сущности, с которыми работает EventManager.
+2. EventManager.Application - слой приложения, содержит use cases, абстракции сервисов и репозиториев.
+3. EventManager.Infrastructure - слой инфраструктуры, содержит реализации абстракций, работает с внешними зависимостями (СУБД, кеширование и т.д.)
+4. EventManager.Presentation - слой представления, содержит описание API и предоставляет клиентам доступ к нему.
+
+```mermaid
+---
+title: Схема зависимостей проектов
+---
+flowchart TB
+    EventManager.Application --> EventManager.Domain
+    EventManager.Infrastructure --> EventManager.Domain & EventManager.Application
+    EventManager.Presentation --> EventManager.Infrastructure & EventManager.Application
+```
+
+## Запуск зависимостей
 
 Для запуска API требуются внешние зависимости: 
 
@@ -32,7 +51,7 @@ docker compose up
 Для добавления новой миграции следует запустить команду:
 
 ```bash
-dotnet ef migrations add <название_миграции>
+dotnet ef migrations add <название_миграции> -p src/EventManager.Infrastructure/EventManager.Infrastructure.csproj -s src/EventManager.Presentation/EventManager.Presentation.csproj -o Persistence/Migrations/ 
 ```
 
 После выполнения команды в проекте в папке Migrations появится новый файл с кодом миграции, состоящий из времени создания миграции и названия.
@@ -40,13 +59,13 @@ dotnet ef migrations add <название_миграции>
 Для применения миграций используется команда:
 
 ```bash
-dotnet ef database update
+dotnet ef database update -p src/EventManager.Infrastructure/EventManager.Infrastructure.csproj -s src/EventManager.Presentation/EventManager.Presentation.csproj
 ```
 
 Для отката миграций используется команда:
 
 ```bash
-dotnet ef database update <название_миграции>
+dotnet ef database update <название_миграции> -p src/EventManager.Infrastructure/EventManager.Infrastructure.csproj -s src/EventManager.Presentation/EventManager.Presentation.csproj
 ```
 
 ### Запуск EventManager API
