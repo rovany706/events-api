@@ -1,4 +1,6 @@
 using EventManager.Application.Abstractions.Persistence.Repositories;
+using EventManager.Application.Abstractions.Services.Dto;
+using EventManager.Application.Common.Pagination;
 using EventManager.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +15,26 @@ public class EventRepository : IEventRepository
     {
         _dbContext = dbContext;
     }
-    
-    /// <inheritdoc />
-    public IQueryable<Event> GetEvents()
+
+    public async Task<PaginatedResult<Event>> GetEvents(EventFilterDto? filterDto = null,
+        PaginationParamsDto? paginationParams = null,
+        CancellationToken ct = default)
     {
-        return _dbContext.Events.AsQueryable().AsNoTracking();
+        var events = _dbContext.Events.AsNoTracking().AsQueryable();
+
+        if (filterDto != null)
+        {
+            events = FilterEvents(events, filterDto);
+        }
+
+        if (paginationParams != null)
+        {
+            return await PaginateResults(events, paginationParams, ct);
+        }
+
+        var materializedEvents = await events.ToListAsync(ct);
+
+        return new PaginatedResult<Event>(materializedEvents, 1, 1, 1, materializedEvents.Count);
     }
 
     /// <inheritdoc />
@@ -42,5 +59,39 @@ public class EventRepository : IEventRepository
     public void RemoveEvent(Event eventToRemove)
     {
         _dbContext.Events.Remove(eventToRemove);
+    }
+
+    private static IQueryable<Event> FilterEvents(IQueryable<Event> events, EventFilterDto filterDto)
+    {
+        if (!string.IsNullOrWhiteSpace(filterDto.Title))
+        {
+            events = events.Where(e => EF.Functions.ILike(e.Title, $"%{filterDto.Title}%"));
+        }
+
+        if (filterDto.From.HasValue)
+        {
+            events = events.Where(e => e.StartAt >= filterDto.From.Value);
+        }
+
+        if (filterDto.To.HasValue)
+        {
+            events = events.Where(e => e.EndAt <= filterDto.To.Value);
+        }
+
+        return events;
+    }
+
+    private static async Task<PaginatedResult<Event>> PaginateResults(IQueryable<Event> events,
+        PaginationParamsDto paginationParams, CancellationToken ct)
+    {
+        var count = await events.CountAsync(ct);
+        var totalPages = (int)Math.Ceiling((double)count / paginationParams.PageSize);
+        var eventPage = await events
+            .OrderBy(e => e.Id)
+            .Skip((paginationParams.Page - 1) * paginationParams.PageSize)
+            .Take(paginationParams.PageSize)
+            .ToListAsync(ct);
+
+        return new PaginatedResult<Event>(eventPage, eventPage.Count, paginationParams.Page, totalPages, count);
     }
 }

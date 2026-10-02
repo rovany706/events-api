@@ -70,7 +70,7 @@ public class EventRepositoryTests : IAsyncLifetime
         // Act
         await using var actContext = CreateContext();
         var repository = new EventRepository(actContext);
-        var events = await repository.GetEvents().ToListAsync(ct);
+        var events = (await repository.GetEvents(ct: ct)).Items;
 
         // Assert
         events.Should().BeEquivalentTo([event1, event2]);
@@ -103,7 +103,7 @@ public class EventRepositoryTests : IAsyncLifetime
         actualEvent.Should().NotBeNull();
         actualEvent.Title.Should().Be(testEvent.Title);
     }
-    
+
     [Fact]
     public async Task GetEventByIdAsync_WhenEventExists_ShouldReturnEventWithBookings()
     {
@@ -121,13 +121,13 @@ public class EventRepositoryTests : IAsyncLifetime
             10);
         await context.Events.AddAsync(testEvent, ct);
         await context.SaveChangesAsync(ct);
-        
+
         context.Bookings.AddRange(
             Booking.CreateInstance(testEvent.Id),
             Booking.CreateInstance(testEvent.Id)
         );
         await context.SaveChangesAsync(ct);
-        
+
         // Act
         await using var actContext = CreateContext();
         var repository = new EventRepository(actContext);
@@ -215,7 +215,7 @@ public class EventRepositoryTests : IAsyncLifetime
         var removedEvent = await verifyContext.Events.FirstOrDefaultAsync(e => e.Title == testEvent.Title, ct);
         removedEvent.Should().BeNull();
     }
-    
+
     [Fact]
     public async Task RemoveEvent_CascadeDeletesBookings()
     {
@@ -239,7 +239,7 @@ public class EventRepositoryTests : IAsyncLifetime
             Booking.CreateInstance(testEvent.Id)
         );
         await context.SaveChangesAsync(ct);
-        
+
         // Act
         await using var actContext = CreateContext();
         var repository = new EventRepository(actContext);
@@ -276,17 +276,17 @@ public class EventRepositoryTests : IAsyncLifetime
             Booking.CreateInstance(testEvent.Id)
         );
         await context.SaveChangesAsync(ct);
-        
+
         // Act
         await using var verifyContext = CreateContext();
         var loadedEvent = await verifyContext.Events
             .Include(e => e.Bookings)
             .FirstAsync(e => e.Title == testEvent.Title, ct);
-        
+
         // Assert
         loadedEvent.Bookings.Should().HaveCount(2);
     }
-    
+
     [Fact]
     public async Task LoadEventWithBookings_ShouldReturnOnlyEventBookings()
     {
@@ -310,13 +310,13 @@ public class EventRepositoryTests : IAsyncLifetime
             Booking.CreateInstance(testEvent.Id)
         );
         await context.SaveChangesAsync(ct);
-        
+
         // Act
         await using var verifyContext = CreateContext();
         var loadedEvent = await verifyContext.Events
             .Include(e => e.Bookings)
             .FirstAsync(e => e.Title == testEvent.Title, ct);
-        
+
         // Assert
         loadedEvent.Bookings.Should().HaveCount(2);
         loadedEvent.Bookings.Should().AllSatisfy(b => b.EventId.Should().Be(testEvent.Id));

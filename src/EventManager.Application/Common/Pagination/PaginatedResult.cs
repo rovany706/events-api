@@ -1,4 +1,4 @@
-﻿namespace EventManager.Domain.Common.Pagination;
+﻿namespace EventManager.Application.Common.Pagination;
 
 /// <summary>
 /// Страница результатов

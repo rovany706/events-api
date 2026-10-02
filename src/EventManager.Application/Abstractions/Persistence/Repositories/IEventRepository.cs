@@ -1,16 +1,22 @@
+using EventManager.Application.Abstractions.Services.Dto;
+using EventManager.Application.Common.Pagination;
 using EventManager.Domain.Entities;
 
 namespace EventManager.Application.Abstractions.Persistence.Repositories;
 
 /// <summary>
-/// Интерфейс репозитория мероприятий
+///     Интерфейс репозитория мероприятий
 /// </summary>
 public interface IEventRepository
 {
     /// <summary>
     /// Получить все мероприятия
     /// </summary>
-    IQueryable<Event> GetEvents();
+    /// <param name="filterDto">Параметры фильтрации</param>
+    /// <param name="paginationParams">Параметры пагинации</param>
+    /// <param name="ct">Токен отмены</param>
+    Task<PaginatedResult<Event>> GetEvents(EventFilterDto? filterDto = null,
+        PaginationParamsDto? paginationParams = null, CancellationToken ct = default);
 
     /// <summary>
     /// Получить мероприятие по идентификатору
