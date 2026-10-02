@@ -46,7 +46,7 @@ public class Booking
     /// <summary>
     /// Мероприятие
     /// </summary>
-    public Event Event { get; set; }
+    public Event? Event { get; set; }
 
     /// <summary>
     /// Подтвердить бронь

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using EventManager.Domain.Exceptions;
 
 namespace EventManager.Domain.Entities;
 
@@ -33,7 +33,7 @@ public class Event
 
         return new Event(id, title, description, startAt, endAt, totalSeats);
     }
-    
+
     public static Event CreateInstance(string title, string? description, DateTime startAt, DateTime endAt,
         int totalSeats)
     {
@@ -84,7 +84,7 @@ public class Event
     /// <summary>
     /// Бронирования
     /// </summary>
-    public List<Booking> Bookings { get; private set; }
+    public List<Booking> Bookings { get; private set; } = [];
 
     public void Update(string title, string? description, DateTime startAt, DateTime endAt)
     {
