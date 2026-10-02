@@ -5,7 +5,7 @@ using Asp.Versioning;
 
 using Microsoft.OpenApi;
 
-namespace EventManager.Presentation.Presentation;
+namespace EventManager.Presentation;
 
 public static class DependencyInjection
 {

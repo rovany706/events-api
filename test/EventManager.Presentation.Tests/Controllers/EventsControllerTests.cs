@@ -1,7 +1,7 @@
 ﻿using EventManager.Application.Abstractions.Services;
-using EventManager.Domain.Common.Results;
+using EventManager.Application.Common.Results;
 using EventManager.Domain.Entities;
-using EventManager.Presentation.Presentation.Controllers;
+using EventManager.Presentation.Controllers;
 
 using FluentAssertions;
 
@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
-namespace EventManager.Presentation.Tests.Presentation.Controllers;
+namespace EventManager.Presentation.Tests.Controllers;
 
 public class EventsControllerTests
 {

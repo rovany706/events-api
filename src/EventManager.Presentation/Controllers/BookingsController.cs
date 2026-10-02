@@ -3,12 +3,12 @@
 using Asp.Versioning;
 
 using EventManager.Application.Abstractions.Services;
-using EventManager.Domain.Common.Results;
+using EventManager.Application.Common.Results;
 using EventManager.Presentation.Models.Response;
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace EventManager.Presentation.Presentation.Controllers;
+namespace EventManager.Presentation.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]

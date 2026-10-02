@@ -4,15 +4,15 @@ using Asp.Versioning;
 
 using EventManager.Application.Abstractions.Services;
 using EventManager.Application.Abstractions.Services.Dto;
-using EventManager.Domain.Common.Pagination;
-using EventManager.Domain.Common.Results;
+using EventManager.Application.Common.Pagination;
+using EventManager.Application.Common.Results;
 using EventManager.Presentation.Models.Mapping;
 using EventManager.Presentation.Models.Request;
 using EventManager.Presentation.Models.Response;
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace EventManager.Presentation.Presentation.Controllers;
+namespace EventManager.Presentation.Controllers;
 
 /// <summary>
 /// Контроллер для работы с мероприятиями
@@ -48,9 +48,9 @@ public class EventsController : ControllerBase
         _logger.LogDebug("Filters: {0}", filters);
         _logger.LogDebug("Pagination params: {0}", paginationParams);
 
-        var filterDto = new EventFilterDto { Title = filters.Title, From = filters.From, To = filters.To };
-
-        var events = await _eventService.GetEvents(filterDto, paginationParams, ct);
+        var filterDto = new EventFilterDto() { Title = filters.Title, From = filters.From, To = filters.To };
+        var paginationDto = new PaginationParamsDto(paginationParams.Page, paginationParams.PageSize);
+        var events = await _eventService.GetEvents(filterDto, paginationDto, ct);
         return Ok(new PaginatedResult<EventInfoResponse>(
             events.Items.Select(x => x.ToEventResponse()).ToList(),
             events.ItemCount,
@@ -99,8 +99,18 @@ public class EventsController : ControllerBase
         _logger.LogDebug("Получен запрос на создание мероприятия");
 
         var eventId = await _eventService.AddEvent(createEventRequest, ct);
+        var response = new EventInfoResponse
+        {
+            Id = eventId,
+            Title = createEventRequest.Title,
+            Description = createEventRequest.Description,
+            StartAt = createEventRequest.StartAt,
+            EndAt = createEventRequest.EndAt,
+            AvailableSeats = createEventRequest.TotalSeats,
+            TotalSeats = createEventRequest.TotalSeats
+        };
 
-        return CreatedAtAction(nameof(GetEventById), new { id = eventId }, createEventRequest);
+        return CreatedAtAction(nameof(GetEventById), new { id = eventId }, response);
     }
 
     /// <summary>
