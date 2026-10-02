@@ -1,8 +1,8 @@
-using EventManager.Domain.Common.Results;
+using EventManager.Application.Common.Results;
+using EventManager.Application.Services.BookingService;
 using EventManager.Domain.Entities;
 using EventManager.Infrastructure.Persistence;
 using EventManager.Infrastructure.Persistence.Repositories;
-using EventManager.Infrastructure.Services.BookingService;
 
 using FluentAssertions;
 

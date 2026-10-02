@@ -1,6 +1,6 @@
 ﻿using EventManager.Application.Abstractions.Services.Dto;
-using EventManager.Domain.Common.Pagination;
-using EventManager.Domain.Common.Results;
+using EventManager.Application.Common.Pagination;
+using EventManager.Application.Common.Results;
 using EventManager.Domain.Entities;
 
 namespace EventManager.Application.Abstractions.Services;
@@ -17,7 +17,7 @@ public interface IEventService
     /// <param name="paginationParams">Параметры пагинации</param>
     /// <param name="ct">Токен отмены</param>
     /// <returns>Коллекция мероприятий с пагинацией</returns>
-    Task<PaginatedResult<Event>> GetEvents(EventFilterDto filterDto, PaginationParams paginationParams,
+    Task<PaginatedResult<Event>> GetEvents(EventFilterDto filterDto, PaginationParamsDto paginationParams,
         CancellationToken ct);
 
     /// <summary>

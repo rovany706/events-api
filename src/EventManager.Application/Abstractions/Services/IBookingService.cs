@@ -1,4 +1,4 @@
-﻿using EventManager.Domain.Common.Results;
+﻿using EventManager.Application.Common.Results;
 using EventManager.Domain.Entities;
 
 namespace EventManager.Application.Abstractions.Services;

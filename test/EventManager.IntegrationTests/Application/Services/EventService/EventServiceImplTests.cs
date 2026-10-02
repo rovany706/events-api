@@ -1,8 +1,8 @@
 using EventManager.Application.Abstractions.Services.Dto;
-using EventManager.Domain.Common.Pagination;
+using EventManager.Application.Common.Pagination;
+using EventManager.Application.Services.EventService;
 using EventManager.Infrastructure.Persistence;
 using EventManager.Infrastructure.Persistence.Repositories;
-using EventManager.Infrastructure.Services.EventService;
 using EventManager.IntegrationTests.Application.Services.EventService.TestHelpers;
 
 using FluentAssertions;
@@ -92,18 +92,18 @@ public class EventServiceImplTests : IAsyncLifetime
         await using var context = CreateContext();
         context.Events.AddRange(EventTestDataGenerator.GetTestEvents());
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        
+
         // Act
         var repository = new EventRepository(context);
         var eventService = new EventServiceImpl(repository, NullLogger<EventServiceImpl>.Instance);
-        var events = await eventService.GetEvents(new EventFilterDto(), new PaginationParams { PageSize = 100 },
+        var events = await eventService.GetEvents(new EventFilterDto(), new PaginationParamsDto(1, 100),
             TestContext.Current.CancellationToken);
 
         // Assert
         events.Should().NotBeNull();
         events.Items.Should().HaveCount(15);
     }
-    
+
     [Theory]
     [Trait("Category", "Filters")]
     [InlineData("Conference", 2)]
@@ -120,13 +120,13 @@ public class EventServiceImplTests : IAsyncLifetime
         await using var context = CreateContext();
         context.Events.AddRange(EventTestDataGenerator.GetTestEvents());
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        
+
         // Act
         var repository = new EventRepository(context);
         var eventService = new EventServiceImpl(repository, NullLogger<EventServiceImpl>.Instance);
-        
+
         var events = await eventService.GetEvents(new EventFilterDto { Title = titleFilter },
-            new PaginationParams { PageSize = 100 }, TestContext.Current.CancellationToken);
+            new PaginationParamsDto(1, 100), TestContext.Current.CancellationToken);
 
         // Assert
         events.ItemCount.Should().Be(expectedCount);
@@ -146,13 +146,13 @@ public class EventServiceImplTests : IAsyncLifetime
         await using var context = CreateContext();
         context.Events.AddRange(EventTestDataGenerator.GetTestEvents());
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        
+
         // Act
         var repository = new EventRepository(context);
         var eventService = new EventServiceImpl(repository, NullLogger<EventServiceImpl>.Instance);
         var events = await eventService.GetEvents(
             new EventFilterDto { From = DateTime.SpecifyKind(new DateTime(year, month, day, hour, 0, 0), DateTimeKind.Utc) },
-            new PaginationParams { PageSize = 100 }, TestContext.Current.CancellationToken);
+            new PaginationParamsDto(1, 100), TestContext.Current.CancellationToken);
 
         // Assert
         events.ItemCount.Should().Be(expectedCount);
@@ -172,13 +172,13 @@ public class EventServiceImplTests : IAsyncLifetime
         await using var context = CreateContext();
         context.Events.AddRange(EventTestDataGenerator.GetTestEvents());
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        
+
         // Act
         var repository = new EventRepository(context);
         var eventService = new EventServiceImpl(repository, NullLogger<EventServiceImpl>.Instance);
         var events = await eventService.GetEvents(
             new EventFilterDto { To = DateTime.SpecifyKind(new DateTime(year, month, day, hour, 0, 0), DateTimeKind.Utc) },
-            new PaginationParams { PageSize = 100 }, TestContext.Current.CancellationToken);
+            new PaginationParamsDto(1, 100), TestContext.Current.CancellationToken);
 
         // Assert
         events.ItemCount.Should().Be(expectedCount);
@@ -201,13 +201,13 @@ public class EventServiceImplTests : IAsyncLifetime
         await using var context = CreateContext();
         context.Events.AddRange(EventTestDataGenerator.GetTestEvents().Take(initialCount));
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        
+
         // Act
         var repository = new EventRepository(context);
         var eventService = new EventServiceImpl(repository, NullLogger<EventServiceImpl>.Instance);
         var pagedEvents = await eventService.GetEvents(
             new EventFilterDto(),
-            new PaginationParams { Page = page, PageSize = pageSize }, TestContext.Current.CancellationToken);
+            new PaginationParamsDto(page, pageSize), TestContext.Current.CancellationToken);
 
         // Assert
         pagedEvents.ItemCount.Should().Be(expectedItemCount);
@@ -228,13 +228,13 @@ public class EventServiceImplTests : IAsyncLifetime
         await using var context = CreateContext();
         context.Events.AddRange(EventTestDataGenerator.GetTestEvents());
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        
+
         // Act
         var repository = new EventRepository(context);
         var eventService = new EventServiceImpl(repository, NullLogger<EventServiceImpl>.Instance);
         var filter = new EventFilterDto { Title = title, From = from, To = to };
 
-        var filteredEvents = await eventService.GetEvents(filter, new PaginationParams { PageSize = 100 },
+        var filteredEvents = await eventService.GetEvents(filter, new PaginationParamsDto(1, 100),
             TestContext.Current.CancellationToken);
 
         // Assert
