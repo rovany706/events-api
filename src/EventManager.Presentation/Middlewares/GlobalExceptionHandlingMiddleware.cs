@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using EventManager.Domain.Exceptions;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -61,7 +61,7 @@ public class GlobalExceptionHandlingMiddleware
     {
         return e switch
         {
-            ValidationException => StatusCodes.Status400BadRequest,
+            EventValidationException => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status500InternalServerError
         };
     }

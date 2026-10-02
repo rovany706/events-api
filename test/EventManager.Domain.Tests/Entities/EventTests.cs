@@ -1,4 +1,5 @@
 ﻿using EventManager.Domain.Entities;
+using EventManager.Domain.Exceptions;
 
 using FluentAssertions;
 
@@ -10,7 +11,103 @@ public class EventTests
     {
         return Event.CreateInstance(1, "Test", "", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), totalSeats);
     }
-    
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("    ")]
+    public void CreateInstance_WhenTitleIsEmptyOrWhiteSpace_ShouldThrowEventValidationException(string title)
+    {
+        var startAt = new DateTime(2026, 1, 1, 1, 1, 1);
+
+        Action act = () => Event.CreateInstance(title, "", startAt, startAt.AddDays(1), 10);
+
+        act.Should().Throw<EventValidationException>().WithMessage("Event title is empty");
+    }
+
+    [Fact]
+    public void CreateInstance_WhenStartAtAfterEndAt_ShouldThrowEventValidationException()
+    {
+        var startAt = new DateTime(2026, 1, 1, 1, 1, 1);
+
+        Action act = () => Event.CreateInstance("Title", "", startAt, startAt.AddDays(-1), 10);
+
+        act.Should().Throw<EventValidationException>().WithMessage("Event start date is greater than event end date");
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    public void CreateInstance_WhenTotalSeatsLessThanOne_ShouldThrowEventValidationException(int totalSeats)
+    {
+        var startAt = new DateTime(2026, 1, 1, 1, 1, 1);
+
+        var act = () => Event.CreateInstance("Title", "", startAt, startAt.AddDays(1), totalSeats);
+
+        act.Should().Throw<EventValidationException>().WithMessage("Total seat count must be positive");
+    }
+
+    [Fact]
+    public void CreateInstance_ShouldReturnEvent()
+    {
+        const string title = "Title";
+        const string description = "Description";
+        var startAt = new DateTime(2026, 1, 1, 1, 1, 1);
+        var endAt = startAt.AddDays(1);
+        const int totalSeats = 10;
+
+        var createdEvent = Event.CreateInstance(title, description, startAt, endAt, totalSeats);
+
+        createdEvent.Should().NotBeNull();
+        createdEvent.Title.Should().Be(title);
+        createdEvent.Description.Should().Be(description);
+        createdEvent.StartAt.Should().Be(startAt);
+        createdEvent.EndAt.Should().Be(endAt);
+        createdEvent.TotalSeats.Should().Be(totalSeats);
+    }
+
+    [Fact]
+    public void Update_ShouldUpdateEvent()
+    {
+        var startAt = new DateTime(2026, 1, 1, 1, 1, 1);
+        var eventToUpdate = Event.CreateInstance("Title", "", startAt, startAt.AddDays(1), 10);
+
+        const string newTitle = "Title";
+        const string newDescription = "Description";
+        DateTime newStartAt = startAt.AddDays(2);
+        DateTime newEndAt = startAt.AddDays(3);
+
+        eventToUpdate.Update(newTitle, newDescription, newStartAt, newEndAt);
+
+        eventToUpdate.Title.Should().Be(newTitle);
+        eventToUpdate.Description.Should().Be(newDescription);
+        eventToUpdate.StartAt.Should().Be(newStartAt);
+        eventToUpdate.EndAt.Should().Be(newEndAt);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("    ")]
+    public void Update_WhenTitleIsEmptyOrWhiteSpace_ShouldThrowEventValidationException(string title)
+    {
+        var startAt = new DateTime(2026, 1, 1, 1, 1, 1);
+        var eventToUpdate = Event.CreateInstance("Title", "", startAt, startAt.AddDays(1), 10);
+
+        Action act = () => eventToUpdate.Update(title, "", startAt, startAt.AddDays(1));
+
+        act.Should().Throw<EventValidationException>().WithMessage("Event title is empty");
+    }
+
+    [Fact]
+    public void Update_WhenStartAtAfterEndAt_ShouldThrowEventValidationException()
+    {
+        var startAt = new DateTime(2026, 1, 1, 1, 1, 1);
+        var eventToUpdate = Event.CreateInstance("Title", "", startAt, startAt.AddDays(1), 10);
+
+        Action act = () => eventToUpdate.Update("Title", "", startAt, startAt.AddDays(-1));
+
+        act.Should().Throw<EventValidationException>().WithMessage("Event start date is greater than event end date");
+    }
+
     [Fact]
     public void AvailableSeats_Initially_ReturnsTotalSeats()
     {

@@ -29,12 +29,16 @@ public class Event
     public static Event CreateInstance(int id, string title, string? description, DateTime startAt, DateTime endAt,
         int totalSeats)
     {
+        ThrowIfNotValid(title, startAt, endAt, totalSeats);
+
         return new Event(id, title, description, startAt, endAt, totalSeats);
     }
     
     public static Event CreateInstance(string title, string? description, DateTime startAt, DateTime endAt,
         int totalSeats)
     {
+        ThrowIfNotValid(title, startAt, endAt, totalSeats);
+
         return CreateInstance(UndefinedId, title, description, startAt, endAt, totalSeats);
     }
     
@@ -146,17 +150,17 @@ public class Event
     {
         if (string.IsNullOrWhiteSpace(title))
         {
-            throw new ValidationException("Event title is empty");
+            throw new EventValidationException("Event title is empty");
         }
 
         if (startAt > endAt)
         {
-            throw new ValidationException("Event start date is greater than event end date");
+            throw new EventValidationException("Event start date is greater than event end date");
         }
 
         if (totalSeats <= 0)
         {
-            throw new ValidationException("Total seat count must be positive");
+            throw new EventValidationException("Total seat count must be positive");
         }
     }
 }
