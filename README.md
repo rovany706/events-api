@@ -1,6 +1,25 @@
 # EventManager API (API для управления мероприятиями)
 
-## Запуск
+## Структура проекта
+
+Структура EventManager API делится на несколько проектов, следуя принципам чистой архитектуры:
+
+1. EventManager.Domain - слой домена, содержит бизнес-сущности, с которыми работает EventManager.
+2. EventManager.Application - слой приложения, содержит use cases, абстракции сервисов и репозиториев.
+3. EventManager.Infrastructure - слой инфраструктуры, содержит реализации абстракций, работает с внешними зависимостями (СУБД, кеширование и т.д.)
+4. EventManager.Presentation - слой представления, содержит описание API и предоставляет клиентам доступ к нему.
+
+```mermaid
+---
+title: Схема зависимостей проектов
+---
+flowchart TB
+    EventManager.Application --> EventManager.Domain
+    EventManager.Infrastructure --> EventManager.Domain & EventManager.Application
+    EventManager.Presentation --> EventManager.Infrastructure & EventManager.Application
+```
+
+## Запуск зависимостей
 
 Для запуска API требуются внешние зависимости: 
 
@@ -8,7 +27,7 @@
 
 Для их запуска в виде docker-контейнеров доступен [docker-compose.yml]().
 
-Запуск контейнеров произоводится с помощью команды:
+Запуск контейнеров производится с помощью команды:
 
 ```bash
 docker compose up
@@ -32,7 +51,7 @@ docker compose up
 Для добавления новой миграции следует запустить команду:
 
 ```bash
-dotnet ef migrations add <название_миграции>
+dotnet ef migrations add <название_миграции> -p src/EventManager.Infrastructure/EventManager.Infrastructure.csproj -s src/EventManager.Presentation/EventManager.Presentation.csproj -o Persistence/Migrations/ 
 ```
 
 После выполнения команды в проекте в папке Migrations появится новый файл с кодом миграции, состоящий из времени создания миграции и названия.
@@ -40,19 +59,19 @@ dotnet ef migrations add <название_миграции>
 Для применения миграций используется команда:
 
 ```bash
-dotnet ef database update
+dotnet ef database update -p src/EventManager.Infrastructure/EventManager.Infrastructure.csproj -s src/EventManager.Presentation/EventManager.Presentation.csproj
 ```
 
 Для отката миграций используется команда:
 
 ```bash
-dotnet ef database update <название_миграции>
+dotnet ef database update <название_миграции> -p src/EventManager.Infrastructure/EventManager.Infrastructure.csproj -s src/EventManager.Presentation/EventManager.Presentation.csproj
 ```
 
 ### Запуск EventManager API
 
 ```bash
-dotnet run --project ./src/EventManager.API/EventManager.API.csproj
+dotnet run --project ./src/EventManager.Presentation/EventManager.Presentation.csproj
 ```
 
 После запуска Swagger будет доступен по адресу: http://localhost:5080/swagger
@@ -64,7 +83,7 @@ dotnet run --project ./src/EventManager.API/EventManager.API.csproj
 - .NET 10
 
 ```bash
-dotnet publish ./src/EventManager.API/EventManager.API.csproj -c Release -o publish
+dotnet publish ./src/EventManager.Presentation/EventManager.Presentation.csproj -c Release -o publish
 ```
 
 ## Тестирование
@@ -82,7 +101,7 @@ dotnet test
 - Проверка схемы базы данных, связи, ограничения.
 
 Для этого используется библиотека TestContainers, которая запускает контейнер с СУБД PostgreSQL.
-Поэтому для запуска тестов в проекте `test/EventManager.API.IntegrationTests` потребуется установленный Docker.
+Поэтому для запуска тестов в проекте `test/EventManager.IntegrationTests` потребуется установленный Docker.
 
 ## Описание API
 
@@ -351,15 +370,11 @@ curl -X 'GET' \
 
 ## Использование примитивов синхронизации
 
-1. Получение ID для сущностей.
+1. Резервирование мест на мероприятии
 
-В качестве ID используются последовательность положительных целых чисел. Для получения нового идентификатора используются атомарные операции класса `Interlocked`
+Логика резервирования мест (получение события, уменьшение счетчика свободных мест, сохранение обновленного события) происходит в рамках блокировки с помощью `SemaphoreSlim`.
 
-2. Резервирование мест на мероприятии
-
-Логика резервирования мест (получение события, уменьшение счетчика свободных мест, сохранение обновленного события) происходит в рамках блокировки с помощью `lock`.
-
-3. Обработка очереди бронирований
+2. Обработка очереди бронирований
 
 Логика подтверждения/отклонения бронирования (проверка события, обновление статуса бронирования) происходит в рамках блокировки с помощью `SemaphoreSlim`. Выбор в пользу семафора обусловлено использованием асинхронных операций.
 
