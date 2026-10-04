@@ -1,4 +1,5 @@
 using EventManager.Application;
+using EventManager.Application.Options;
 using EventManager.Infrastructure;
 using EventManager.Infrastructure.Persistence;
 using EventManager.Presentation;
@@ -16,6 +17,12 @@ if (builder.Environment.IsDevelopment())
         options.ValidateOnBuild = true;
     });
 }
+
+builder.Services.AddOptions<UserJwtTokenSettings>()
+    .Bind(builder.Configuration.GetSection("UserJwtToken"))
+    .ValidateDataAnnotations()
+    .Validate(s => s.Lifetime > TimeSpan.Zero, "UserJwtToken:Lifetime must be greater than zero seconds.")
+    .ValidateOnStart();
 
 var dbConnectionString = builder.Configuration.GetConnectionString("EventsDb") ??
                          throw new InvalidOperationException("Connection string 'EventsDb' not found.");
