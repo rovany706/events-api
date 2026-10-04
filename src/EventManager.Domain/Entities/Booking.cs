@@ -1,4 +1,6 @@
-﻿namespace EventManager.Domain.Entities;
+﻿using EventManager.Domain.Exceptions;
+
+namespace EventManager.Domain.Entities;
 
 /// <summary>
 /// Бронирование мероприятия
@@ -7,15 +9,16 @@ public class Booking
 {
     private Booking() { }
 
-    private Booking(int eventId)
+    private Booking(int eventId, int userId)
     {
         EventId = eventId;
         Status = BookingStatus.Pending;
+        UserId = userId;
     }
 
-    public static Booking CreateInstance(int eventId)
+    public static Booking CreateInstance(int eventId, int userId)
     {
-        return new Booking(eventId);
+        return new Booking(eventId, userId);
     }
     
     /// <summary>
@@ -44,9 +47,19 @@ public class Booking
     public DateTime? ProcessedAt { get; private set; }
 
     /// <summary>
+    /// Идентификатор пользователя
+    /// </summary>
+    public int UserId { get; private set; }
+
+    /// <summary>
     /// Мероприятие
     /// </summary>
     public Event? Event { get; set; }
+
+    /// <summary>
+    /// Пользователь
+    /// </summary>
+    public User? User { get; set; }
 
     /// <summary>
     /// Подтвердить бронь
@@ -63,6 +76,17 @@ public class Booking
     public void Reject()
     {
         Status = BookingStatus.Rejected;
+        ProcessedAt = DateTime.UtcNow;
+    }
+
+    public void Cancel()
+    {
+        if (Status == BookingStatus.Cancelled)
+        {
+            throw new BookingAlreadyCancelledException();
+        }
+        
+        Status = BookingStatus.Cancelled;
         ProcessedAt = DateTime.UtcNow;
     }
 }
