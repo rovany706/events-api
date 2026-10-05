@@ -7,7 +7,6 @@ namespace EventManager.Domain.Entities;
 /// </summary>
 public class Event
 {
-    private const int UndefinedId = 0;
     private int _availableSeats;
 
     private Event()
@@ -15,9 +14,8 @@ public class Event
         Title = null!;
     }
 
-    private Event(int id, string title, string? description, DateTime startAt, DateTime endAt, int totalSeats)
+    private Event(string title, string? description, DateTime startAt, DateTime endAt, int totalSeats)
     {
-        Id = id; // ?
         Title = title;
         Description = description;
         StartAt = startAt;
@@ -26,20 +24,12 @@ public class Event
         AvailableSeats = totalSeats;
     }
 
-    public static Event CreateInstance(int id, string title, string? description, DateTime startAt, DateTime endAt,
-        int totalSeats)
-    {
-        ThrowIfNotValid(title, startAt, endAt, totalSeats);
-
-        return new Event(id, title, description, startAt, endAt, totalSeats);
-    }
-
     public static Event CreateInstance(string title, string? description, DateTime startAt, DateTime endAt,
         int totalSeats)
     {
         ThrowIfNotValid(title, startAt, endAt, totalSeats);
 
-        return CreateInstance(UndefinedId, title, description, startAt, endAt, totalSeats);
+        return new Event( title, description, startAt, endAt, totalSeats);
     }
     
     /// <summary>
