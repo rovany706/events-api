@@ -1,3 +1,5 @@
+using System.Text;
+
 using EventManager.Application;
 using EventManager.Application.Options;
 using EventManager.Infrastructure;
@@ -5,7 +7,9 @@ using EventManager.Infrastructure.Persistence;
 using EventManager.Presentation;
 using EventManager.Presentation.Middlewares;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,8 +22,11 @@ if (builder.Environment.IsDevelopment())
     });
 }
 
+var userJwtTokenSection = builder.Configuration.GetSection("UserJwtToken") ??
+                          throw new InvalidOperationException("UserJwtToken section not found");
+
 builder.Services.AddOptions<UserJwtTokenSettings>()
-    .Bind(builder.Configuration.GetSection("UserJwtToken"))
+    .Bind(userJwtTokenSection)
     .ValidateDataAnnotations()
     .Validate(s => s.Lifetime > TimeSpan.Zero, "UserJwtToken:Lifetime must be greater than zero seconds.")
     .ValidateOnStart();
@@ -31,6 +38,27 @@ builder.Services
     .AddApplicationServices()
     .AddInfrastructure(dbConnectionString)
     .AddPresentation();
+
+var userJwtTokenSettings = userJwtTokenSection.Get<UserJwtTokenSettings>()!;
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        RoleClaimType = "role",
+        ValidateIssuer = true,
+        ValidIssuer = userJwtTokenSettings.Issuer,
+        ValidateAudience = true,
+        ValidAudience = userJwtTokenSettings.Audience,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(userJwtTokenSettings.Secret))
+    };
+});
 
 var app = builder.Build();
 
@@ -54,6 +82,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
