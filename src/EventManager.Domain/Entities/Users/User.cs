@@ -44,4 +44,9 @@ public class User
     /// Роль пользователя
     /// </summary>
     public UserRole Role { get; private set; }
+
+    /// <summary>
+    /// Бронирования пользователя
+    /// </summary>
+    public List<Booking> Bookings { get; private set; } = [];
 }

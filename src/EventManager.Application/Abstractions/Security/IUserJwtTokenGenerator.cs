@@ -1,4 +1,4 @@
-using EventManager.Domain.Entities;
+using EventManager.Domain.Entities.Users;
 
 namespace EventManager.Application.Abstractions.Security;
 

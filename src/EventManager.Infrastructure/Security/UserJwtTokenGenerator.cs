@@ -1,9 +1,8 @@
-using System.Security.Claims;
 using System.Text;
 
 using EventManager.Application.Abstractions.Security;
 using EventManager.Application.Options;
-using EventManager.Domain.Entities;
+using EventManager.Domain.Entities.Users;
 
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
