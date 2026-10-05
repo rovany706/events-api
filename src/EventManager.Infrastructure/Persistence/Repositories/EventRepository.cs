@@ -34,7 +34,7 @@ public class EventRepository : IEventRepository
 
         var materializedEvents = await events.ToListAsync(ct);
 
-        return new PaginatedResult<Event>(materializedEvents, 1, 1, 1, materializedEvents.Count);
+        return new PaginatedResult<Event>(materializedEvents, materializedEvents.Count, 1, 1, materializedEvents.Count);
     }
 
     /// <inheritdoc />
