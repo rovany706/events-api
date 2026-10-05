@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 using Testcontainers.PostgreSql;
 
-namespace EventManager.IntegrationTests.Domain.Repositories;
+namespace EventManager.IntegrationTests.Infrastructure.Repositories;
 
 public class EventRepositoryTests : IAsyncLifetime
 {

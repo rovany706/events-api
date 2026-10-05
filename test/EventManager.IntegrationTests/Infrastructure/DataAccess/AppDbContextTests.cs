@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 using Testcontainers.PostgreSql;
 
-namespace EventManager.IntegrationTests.Domain.DataAccess;
+namespace EventManager.IntegrationTests.Infrastructure.DataAccess;
 
 public class AppDbContextTests : IAsyncLifetime
 {

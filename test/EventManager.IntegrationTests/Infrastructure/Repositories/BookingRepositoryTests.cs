@@ -5,9 +5,10 @@ using EventManager.Infrastructure.Persistence.Repositories;
 using FluentAssertions;
 
 using Microsoft.EntityFrameworkCore;
+
 using Testcontainers.PostgreSql;
 
-namespace EventManager.IntegrationTests.Domain.Repositories;
+namespace EventManager.IntegrationTests.Infrastructure.Repositories;
 
 public class BookingRepositoryTests : IAsyncLifetime
 {
