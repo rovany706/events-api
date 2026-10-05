@@ -9,7 +9,7 @@ public class EventTests
 {
     private static Event CreateTestEvent(int totalSeats)
     {
-        return Event.CreateInstance(1, "Test", "", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), totalSeats);
+        return Event.CreateInstance("Test", "", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), totalSeats);
     }
 
     [Theory]

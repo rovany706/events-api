@@ -1,7 +1,7 @@
 <Solution>
   <Folder Name="/test/">
     <Project Path="test/EventManager.Domain.Tests/EventManager.Domain.Tests.csproj" />
-    <Project Path="test/EventManager.Infrastructure.Tests/EventManager.Infrastructure.Tests.csproj" />
+    <Project Path="test\EventManager.Application.Tests\EventManager.Application.Tests.csproj" />
     <Project Path="test\EventManager.IntegrationTests\EventManager.IntegrationTests.csproj" />
     <Project Path="test\EventManager.Presentation.Tests\EventManager.Presentation.Tests.csproj" />
   </Folder>

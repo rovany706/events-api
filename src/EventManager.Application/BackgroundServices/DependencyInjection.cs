@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace EventManager.Infrastructure.BackgroundServices;
+namespace EventManager.Application.BackgroundServices;
 
 internal static class DependencyInjection
 {

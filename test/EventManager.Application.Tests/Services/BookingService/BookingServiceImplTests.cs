@@ -1,5 +1,4 @@
 ﻿using EventManager.Application.Abstractions.Persistence.Repositories;
-using EventManager.Application.Abstractions.Services;
 using EventManager.Application.Common.Results;
 using EventManager.Application.Services.BookingService;
 using EventManager.Domain.Entities;
@@ -10,11 +9,11 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
-namespace EventManager.Infrastructure.Tests.Services.BookingService;
+namespace EventManager.Application.Tests.Services.BookingService;
 
 public class BookingServiceImplTests
 {
-    private readonly IBookingService _bookingService;
+    private readonly BookingServiceImpl _bookingService;
     private readonly Mock<IBookingRepository> _bookingRepositoryMock;
     private readonly Mock<IEventRepository> _eventRepositoryMock;
 
@@ -29,7 +28,7 @@ public class BookingServiceImplTests
 
     private Event CreateTestEvent(int id = 1, int totalSeats = 10)
     {
-        var testEvent = Event.CreateInstance(id, "Test Event", "", DateTime.Now, DateTime.Now, totalSeats);
+        var testEvent = Event.CreateInstance("Test Event", "", DateTime.Now, DateTime.Now, totalSeats);
 
         _eventRepositoryMock.Setup(x => x.GetEventByIdAsync(testEvent.Id, TestContext.Current.CancellationToken))
             .ReturnsAsync(testEvent);
