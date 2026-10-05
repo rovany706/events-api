@@ -93,11 +93,17 @@ public class Event
     /// <param name="count">Количество мест</param>
     /// <returns>true - резервирование успешно, false - мест для резервирования нет</returns>
     /// <exception cref="ArgumentOutOfRangeException">Количество мест для резервирования меньше или равно 0</exception>
+    /// <exception cref="EventAlreadyStartedException">Мероприятие уже началось</exception>
     public bool TryReserveSeats(int count = 1)
     {
         if (count <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(count), "Count must be positive.");
+        }
+
+        if (DateTime.UtcNow > StartAt)
+        {
+            throw new EventAlreadyStartedException();
         }
 
         int current, updated;
