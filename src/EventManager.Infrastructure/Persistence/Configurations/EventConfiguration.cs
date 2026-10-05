@@ -35,6 +35,8 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
         builder.Property(e => e.AvailableSeats)
             .IsRequired();
 
+        builder.Ignore(e => e.HasStarted);
+
         builder.HasMany(e => e.Bookings)
             .WithOne(b => b.Event)
             .HasForeignKey(b => b.EventId)

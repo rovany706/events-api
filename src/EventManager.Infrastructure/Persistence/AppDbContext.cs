@@ -1,5 +1,6 @@
 using EventManager.Domain.Entities;
 using EventManager.Domain.Entities.Bookings;
+using EventManager.Domain.Entities.Users;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,8 @@ public class AppDbContext : DbContext
     public DbSet<Event> Events => Set<Event>();
 
     public DbSet<Booking> Bookings => Set<Booking>();
+
+    public DbSet<User> Users => Set<User>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
