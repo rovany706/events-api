@@ -1,5 +1,4 @@
-﻿using EventManager.Infrastructure.BackgroundServices;
-using EventManager.Infrastructure.Persistence;
+﻿using EventManager.Infrastructure.Persistence;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,7 +9,6 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, string dbConnectionString)
     {
         services.AddPersistence(dbConnectionString);
-        services.AddBackgroundServices();
 
         return services;
     }

@@ -1,4 +1,5 @@
 using EventManager.Application.Abstractions.Services;
+using EventManager.Application.BackgroundServices;
 using EventManager.Application.Services.BookingService;
 using EventManager.Application.Services.EventService;
 
@@ -10,6 +11,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        services.AddBackgroundServices();
         services.AddScoped<IEventService, EventServiceImpl>();
         services.AddScoped<IBookingService, BookingServiceImpl>();
 
