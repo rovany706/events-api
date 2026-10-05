@@ -43,4 +43,11 @@ public interface IBookingRepository
     /// </summary>
     /// <param name="ct">Токен отмены</param>
     Task SaveChangesAsync(CancellationToken ct);
+    
+    /// <summary>
+    /// Получить количество активных бронирований пользователя
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя</param>
+    /// <param name="cancellationToken">Токен отмены</param>
+    Task<int> GetActiveBookingCountForUserAsync(int userId, CancellationToken cancellationToken);
 }

@@ -72,6 +72,8 @@ public class Event
         private set => _availableSeats = value;
     }
 
+    public bool HasStarted => DateTime.UtcNow > StartAt;
+
     /// <summary>
     /// Бронирования
     /// </summary>
@@ -101,7 +103,7 @@ public class Event
             throw new ArgumentOutOfRangeException(nameof(count), "Count must be positive.");
         }
 
-        if (DateTime.UtcNow > StartAt)
+        if (HasStarted)
         {
             throw new EventAlreadyStartedException();
         }

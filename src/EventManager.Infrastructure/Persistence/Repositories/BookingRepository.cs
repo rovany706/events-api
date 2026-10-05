@@ -51,4 +51,14 @@ public class BookingRepository : IBookingRepository
     {
         return _dbContext.SaveChangesAsync(ct);
     }
+
+    /// <inheritdoc />
+    public Task<int> GetActiveBookingCountForUserAsync(int userId, CancellationToken cancellationToken)
+    {
+        return _dbContext.Bookings
+            .AsNoTracking()
+            .Include(b => b.User)
+            .Include(b => b.Event)
+            .CountAsync(b => b.UserId == userId && !b.Event.HasStarted, cancellationToken);
+    }
 }

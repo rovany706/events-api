@@ -41,7 +41,7 @@ public class BookingServiceImpl : IBookingService
             if (user == null)
                 return Result<Booking?>.Failure(Error.NotFound($"Booking failed. User with {userId} not found."));
 
-            var userBookingCount = await _userRepository.GetActiveBookingCount(userId, cancellationToken);
+            var userBookingCount = await _bookingRepository.GetActiveBookingCountForUserAsync(userId, cancellationToken);
             if (userBookingCount == BookingConstants.MaxActiveBookingCountPerUser)
                 throw new TooManyActiveBookingsException();
 
