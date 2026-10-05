@@ -1,4 +1,4 @@
-﻿namespace EventManager.Domain.Entities;
+﻿namespace EventManager.Domain.Entities.Bookings;
 
 /// <summary>
 /// Статус бронирования

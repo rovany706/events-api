@@ -1,5 +1,6 @@
 ﻿using EventManager.Application.Abstractions.Persistence.Repositories;
 using EventManager.Domain.Entities;
+using EventManager.Domain.Entities.Bookings;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

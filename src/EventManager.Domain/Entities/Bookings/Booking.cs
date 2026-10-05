@@ -1,13 +1,18 @@
-﻿using EventManager.Domain.Exceptions;
+﻿using EventManager.Domain.Entities.Users;
+using EventManager.Domain.Exceptions;
 
-namespace EventManager.Domain.Entities;
+namespace EventManager.Domain.Entities.Bookings;
 
 /// <summary>
 /// Бронирование мероприятия
 /// </summary>
 public class Booking
 {
-    private Booking() { }
+    private Booking()
+    {
+        Event = null!;
+        User = null!;
+    }
 
     private Booking(int eventId, int userId)
     {
@@ -54,12 +59,12 @@ public class Booking
     /// <summary>
     /// Мероприятие
     /// </summary>
-    public Event? Event { get; set; }
+    public Event Event { get; private set; }
 
     /// <summary>
     /// Пользователь
     /// </summary>
-    public User? User { get; set; }
+    public User User { get; private set; }
 
     /// <summary>
     /// Подтвердить бронь
@@ -87,6 +92,5 @@ public class Booking
         }
         
         Status = BookingStatus.Cancelled;
-        ProcessedAt = DateTime.UtcNow;
     }
 }

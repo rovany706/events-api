@@ -1,4 +1,4 @@
-using EventManager.Domain.Entities;
+using EventManager.Domain.Entities.Bookings;
 
 namespace EventManager.Application.Abstractions.Persistence.Repositories;
 

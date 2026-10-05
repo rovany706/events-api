@@ -1,4 +1,6 @@
-namespace EventManager.Domain.Entities;
+using EventManager.Domain.Entities.Bookings;
+
+namespace EventManager.Domain.Entities.Users;
 
 /// <summary>
 /// Пользователь

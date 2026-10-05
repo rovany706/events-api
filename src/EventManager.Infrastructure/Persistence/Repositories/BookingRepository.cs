@@ -1,5 +1,5 @@
 using EventManager.Application.Abstractions.Persistence.Repositories;
-using EventManager.Domain.Entities;
+using EventManager.Domain.Entities.Bookings;
 
 using Microsoft.EntityFrameworkCore;
 

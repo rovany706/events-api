@@ -1,6 +1,6 @@
 ﻿using EventManager.Application.Abstractions.Services;
 using EventManager.Application.Common.Results;
-using EventManager.Domain.Entities;
+using EventManager.Domain.Entities.Bookings;
 using EventManager.Presentation.Controllers;
 
 using FluentAssertions;

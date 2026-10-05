@@ -1,5 +1,5 @@
 ﻿using EventManager.Application.Common.Results;
-using EventManager.Domain.Entities;
+using EventManager.Domain.Entities.Bookings;
 
 namespace EventManager.Application.Abstractions.Services;
 

@@ -27,7 +27,7 @@ namespace EventManager.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("EventManager.Presentation.Models.Entities.Booking", b =>
+            modelBuilder.Entity("EventManager.Presentation.Models.Entities.Bookings.Booking", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -240,7 +240,7 @@ namespace EventManager.Infrastructure.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("EventManager.Presentation.Models.Entities.Booking", b =>
+            modelBuilder.Entity("EventManager.Presentation.Models.Entities.Bookings.Booking", b =>
                 {
                     b.HasOne("EventManager.Presentation.Models.Entities.Event", "Event")
                         .WithMany("Bookings")

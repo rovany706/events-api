@@ -1,15 +1,15 @@
-﻿using EventManager.Domain.Entities;
+﻿using EventManager.Domain.Entities.Bookings;
 
 using FluentAssertions;
 
-namespace EventManager.Domain.Tests.Entities;
+namespace EventManager.Domain.Tests.Entities.Bookings;
 
 public class BookingTests
 {
     [Fact]
     public void Confirm_Always_ShouldSetProcessedAt()
     {
-        var booking = Booking.CreateInstance(1);
+        var booking = Booking.CreateInstance(1, 1);
 
         booking.Confirm();
 
@@ -19,7 +19,7 @@ public class BookingTests
     [Fact]
     public void Confirm_Always_ShouldSetStatus()
     {
-        var booking = Booking.CreateInstance(1);
+        var booking = Booking.CreateInstance(1, 1);
         
         booking.Confirm();
 
@@ -29,7 +29,7 @@ public class BookingTests
     [Fact]
     public void Reject_Always_ShouldSetProcessedAt()
     {
-        var booking = Booking.CreateInstance(1);
+        var booking = Booking.CreateInstance(1, 1);
 
         booking.Reject();
 
@@ -39,7 +39,7 @@ public class BookingTests
     [Fact]
     public void Reject_Always_ShouldSetStatus()
     {
-        var booking = Booking.CreateInstance(1);
+        var booking = Booking.CreateInstance(1, 1);
 
         booking.Reject();
 

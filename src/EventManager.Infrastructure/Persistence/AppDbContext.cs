@@ -1,4 +1,5 @@
 using EventManager.Domain.Entities;
+using EventManager.Domain.Entities.Bookings;
 
 using Microsoft.EntityFrameworkCore;
 
