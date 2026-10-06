@@ -25,7 +25,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(64); // SHA-256
 
         builder.Property(u => u.Role)
-            .IsRequired();
+            .IsRequired()
+            .HasConversion<string>();
 
         builder.HasMany(u => u.Bookings)
             .WithOne(b => b.User)
