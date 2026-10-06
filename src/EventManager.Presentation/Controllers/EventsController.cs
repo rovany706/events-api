@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-
-using Asp.Versioning;
+﻿using Asp.Versioning;
 
 using EventManager.Application.Abstractions.Services;
 using EventManager.Application.Abstractions.Services.Dto;
@@ -10,7 +8,9 @@ using EventManager.Presentation.Models.Mapping;
 using EventManager.Presentation.Models.Request;
 using EventManager.Presentation.Models.Response;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace EventManager.Presentation.Controllers;
 
@@ -51,6 +51,7 @@ public class EventsController : ControllerBase
         var filterDto = new EventFilterDto() { Title = filters.Title, From = filters.From, To = filters.To };
         var paginationDto = new PaginationParamsDto(paginationParams.Page, paginationParams.PageSize);
         var events = await _eventService.GetEvents(filterDto, paginationDto, ct);
+        
         return Ok(new PaginatedResult<EventInfoResponse>(
             events.Items.Select(x => x.ToEventResponse()).ToList(),
             events.ItemCount,
@@ -78,7 +79,7 @@ public class EventsController : ControllerBase
 
         if (!result.IsSuccess)
         {
-            return GetProblem(result.Error!, id);
+            return Problem(detail: result.Error!.ErrorMessage, statusCode: result.Error!.GetHttpStatusCodeForError());
         }
 
         var eventToSend = result.Value!;
@@ -92,8 +93,11 @@ public class EventsController : ControllerBase
     /// <param name="createEventRequest">Запрос на создание мероприятия</param>
     /// <param name="ct">Токен отмены</param>
     /// <response code="201">Мероприятие создано</response>
+    /// <response code="401">Пользователь не авторизован</response>
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> CreateEvent(CreateEventRequest createEventRequest, CancellationToken ct)
     {
         _logger.LogDebug("Получен запрос на создание мероприятия");
@@ -121,18 +125,21 @@ public class EventsController : ControllerBase
     /// <param name="ct">Токен отмены</param>
     /// <response code="204">Мероприятие обновлено</response>
     /// <response code="404">Мероприятие не найдено</response>
+    /// <response code="401">Пользователь не авторизован</response>
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateEvent(int id, [FromBody] UpdateEventRequest updateEventRequest, CancellationToken ct)
     {
         _logger.LogDebug("Получен запрос на обновление информации о мероприятии (id = {Id})", id);
 
-        var updateResult = await _eventService.TryUpdateEvent(id, updateEventRequest, ct);
+        var result = await _eventService.UpdateEvent(id, updateEventRequest, ct);
 
-        if (!updateResult)
+        if (!result.IsSuccess)
         {
-            return Problem(detail: GetEventNotFoundErrorMessage(id), statusCode: StatusCodes.Status404NotFound);
+            return Problem(detail: result.Error!.ErrorMessage, statusCode: result.Error!.GetHttpStatusCodeForError());
         }
 
         return NoContent();
@@ -145,18 +152,21 @@ public class EventsController : ControllerBase
     /// <param name="ct">Токен отмены</param>
     /// <response code="204">Мероприятие удалено</response>
     /// <response code="404">Мероприятие не найдено</response>
+    /// <response code="401">Пользователь не авторизован</response>
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteEvent(int id, CancellationToken ct)
     {
         _logger.LogDebug("Получен запрос на удаление мероприятия (id = {Id})", id);
 
-        var removeResult = await _eventService.TryRemoveEvent(id, ct);
+        var result = await _eventService.RemoveEvent(id, ct);
 
-        if (!removeResult)
+        if (!result.IsSuccess)
         {
-            return Problem(detail: GetEventNotFoundErrorMessage(id), statusCode: StatusCodes.Status404NotFound);
+            return Problem(detail: result.Error!.ErrorMessage, statusCode: result.Error!.GetHttpStatusCodeForError());
         }
 
         return NoContent();
@@ -170,21 +180,32 @@ public class EventsController : ControllerBase
     /// <response code="202">Бронь зарегистрирована</response>
     /// <response code="404">Мероприятие не найдено</response>
     /// <response code="409">Мест для бронирования нет</response>
+    /// <response code="401">Пользователь не авторизован</response>
+    [Authorize]
     [HttpPost("{id:int}/book")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> BookEventAsync([FromRoute] int id, CancellationToken ct)
     {
-        var result = await _bookingService.CreateBookingAsync(id, ct);
+        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub);
+
+        if (userIdClaim == null)
+            return Problem(detail: "Invalid token.", statusCode: StatusCodes.Status401Unauthorized);
+
+        if (!int.TryParse(userIdClaim.Value, out var userId))
+            return Problem(detail: "Invalid token.", statusCode: StatusCodes.Status401Unauthorized);
+        
+        var result = await _bookingService.CreateBookingAsync(id, userId, ct);
 
         if (!result.IsSuccess)
         {
-            return GetProblem(result.Error!, id);
+            return Problem(detail: result.Error!.ErrorMessage, statusCode: result.Error!.GetHttpStatusCodeForError());
         }
 
         var newBooking = result.Value!;
-        var bookingResponse = new BookingResponse
+        var bookingResponse = new BookingInfoResponse
         {
             Id = newBooking.Id,
             EventId = newBooking.EventId,
@@ -195,20 +216,5 @@ public class EventsController : ControllerBase
 
         return AcceptedAtAction(nameof(BookingsController.GetBookingById), "Bookings",
             new { id = newBooking.Id }, bookingResponse);
-    }
-
-    private ObjectResult GetProblem(Error error, params object[] errorMessageFormatParams)
-    {
-        return error.ErrorType switch
-        {
-            ErrorType.NotFound => Problem(detail: GetEventNotFoundErrorMessage(errorMessageFormatParams[0]), statusCode: StatusCodes.Status404NotFound),
-            ErrorType.Conflict => Problem(detail: error.ErrorMessage, statusCode: StatusCodes.Status409Conflict),
-            _ => throw new Exception($"Unknown error {error.ErrorType}. Message: {error.ErrorMessage}")
-        };
-    }
-
-    private static string GetEventNotFoundErrorMessage(object id)
-    {
-        return string.Format(CultureInfo.InvariantCulture, Resource.ErrorEventNotFound, id);
     }
 }

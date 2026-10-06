@@ -59,6 +59,10 @@ public class BookingRepository : IBookingRepository
             .AsNoTracking()
             .Include(b => b.User)
             .Include(b => b.Event)
-            .CountAsync(b => b.UserId == userId && !b.Event.HasStarted, cancellationToken);
+            .CountAsync(b => 
+                b.UserId == userId
+                && DateTime.UtcNow <= b.Event.StartAt
+                && (b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Pending),
+                cancellationToken);
     }
 }

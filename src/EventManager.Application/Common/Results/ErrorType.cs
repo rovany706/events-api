@@ -7,5 +7,6 @@ public enum ErrorType
     ValidationError,
     Failure,
     Conflict,
-    Unauthorized
+    Unauthorized,
+    Forbidden
 }

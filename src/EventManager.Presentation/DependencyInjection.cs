@@ -3,6 +3,8 @@ using System.Text.Json.Serialization;
 
 using Asp.Versioning;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi;
 
 namespace EventManager.Presentation;
@@ -34,6 +36,21 @@ public static class DependencyInjection
             options.IncludeXmlComments(xmlPath);
 
             options.SwaggerDoc("v1", new OpenApiInfo { Title = "Events API v1", Version = "v1" });
+
+            options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme,
+                new OpenApiSecurityScheme
+                {
+                    Description = "Enter JWT token",
+                    In = ParameterLocation.Header,
+                    BearerFormat = "JWT",
+                    Type = SecuritySchemeType.Http,
+                    Name = HeaderNames.Authorization,
+                    Scheme = JwtBearerDefaults.AuthenticationScheme
+                });
+            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme, document)] = []
+            });
         });
 
         return services;

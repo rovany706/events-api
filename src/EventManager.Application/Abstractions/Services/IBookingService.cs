@@ -21,9 +21,10 @@ public interface IBookingService
     /// Получение брони по идентификатору
     /// </summary>
     /// <param name="bookingId">Идентификатор брони</param>
+    /// <param name="userId">Идентификатор пользователя</param>
     /// <param name="cancellationToken">Токен отмены</param>
     /// <returns>Бронь</returns>
-    Task<Result<Booking?>> GetBookingByIdAsync(int bookingId, CancellationToken cancellationToken);
+    Task<Result<Booking?>> GetBookingByIdAsync(int bookingId, int userId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Отмена брони
