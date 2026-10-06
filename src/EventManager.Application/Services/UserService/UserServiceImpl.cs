@@ -7,13 +7,13 @@ using EventManager.Domain.Entities.Users;
 
 namespace EventManager.Application.Services.UserService;
 
-public class UserService : IUserService
+public class UserServiceImpl : IUserService
 {
     private readonly IPasswordHasher _passwordHasher;
     private readonly IUserJwtTokenGenerator _jwtTokenGenerator;
     private readonly IUserRepository _userRepository;
 
-    public UserService(IPasswordHasher passwordHasher, IUserJwtTokenGenerator jwtTokenGenerator,
+    public UserServiceImpl(IPasswordHasher passwordHasher, IUserJwtTokenGenerator jwtTokenGenerator,
         IUserRepository userRepository)
     {
         _passwordHasher = passwordHasher;

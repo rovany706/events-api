@@ -25,10 +25,14 @@ public class UserJwtTokenGenerator : IUserJwtTokenGenerator
     /// <inheritdoc />
     public string CreateToken(User user)
     {
-        var claims = new Dictionary<string, object> { { JwtRegisteredClaimNames.Sub, user.Id.ToString() } };
+        var claims = new Dictionary<string, object>
+        {
+            { JwtRegisteredClaimNames.Sub, user.Id.ToString() },
+            { "role", user.Role.ToString() }
+        };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_tokenSettings.Secret));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var now = DateTime.UtcNow;
 
@@ -39,7 +43,7 @@ public class UserJwtTokenGenerator : IUserJwtTokenGenerator
             Claims = claims,
             Expires = now.Add(_tokenSettings.Lifetime),
             IssuedAt = now,
-            SigningCredentials = creds
+            SigningCredentials = credentials
         };
 
         return new JsonWebTokenHandler().CreateToken(descriptor);
