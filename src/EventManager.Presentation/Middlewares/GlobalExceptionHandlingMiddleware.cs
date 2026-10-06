@@ -62,6 +62,10 @@ public class GlobalExceptionHandlingMiddleware
         return e switch
         {
             EventValidationException => StatusCodes.Status400BadRequest,
+            BookingAlreadyCancelledException => StatusCodes.Status400BadRequest,
+            InsufficientRightsException => StatusCodes.Status403Forbidden,
+            EventAlreadyStartedException => StatusCodes.Status400BadRequest,
+            TooManyActiveBookingsException => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status500InternalServerError
         };
     }

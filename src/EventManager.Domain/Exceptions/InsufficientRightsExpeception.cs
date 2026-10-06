@@ -5,7 +5,7 @@ namespace EventManager.Domain.Exceptions;
 /// </summary>
 public class InsufficientRightsException : Exception
 {
-    public InsufficientRightsException() { }
+    public InsufficientRightsException() : this("Не хватает прав на выполнение операции") { }
     public InsufficientRightsException(string message) : base(message) { }
     public InsufficientRightsException(string message, Exception inner) : base(message, inner) { }
 }

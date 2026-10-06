@@ -5,7 +5,7 @@ namespace EventManager.Domain.Exceptions;
 /// </summary>
 public class BookingAlreadyCancelledException : Exception
 {
-    public BookingAlreadyCancelledException() { }
+    public BookingAlreadyCancelledException() : this("Бронирование уже отменено") { }
     public BookingAlreadyCancelledException(string message) : base(message) { }
     public BookingAlreadyCancelledException(string message, Exception inner) : base(message, inner) { }
 }
