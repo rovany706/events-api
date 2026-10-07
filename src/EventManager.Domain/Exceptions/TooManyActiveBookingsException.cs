@@ -1,3 +1,5 @@
+using EventManager.Domain.Entities.Bookings;
+
 namespace EventManager.Domain.Exceptions;
 
 /// <summary>
@@ -5,7 +7,7 @@ namespace EventManager.Domain.Exceptions;
 /// </summary>
 public class TooManyActiveBookingsException : Exception
 {
-    public TooManyActiveBookingsException() : this("Превышено количество активных бронирований") { }
+    public TooManyActiveBookingsException() : this($"Превышено количество активных бронирований ({BookingConstants.MaxActiveBookingCountPerUser})") { }
     public TooManyActiveBookingsException(string message) : base(message) { }
     public TooManyActiveBookingsException(string message, Exception inner) : base(message, inner) { }
 }
