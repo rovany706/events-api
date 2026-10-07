@@ -80,7 +80,7 @@ public class EventServiceImplTests
     }
 
     [Fact]
-    public async Task TryUpdateEvent_WhenEventExists_ReturnTrueAndUpdate()
+    public async Task UpdateEvent_WhenEventExists_ReturnTrueAndUpdate()
     {
         var eventToUpdateId = CreateTestEvent().Id;
         var updateRequest = new UpdateEventRequest
@@ -92,12 +92,12 @@ public class EventServiceImplTests
         };
 
         var updateResult =
-            await _eventService.TryUpdateEvent(eventToUpdateId, updateRequest, TestContext.Current.CancellationToken);
+            await _eventService.UpdateEvent(eventToUpdateId, updateRequest, TestContext.Current.CancellationToken);
         var updatedEvent = (await _eventService.GetEventById(eventToUpdateId, TestContext.Current.CancellationToken))
             .Value!;
 
         _eventRepositoryMock.Verify(x => x.SaveChangesAsync(TestContext.Current.CancellationToken), Times.Once);
-        updateResult.Should().BeTrue();
+        updateResult.IsSuccess.Should().BeTrue();
         updatedEvent.Title.Should().Be(updateRequest.Title);
         updatedEvent.Description.Should().Be(updateRequest.Description);
         updatedEvent.StartAt.Should().Be(updateRequest.StartAt);
@@ -105,7 +105,7 @@ public class EventServiceImplTests
     }
 
     [Fact]
-    public async Task TryUpdateEvent_WhenEventNotExists_ReturnFalse()
+    public async Task UpdateEvent_WhenEventNotExists_ReturnFalse()
     {
         var updateRequest = new UpdateEventRequest
         {
@@ -115,34 +115,36 @@ public class EventServiceImplTests
             EndAt = new DateTime(2027, 2, 3, 4, 5, 6)
         };
 
-        var updateResult = await _eventService.TryUpdateEvent(10, updateRequest, TestContext.Current.CancellationToken);
+        var updateResult = await _eventService.UpdateEvent(10, updateRequest, TestContext.Current.CancellationToken);
         
-        updateResult.Should().BeFalse();
+        updateResult.IsSuccess.Should().BeFalse();
+        updateResult.Error!.ErrorType.Should().Be(ErrorType.NotFound);
         _eventRepositoryMock.Verify(x => x.SaveChangesAsync(TestContext.Current.CancellationToken), Times.Never);
     }
 
     [Fact]
-    public async Task TryRemoveEvent_WhenEventExists_ReturnTrueAndRemove()
+    public async Task RemoveEvent_WhenEventExists_ReturnTrueAndRemove()
     {
         var eventToRemove = CreateTestEvent();
         var eventToRemoveId = eventToRemove.Id;
 
-        var removeResult = await _eventService.TryRemoveEvent(eventToRemoveId, TestContext.Current.CancellationToken);
+        var removeResult = await _eventService.RemoveEvent(eventToRemoveId, TestContext.Current.CancellationToken);
 
-        removeResult.Should().BeTrue();
+        removeResult.IsSuccess.Should().BeTrue();
         _eventRepositoryMock.Verify(x => x.RemoveEvent(eventToRemove), Times.Once);
         _eventRepositoryMock.Verify(x => x.SaveChangesAsync(TestContext.Current.CancellationToken), Times.Once);
     }
 
     [Fact]
-    public async Task TryRemoveEvent_WhenEventNotExists_ReturnFalse()
+    public async Task RemoveEvent_WhenEventNotExists_ReturnFalse()
     {
         _eventRepositoryMock.Setup(x => x.GetEventByIdAsync(It.IsAny<int>(), TestContext.Current.CancellationToken))
             .ReturnsAsync((Event?)null);
 
-        var removeResult = await _eventService.TryRemoveEvent(10, TestContext.Current.CancellationToken);
+        var removeResult = await _eventService.RemoveEvent(10, TestContext.Current.CancellationToken);
 
-        removeResult.Should().BeFalse();
+        removeResult.IsSuccess.Should().BeFalse();
+        removeResult.Error!.ErrorType.Should().Be(ErrorType.NotFound);
         _eventRepositoryMock.Verify(x => x.RemoveEvent(It.IsAny<Event>()), Times.Never);
         _eventRepositoryMock.Verify(x => x.SaveChangesAsync(TestContext.Current.CancellationToken), Times.Never);
     }

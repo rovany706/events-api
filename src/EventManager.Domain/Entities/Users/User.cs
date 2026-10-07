@@ -7,19 +7,31 @@ namespace EventManager.Domain.Entities.Users;
 /// </summary>
 public class User
 {
+    private const int UndefinedId = 0;
+    
     private User()
     {
         Login = null!;
         PasswordHash = null!;
     }
-
-    private User(string login, string passwordHash, UserRole role)
+    
+    private User(int id, string login, string passwordHash, UserRole role)
     {
+        Id = id;
         Login = login;
         PasswordHash = passwordHash;
         Role = role;
     }
 
+    private User(string login, string passwordHash, UserRole role) : this(UndefinedId, login, passwordHash, role)
+    {
+    }
+
+    public static User CreateInstance(int id, string login, string passwordHash, UserRole role)
+    {
+        return new User(id, login, passwordHash, role);
+    }
+    
     public static User CreateInstance(string login, string passwordHash, UserRole role)
     {
         return new User(login, passwordHash, role);

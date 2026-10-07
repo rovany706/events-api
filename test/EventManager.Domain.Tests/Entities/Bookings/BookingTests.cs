@@ -1,4 +1,5 @@
 ﻿using EventManager.Domain.Entities.Bookings;
+using EventManager.Domain.Exceptions;
 
 using FluentAssertions;
 
@@ -44,5 +45,26 @@ public class BookingTests
         booking.Reject();
 
         booking.Status.Should().Be(BookingStatus.Rejected);
+    }
+
+    [Fact]
+    public void Cancel_Always_ShouldSetStatus()
+    {
+        var booking = Booking.CreateInstance(1, 1);
+
+        booking.Cancel();
+
+        booking.Status.Should().Be(BookingStatus.Cancelled);
+    }
+    
+    [Fact]
+    public void Cancel_WhenAlreadyCancelled_ShouldThrowBookingAlreadyCancelledException()
+    {
+        var booking = Booking.CreateInstance(1, 1);
+
+        booking.Cancel();
+        Action act = booking.Cancel;
+
+        act.Should().Throw<BookingAlreadyCancelledException>();
     }
 }
