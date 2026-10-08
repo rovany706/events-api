@@ -43,8 +43,7 @@ public class UserServiceImpl : IUserService
         if (user == null)
             return Result<string>.Failure(Error.Unauthorized("Invalid login or password."));
 
-        var passwordHash = _passwordHasher.Hash(credentialsDto.Password);
-        if (user.PasswordHash != passwordHash)
+        if (_passwordHasher.Verify(credentialsDto.Password, user.PasswordHash))
             return Result<string>.Failure(Error.Unauthorized("Invalid login or password."));
 
         var token = _jwtTokenGenerator.CreateToken(user);

@@ -17,4 +17,13 @@ public class SHA256PasswordHasher : IPasswordHasher
 
         return Convert.ToHexString(bytes);
     }
+
+    /// <inheritdoc />
+    public bool Verify(string password, string expectedHash)
+    {
+        var passwordHash = Hash(password);
+
+        return CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(passwordHash),
+            Encoding.UTF8.GetBytes(expectedHash));
+    }
 }

@@ -10,4 +10,11 @@ public interface IPasswordHasher
     /// </summary>
     /// <param name="password">Пароль</param>
     string Hash(string password);
+
+    /// <summary>
+    /// Проверить пароль с ожидаемым хешом
+    /// </summary>
+    /// <param name="password">Пароль</param>
+    /// <param name="expectedHash">Ожидаемый хеш</param>
+    bool Verify(string password, string expectedHash);
 }
