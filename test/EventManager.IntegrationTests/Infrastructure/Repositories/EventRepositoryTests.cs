@@ -1,4 +1,6 @@
 using EventManager.Domain.Entities;
+using EventManager.Domain.Entities.Bookings;
+using EventManager.Domain.Entities.Users;
 using EventManager.Infrastructure.Persistence;
 using EventManager.Infrastructure.Persistence.Repositories;
 
@@ -116,15 +118,19 @@ public class EventRepositoryTests : IAsyncLifetime
         var testEvent = Event.CreateInstance(
             "Event 1",
             "Description",
-            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 0, 1, 2), DateTimeKind.Utc),
-            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 1, 2, 3), DateTimeKind.Utc),
+            DateTime.UtcNow.AddDays(1),
+            DateTime.UtcNow.AddDays(2),
             10);
         await context.Events.AddAsync(testEvent, ct);
         await context.SaveChangesAsync(ct);
+        var testUser = User.CreateInstance("test", "123", UserRole.User);
+        var userRepository = new UserRepository(context);
+        await userRepository.AddUserAsync(testUser, ct);
+        await userRepository.SaveChangesAsync(ct);
 
         context.Bookings.AddRange(
-            Booking.CreateInstance(testEvent.Id),
-            Booking.CreateInstance(testEvent.Id)
+            Booking.CreateInstance(testEvent.Id, testUser.Id),
+            Booking.CreateInstance(testEvent.Id, testUser.Id)
         );
         await context.SaveChangesAsync(ct);
 
@@ -228,15 +234,19 @@ public class EventRepositoryTests : IAsyncLifetime
         var testEvent = Event.CreateInstance(
             "Event 1",
             "Description",
-            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 0, 1, 2), DateTimeKind.Utc),
-            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 1, 2, 3), DateTimeKind.Utc),
+            DateTime.UtcNow.AddDays(1),
+            DateTime.UtcNow.AddDays(2),
             10);
         await context.Events.AddAsync(testEvent, ct);
         await context.SaveChangesAsync(ct);
+        var testUser = User.CreateInstance("test", "123", UserRole.User);
+        var userRepository = new UserRepository(context);
+        await userRepository.AddUserAsync(testUser, ct);
+        await userRepository.SaveChangesAsync(ct);
 
         context.Bookings.AddRange(
-            Booking.CreateInstance(testEvent.Id),
-            Booking.CreateInstance(testEvent.Id)
+            Booking.CreateInstance(testEvent.Id, testUser.Id),
+            Booking.CreateInstance(testEvent.Id, testUser.Id)
         );
         await context.SaveChangesAsync(ct);
 
@@ -265,15 +275,19 @@ public class EventRepositoryTests : IAsyncLifetime
         var testEvent = Event.CreateInstance(
             "Event 1",
             "Description",
-            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 0, 1, 2), DateTimeKind.Utc),
-            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 1, 2, 3), DateTimeKind.Utc),
+            DateTime.UtcNow.AddDays(1),
+            DateTime.UtcNow.AddDays(2),
             10);
         await context.Events.AddAsync(testEvent, ct);
         await context.SaveChangesAsync(ct);
+        var testUser = User.CreateInstance("test", "123", UserRole.User);
+        var userRepository = new UserRepository(context);
+        await userRepository.AddUserAsync(testUser, ct);
+        await userRepository.SaveChangesAsync(ct);
 
         context.Bookings.AddRange(
-            Booking.CreateInstance(testEvent.Id),
-            Booking.CreateInstance(testEvent.Id)
+            Booking.CreateInstance(testEvent.Id, testUser.Id),
+            Booking.CreateInstance(testEvent.Id, testUser.Id)
         );
         await context.SaveChangesAsync(ct);
 
@@ -299,15 +313,19 @@ public class EventRepositoryTests : IAsyncLifetime
         var testEvent = Event.CreateInstance(
             "Event 1",
             "Description",
-            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 0, 1, 2), DateTimeKind.Utc),
-            DateTime.SpecifyKind(new DateTime(2026, 10, 1, 1, 2, 3), DateTimeKind.Utc),
+            DateTime.UtcNow.AddDays(1),
+            DateTime.UtcNow.AddDays(2),
             10);
         await context.Events.AddAsync(testEvent, ct);
         await context.SaveChangesAsync(ct);
+        var testUser = User.CreateInstance("test", "123", UserRole.User);
+        var userRepository = new UserRepository(context);
+        await userRepository.AddUserAsync(testUser, ct);
+        await userRepository.SaveChangesAsync(ct);
 
         context.Bookings.AddRange(
-            Booking.CreateInstance(testEvent.Id),
-            Booking.CreateInstance(testEvent.Id)
+            Booking.CreateInstance(testEvent.Id, testUser.Id),
+            Booking.CreateInstance(testEvent.Id, testUser.Id)
         );
         await context.SaveChangesAsync(ct);
 

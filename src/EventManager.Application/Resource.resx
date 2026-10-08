@@ -33,4 +33,13 @@
     <data name="ErrorTotalSeatsRequired" xml:space="preserve">
     <value>Не указано общее количество мест на мероприятии.</value>
   </data>
+    <data name="ErrorBookingNotFound" xml:space="preserve">
+    <value>Бронирование с id {0} не найдено.</value>
+  </data>
+    <data name="ErrorEventNotFound" xml:space="preserve">
+        <value>Мероприятие с id {0} не найдено.</value>
+    </data>
+    <data name="ErrorUserNotFound" xml:space="preserve">
+        <value>Пользователь не найден.</value>
+    </data>
 </root>

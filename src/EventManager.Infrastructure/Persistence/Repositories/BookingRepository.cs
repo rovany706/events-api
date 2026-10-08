@@ -1,5 +1,5 @@
 using EventManager.Application.Abstractions.Persistence.Repositories;
-using EventManager.Domain.Entities;
+using EventManager.Domain.Entities.Bookings;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +13,7 @@ public class BookingRepository : IBookingRepository
     {
         _dbContext = dbContext;
     }
-    
+
     /// <inheritdoc />
     public IQueryable<Booking> GetBookings()
     {
@@ -50,5 +50,19 @@ public class BookingRepository : IBookingRepository
     public Task SaveChangesAsync(CancellationToken ct)
     {
         return _dbContext.SaveChangesAsync(ct);
+    }
+
+    /// <inheritdoc />
+    public Task<int> GetActiveBookingCountForUserAsync(int userId, CancellationToken cancellationToken)
+    {
+        return _dbContext.Bookings
+            .AsNoTracking()
+            .Include(b => b.User)
+            .Include(b => b.Event)
+            .CountAsync(b =>
+                b.UserId == userId
+                && DateTime.UtcNow <= b.Event.StartAt
+                && (b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Pending),
+                cancellationToken);
     }
 }

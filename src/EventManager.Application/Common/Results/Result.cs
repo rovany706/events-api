@@ -40,7 +40,7 @@ public class Result<TValue> : Result
     public TValue Value => IsSuccess
         ? field!
         : throw new InvalidOperationException("Value can not be accessed when IsSuccess is false");
-    
+
     public static implicit operator Result<TValue>(Error error) =>
         new(error);
 

@@ -1,4 +1,5 @@
-﻿using EventManager.Domain.Exceptions;
+﻿using EventManager.Domain.Entities.Bookings;
+using EventManager.Domain.Exceptions;
 
 namespace EventManager.Domain.Entities;
 
@@ -29,9 +30,9 @@ public class Event
     {
         ThrowIfNotValid(title, startAt, endAt, totalSeats);
 
-        return new Event( title, description, startAt, endAt, totalSeats);
+        return new Event(title, description, startAt, endAt, totalSeats);
     }
-    
+
     /// <summary>
     /// Идентификатор мероприятия
     /// </summary>
@@ -71,6 +72,8 @@ public class Event
         private set => _availableSeats = value;
     }
 
+    public bool HasStarted => DateTime.UtcNow > StartAt;
+
     /// <summary>
     /// Бронирования
     /// </summary>
@@ -92,11 +95,17 @@ public class Event
     /// <param name="count">Количество мест</param>
     /// <returns>true - резервирование успешно, false - мест для резервирования нет</returns>
     /// <exception cref="ArgumentOutOfRangeException">Количество мест для резервирования меньше или равно 0</exception>
+    /// <exception cref="EventAlreadyStartedException">Мероприятие уже началось</exception>
     public bool TryReserveSeats(int count = 1)
     {
         if (count <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(count), "Count must be positive.");
+        }
+
+        if (HasStarted)
+        {
+            throw new EventAlreadyStartedException();
         }
 
         int current, updated;

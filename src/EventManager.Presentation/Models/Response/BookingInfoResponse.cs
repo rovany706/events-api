@@ -1,11 +1,11 @@
-﻿using EventManager.Domain.Entities;
+﻿using EventManager.Domain.Entities.Bookings;
 
 namespace EventManager.Presentation.Models.Response;
 
 /// <summary>
 /// Бронирование
 /// </summary>
-public record BookingResponse
+public record BookingInfoResponse
 {
     /// <summary>
     /// Уникальный идентификатор брони

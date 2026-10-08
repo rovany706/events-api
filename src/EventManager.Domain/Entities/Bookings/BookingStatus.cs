@@ -1,4 +1,4 @@
-﻿namespace EventManager.Domain.Entities;
+﻿namespace EventManager.Domain.Entities.Bookings;
 
 /// <summary>
 /// Статус бронирования
@@ -9,14 +9,19 @@ public enum BookingStatus
     /// Бронь создана, ожидает обработки
     /// </summary>
     Pending,
-    
+
     /// <summary>
     /// Бронь подтверждена
     /// </summary>
     Confirmed,
-    
+
     /// <summary>
     /// Бронь отклонена
     /// </summary>
-    Rejected
+    Rejected,
+
+    /// <summary>
+    /// Бронь отменена
+    /// </summary>
+    Cancelled
 }

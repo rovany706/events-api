@@ -74,5 +74,23 @@ namespace EventManager.Application {
                 return ResourceManager.GetString("ErrorTotalSeatsRequired", resourceCulture);
             }
         }
+        
+        internal static string ErrorBookingNotFound {
+            get {
+                return ResourceManager.GetString("ErrorBookingNotFound", resourceCulture);
+            }
+        }
+        
+        internal static string ErrorEventNotFound {
+            get {
+                return ResourceManager.GetString("ErrorEventNotFound", resourceCulture);
+            }
+        }
+        
+        internal static string ErrorUserNotFound {
+            get {
+                return ResourceManager.GetString("ErrorUserNotFound", resourceCulture);
+            }
+        }
     }
 }

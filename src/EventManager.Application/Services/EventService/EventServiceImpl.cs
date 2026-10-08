@@ -1,4 +1,6 @@
-﻿using EventManager.Application.Abstractions.Persistence.Repositories;
+﻿using System.Globalization;
+
+using EventManager.Application.Abstractions.Persistence.Repositories;
 using EventManager.Application.Abstractions.Services;
 using EventManager.Application.Abstractions.Services.Dto;
 using EventManager.Application.Common.Pagination;
@@ -40,7 +42,8 @@ public class EventServiceImpl : IEventService
         if (eventToGet == null)
         {
             _logger.LogDebug("Event with {eventId} not found.", id);
-            return Result<Event?>.Failure(Error.NotFound($"Event with {id} not found."));
+            return Result<Event?>.Failure(
+                Error.NotFound(string.Format(CultureInfo.InvariantCulture, Resource.ErrorEventNotFound, id)));
         }
 
         return Result<Event?>.Success(eventToGet);
@@ -54,18 +57,18 @@ public class EventServiceImpl : IEventService
 
         await _eventRepository.AddEventAsync(newEvent, ct);
         await _eventRepository.SaveChangesAsync(ct);
-        
+
         return newEvent.Id;
     }
 
     /// <inheritdoc />
-    public async Task<bool> TryUpdateEvent(int eventId, UpdateEventRequest updateEventRequest, CancellationToken ct)
+    public async Task<Result> UpdateEvent(int eventId, UpdateEventRequest updateEventRequest, CancellationToken ct)
     {
         var eventResult = await GetEventById(eventId, ct);
 
         if (!eventResult.IsSuccess)
         {
-            return false;
+            return eventResult;
         }
 
         var eventToUpdate = eventResult.Value!;
@@ -73,23 +76,23 @@ public class EventServiceImpl : IEventService
             updateEventRequest.EndAt);
         await _eventRepository.SaveChangesAsync(ct);
 
-        return true;
+        return Result.Success();
     }
 
     /// <inheritdoc />
-    public async Task<bool> TryRemoveEvent(int id, CancellationToken ct)
+    public async Task<Result> RemoveEvent(int id, CancellationToken ct)
     {
         var eventResult = await GetEventById(id, ct);
 
         if (!eventResult.IsSuccess)
         {
-            return false;
+            return eventResult;
         }
 
         var eventToRemove = eventResult.Value!;
         _eventRepository.RemoveEvent(eventToRemove);
         await _eventRepository.SaveChangesAsync(ct);
 
-        return true;
+        return Result.Success();
     }
 }

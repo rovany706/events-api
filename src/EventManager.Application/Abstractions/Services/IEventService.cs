@@ -43,7 +43,7 @@ public interface IEventService
     /// <param name="updateEventRequest">Информация об обновлении</param>
     /// <param name="ct">Токен отмены</param>
     /// <returns>false, если мероприятие не найдено, иначе true</returns>
-    Task<bool> TryUpdateEvent(int eventId, UpdateEventRequest updateEventRequest, CancellationToken ct);
+    Task<Result> UpdateEvent(int eventId, UpdateEventRequest updateEventRequest, CancellationToken ct);
 
     /// <summary>
     /// Удаление мероприятия
@@ -51,5 +51,5 @@ public interface IEventService
     /// <param name="id">Идентификатор мероприятия</param>
     /// <param name="ct">Токен отмены</param>
     /// <returns>false, если мероприятие не найдено, иначе true</returns>
-    Task<bool> TryRemoveEvent(int id, CancellationToken ct);
+    Task<Result> RemoveEvent(int id, CancellationToken ct);
 }

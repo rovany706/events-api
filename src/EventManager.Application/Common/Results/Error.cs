@@ -19,4 +19,6 @@ public class Error
     public static Error Conflict(string errorMessage) => new(errorMessage, ErrorType.Conflict);
 
     public static Error ValidationError(string errorMessage) => new(errorMessage, ErrorType.ValidationError);
+
+    public static Error Unauthorized(string errorMessage) => new Error(errorMessage, ErrorType.Unauthorized);
 }

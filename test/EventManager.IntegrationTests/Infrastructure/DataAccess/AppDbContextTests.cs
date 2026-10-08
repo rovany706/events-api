@@ -22,7 +22,7 @@ public class AppDbContextTests : IAsyncLifetime
     {
         await _postgres.DisposeAsync();
     }
-    
+
     [Fact]
     public async Task DbContext_ShouldHaveNoPendingModelChanges()
     {
