@@ -14,7 +14,7 @@ public interface IUserRepository
     /// <param name="cancellationToken">Токен отмены</param>
     /// <returns></returns>
     Task<User?> GetUserByLoginAsync(string login, CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Получить пользователя по идентификатору
     /// </summary>

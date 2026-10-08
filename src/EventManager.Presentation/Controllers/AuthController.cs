@@ -37,7 +37,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> RegisterAsync(RegisterUserRequest request, CancellationToken cancellationToken)
     {
         _logger.LogDebug("Получен запрос на регистрацию (login = {Login})", request.Login);
-        
+
         var dto = new UserCredentialsDto(request.Login, request.Password);
 
         var result = await _userService.RegisterUserAsync(dto, request.UserRole, cancellationToken);
@@ -61,11 +61,11 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<string>> LoginAsync(LoginUserRequest request, CancellationToken cancellationToken)
     {
         _logger.LogDebug("Получен запрос на вход (login = {Login})", request.Login);
-        
+
         var dto = new UserCredentialsDto(request.Login, request.Password);
 
         var result = await _userService.LoginUserAsync(dto, cancellationToken);
-        
+
         if (!result.IsSuccess)
             return Problem(detail: result.Error!.ErrorMessage, statusCode: result.Error.GetHttpStatusCodeForError());
 

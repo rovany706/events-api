@@ -12,7 +12,7 @@ public static class DependencyInjection
     {
         services.AddPersistence(dbConnectionString);
         services.AddTransient<IUserJwtTokenGenerator, UserJwtTokenGenerator>();
-        
+
         return services;
     }
 }

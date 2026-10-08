@@ -37,7 +37,7 @@ public class EventServiceImplTests
 
         return testEvent;
     }
-    
+
     [Fact]
     public async Task GetEventById_WhenEventExists_ReturnsEvent()
     {
@@ -55,7 +55,7 @@ public class EventServiceImplTests
     {
         _eventRepositoryMock.Setup(x => x.GetEventByIdAsync(It.IsAny<int>(), TestContext.Current.CancellationToken))
             .ReturnsAsync((Event?)null);
-        
+
         var result = await _eventService.GetEventById(20, TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeFalse();
@@ -116,7 +116,7 @@ public class EventServiceImplTests
         };
 
         var updateResult = await _eventService.UpdateEvent(10, updateRequest, TestContext.Current.CancellationToken);
-        
+
         updateResult.IsSuccess.Should().BeFalse();
         updateResult.Error!.ErrorType.Should().Be(ErrorType.NotFound);
         _eventRepositoryMock.Verify(x => x.SaveChangesAsync(TestContext.Current.CancellationToken), Times.Never);

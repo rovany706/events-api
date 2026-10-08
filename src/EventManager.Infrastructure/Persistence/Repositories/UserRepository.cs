@@ -16,7 +16,7 @@ public class UserRepository : IUserRepository
     {
         _dbContext = dbContext;
     }
-    
+
     /// <inheritdoc />
     public Task<User?> GetUserByLoginAsync(string login, CancellationToken cancellationToken)
     {

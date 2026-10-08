@@ -8,13 +8,13 @@ namespace EventManager.Domain.Entities.Users;
 public class User
 {
     private const int UndefinedId = 0;
-    
+
     private User()
     {
         Login = null!;
         PasswordHash = null!;
     }
-    
+
     private User(int id, string login, string passwordHash, UserRole role)
     {
         Id = id;
@@ -31,12 +31,12 @@ public class User
     {
         return new User(id, login, passwordHash, role);
     }
-    
+
     public static User CreateInstance(string login, string passwordHash, UserRole role)
     {
         return new User(login, passwordHash, role);
     }
-    
+
     /// <summary>
     /// Идентификатор пользователя
     /// </summary>

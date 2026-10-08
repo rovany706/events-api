@@ -30,9 +30,9 @@ public class Event
     {
         ThrowIfNotValid(title, startAt, endAt, totalSeats);
 
-        return new Event( title, description, startAt, endAt, totalSeats);
+        return new Event(title, description, startAt, endAt, totalSeats);
     }
-    
+
     /// <summary>
     /// Идентификатор мероприятия
     /// </summary>

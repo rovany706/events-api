@@ -16,7 +16,7 @@ public static class DependencyInjection
     {
         services.AddBackgroundServices();
         services.AddTransient<IPasswordHasher, SHA256PasswordHasher>();
-        
+
         services.AddScoped<IEventService, EventServiceImpl>();
         services.AddScoped<IBookingService, BookingServiceImpl>();
         services.AddScoped<IUserService, UserServiceImpl>();

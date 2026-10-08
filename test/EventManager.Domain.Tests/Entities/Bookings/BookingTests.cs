@@ -21,7 +21,7 @@ public class BookingTests
     public void Confirm_Always_ShouldSetStatus()
     {
         var booking = Booking.CreateInstance(1, 1);
-        
+
         booking.Confirm();
 
         booking.Status.Should().Be(BookingStatus.Confirmed);
@@ -56,7 +56,7 @@ public class BookingTests
 
         booking.Status.Should().Be(BookingStatus.Cancelled);
     }
-    
+
     [Fact]
     public void Cancel_WhenAlreadyCancelled_ShouldThrowBookingAlreadyCancelledException()
     {

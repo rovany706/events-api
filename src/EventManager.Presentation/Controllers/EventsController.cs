@@ -51,7 +51,7 @@ public class EventsController : ControllerBase
         var filterDto = new EventFilterDto() { Title = filters.Title, From = filters.From, To = filters.To };
         var paginationDto = new PaginationParamsDto(paginationParams.Page, paginationParams.PageSize);
         var events = await _eventService.GetEvents(filterDto, paginationDto, ct);
-        
+
         return Ok(new PaginatedResult<EventInfoResponse>(
             events.Items.Select(x => x.ToEventResponse()).ToList(),
             events.ItemCount,
@@ -196,7 +196,7 @@ public class EventsController : ControllerBase
 
         if (!int.TryParse(userIdClaim.Value, out var userId))
             return Problem(detail: "Invalid token.", statusCode: StatusCodes.Status401Unauthorized);
-        
+
         var result = await _bookingService.CreateBookingAsync(id, userId, ct);
 
         if (!result.IsSuccess)

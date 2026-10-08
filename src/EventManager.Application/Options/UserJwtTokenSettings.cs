@@ -12,19 +12,19 @@ public class UserJwtTokenSettings
     /// </summary>
     [Required]
     public string Secret { get; set; }
-    
+
     /// <summary>
     /// Издатель токена
     /// </summary>
     [Required]
     public string Issuer { get; set; }
-    
+
     /// <summary>
     /// Получатель токена
     /// </summary>
     [Required]
     public string Audience { get; set; }
-    
+
     /// <summary>
     /// Время жизни токена
     /// </summary>

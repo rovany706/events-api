@@ -170,7 +170,7 @@ public class BookingServiceImplTests
         unsuccessfulBook.IsSuccess.Should().BeFalse();
         unsuccessfulBook.Error!.ErrorType.Should().Be(ErrorType.Conflict);
     }
-    
+
     [Fact]
     public async Task GetBookingByIdAsync_WhenBookingDoesNotBelongToUser_ShouldThrowInsufficientRightsException()
     {
@@ -181,13 +181,13 @@ public class BookingServiceImplTests
         _bookingRepositoryMock.Setup(x => x.GetBookingByIdAsync(expectedBooking.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedBooking);
 
-        Func<Task> act = async () => 
+        Func<Task> act = async () =>
             await _bookingService.GetBookingByIdAsync(expectedBooking.Id, userId,
                 TestContext.Current.CancellationToken);
 
         await act.Should().ThrowAsync<InsufficientRightsException>();
     }
-    
+
     [Fact]
     public async Task GetBookingByIdAsync_WhenBookingDoesNotBelongToUserAndUserIsAdmin_ShouldThrowInsufficientRightsException()
     {
@@ -198,13 +198,13 @@ public class BookingServiceImplTests
         _bookingRepositoryMock.Setup(x => x.GetBookingByIdAsync(expectedBooking.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedBooking);
 
-        Func<Task> act = async () => 
+        Func<Task> act = async () =>
             await _bookingService.GetBookingByIdAsync(expectedBooking.Id, userId,
                 TestContext.Current.CancellationToken);
 
         await act.Should().NotThrowAsync<InsufficientRightsException>();
     }
-    
+
     [Fact]
     public async Task CancelBookingAsync_WhenBookingDoesNotExist_ShouldReturnNotFoundError()
     {
@@ -232,7 +232,7 @@ public class BookingServiceImplTests
         result.IsSuccess.Should().BeFalse();
         result.Error!.ErrorType.Should().Be(ErrorType.NotFound);
     }
-    
+
     [Fact]
     public async Task CancelBookingAsync_WhenBookingDoesNotBelongToUser_ShouldThrowInsufficientRightsException()
     {
@@ -243,13 +243,13 @@ public class BookingServiceImplTests
         _bookingRepositoryMock.Setup(x => x.GetBookingByIdAsync(expectedBooking.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedBooking);
 
-        Func<Task> act = async () => 
+        Func<Task> act = async () =>
             await _bookingService.CancelBookingAsync(expectedBooking.Id, userId,
                 TestContext.Current.CancellationToken);
 
         await act.Should().ThrowAsync<InsufficientRightsException>();
     }
-    
+
     [Fact]
     public async Task CancelBookingAsync_WhenBookingDoesNotBelongToUserAndUserIsAdmin_ShouldThrowInsufficientRightsException()
     {
@@ -260,7 +260,7 @@ public class BookingServiceImplTests
         _bookingRepositoryMock.Setup(x => x.GetBookingByIdAsync(expectedBooking.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedBooking);
 
-        Func<Task> act = async () => 
+        Func<Task> act = async () =>
             await _bookingService.CancelBookingAsync(expectedBooking.Id, userId,
                 TestContext.Current.CancellationToken);
 

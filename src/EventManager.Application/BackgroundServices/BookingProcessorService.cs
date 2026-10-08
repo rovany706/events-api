@@ -40,11 +40,11 @@ public class BookingProcessorService : BackgroundService
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
-                    
+
                     _logger.LogInformation("Checking for pending bookings...");
                     var pendingBookings = await bookingRepository.GetPendingBookingsAsync(stoppingToken);
                     pendingBookingIds = pendingBookings.Select(b => b.Id).ToList();
-                
+
                     _logger.LogInformation("Found {pendingCount} pending bookings.", pendingBookingIds.Count);
                 }
 
@@ -79,9 +79,9 @@ public class BookingProcessorService : BackgroundService
             _logger.LogDebug("Booking {Id} not found or already processed.", bookingId);
             return;
         }
-        
+
         await Task.Delay(TimeSpan.FromSeconds(ProcessingDelayInSeconds), ct); // working...
-        
+
         var eventToBook = booking.Event;
 
         await _bookingSemaphore.WaitAsync(ct);

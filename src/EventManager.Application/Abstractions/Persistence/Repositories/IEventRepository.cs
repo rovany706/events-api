@@ -37,7 +37,7 @@ public interface IEventRepository
     /// </summary>
     /// <param name="eventToRemove">Мероприятие</param>
     void RemoveEvent(Event eventToRemove);
-    
+
     /// <summary>
     /// Сохранить изменения
     /// </summary>

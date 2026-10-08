@@ -57,7 +57,7 @@ public class EventServiceImpl : IEventService
 
         await _eventRepository.AddEventAsync(newEvent, ct);
         await _eventRepository.SaveChangesAsync(ct);
-        
+
         return newEvent.Id;
     }
 

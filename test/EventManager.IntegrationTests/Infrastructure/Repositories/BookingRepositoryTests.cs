@@ -64,18 +64,18 @@ public class BookingRepositoryTests : IAsyncLifetime
         var userRepository = new UserRepository(context);
         await userRepository.AddUserAsync(testUser, ct);
         await userRepository.SaveChangesAsync(ct);
-        
+
         context.Bookings.AddRange(
             Booking.CreateInstance(testEvent.Id, testUser.Id),
             Booking.CreateInstance(testEvent.Id, testUser.Id)
         );
         await context.SaveChangesAsync(ct);
-        
+
         // Act
         await using var verifyContext = CreateContext();
         var repository = new BookingRepository(verifyContext);
         var bookings = await repository.GetBookings().ToListAsync(ct);
-        
+
         // Assert
         bookings.Should().HaveCount(2);
     }
@@ -100,20 +100,20 @@ public class BookingRepositoryTests : IAsyncLifetime
         var userRepository = new UserRepository(context);
         await userRepository.AddUserAsync(testUser, ct);
         await userRepository.SaveChangesAsync(ct);
-        
+
         var testBooking = Booking.CreateInstance(testEvent.Id, testUser.Id);
         await context.Bookings.AddAsync(testBooking, ct);
         await context.SaveChangesAsync(ct);
-        
+
         // Act
         await using var verifyContext = CreateContext();
         var repository = new BookingRepository(verifyContext);
         var booking = await repository.GetBookingByIdAsync(testBooking.Id, ct);
-        
+
         // Assert
         booking.Should().NotBeNull();
     }
-    
+
     [Fact]
     public async Task GetBookingByIdAsync_WhenBookingExists_ShouldReturnBookingWithEvent()
     {
@@ -134,21 +134,21 @@ public class BookingRepositoryTests : IAsyncLifetime
         var userRepository = new UserRepository(context);
         await userRepository.AddUserAsync(testUser, ct);
         await userRepository.SaveChangesAsync(ct);
-        
+
         var testBooking = Booking.CreateInstance(testEvent.Id, testUser.Id);
         await context.Bookings.AddAsync(testBooking, ct);
         await context.SaveChangesAsync(ct);
-        
+
         // Act
         await using var verifyContext = CreateContext();
         var repository = new BookingRepository(verifyContext);
         var booking = await repository.GetBookingByIdAsync(testBooking.Id, ct);
-        
+
         // Assert
         booking.Should().NotBeNull();
         booking.Event.Should().NotBeNull();
     }
-    
+
     [Fact]
     public async Task GetBookingByIdAsync_WhenBookingDoNotExist_ShouldReturnNull()
     {
@@ -160,7 +160,7 @@ public class BookingRepositoryTests : IAsyncLifetime
         await using var verifyContext = CreateContext();
         var repository = new BookingRepository(verifyContext);
         var booking = await repository.GetBookingByIdAsync(1, ct);
-        
+
         // Assert
         booking.Should().BeNull();
     }
@@ -185,18 +185,18 @@ public class BookingRepositoryTests : IAsyncLifetime
         var userRepository = new UserRepository(context);
         await userRepository.AddUserAsync(testUser, ct);
         await userRepository.SaveChangesAsync(ct);
-        
+
         var pendingBooking = Booking.CreateInstance(testEvent.Id, testUser.Id);
         var confirmed = Booking.CreateInstance(testEvent.Id, testUser.Id);
         confirmed.Confirm();
         context.Bookings.AddRange(pendingBooking, confirmed);
         await context.SaveChangesAsync(ct);
-        
+
         // Act
         await using var verifyContext = CreateContext();
         var repository = new BookingRepository(verifyContext);
         var pendingBookings = await repository.GetPendingBookingsAsync(ct);
-        
+
         // Assert
         pendingBookings.Should().HaveCount(1);
         pendingBookings.Should().AllSatisfy(b => b.Status.Should().Be(BookingStatus.Pending));
@@ -222,19 +222,19 @@ public class BookingRepositoryTests : IAsyncLifetime
         var userRepository = new UserRepository(context);
         await userRepository.AddUserAsync(testUser, ct);
         await userRepository.SaveChangesAsync(ct);
-        
+
         // Act
         await using var actContext = CreateContext();
         var booking = Booking.CreateInstance(testEvent.Id, testUser.Id);
-        
+
         var repository = new BookingRepository(actContext);
         await repository.AddBookingAsync(booking, ct);
         await repository.SaveChangesAsync(ct);
-        
+
         // Assert
         await using var verifyContext = CreateContext();
         var addedBooking = await verifyContext.Bookings.FirstOrDefaultAsync(b => b.EventId == testEvent.Id, ct);
-        
+
         addedBooking.Should().NotBeNull();
     }
 
@@ -258,17 +258,17 @@ public class BookingRepositoryTests : IAsyncLifetime
         var userRepository = new UserRepository(context);
         await userRepository.AddUserAsync(testUser, ct);
         await userRepository.SaveChangesAsync(ct);
-        
+
         await context.Bookings.AddAsync(Booking.CreateInstance(testEvent.Id, testUser.Id), ct);
         await context.SaveChangesAsync(ct);
-        
+
         // Act
         await using var actContext = CreateContext();
         var repository = new BookingRepository(actContext);
         var bookingToRemove = await repository.GetBookings().FirstAsync(b => b.EventId == testEvent.Id, ct);
         repository.RemoveBooking(bookingToRemove);
         await repository.SaveChangesAsync(ct);
-        
+
         // Assert
         await using var verifyContext = CreateContext();
         var removedBooking = await verifyContext.Bookings.FirstOrDefaultAsync(b => b.EventId == testEvent.Id, ct);
@@ -296,15 +296,15 @@ public class BookingRepositoryTests : IAsyncLifetime
         var userRepository = new UserRepository(context);
         await userRepository.AddUserAsync(testUser, ct);
         await userRepository.SaveChangesAsync(ct);
-        
+
         // Act
         await using var actContext = CreateContext();
         var booking = Booking.CreateInstance(testEvent.Id, testUser.Id);
-        
+
         var repository = new BookingRepository(actContext);
         await repository.AddBookingAsync(booking, ct);
         await repository.SaveChangesAsync(ct);
-        
+
         // Assert
         await using var verifyContext = CreateContext();
         var addedBooking = await verifyContext.Bookings.FirstOrDefaultAsync(b => b.EventId == testEvent.Id, ct);
@@ -333,19 +333,19 @@ public class BookingRepositoryTests : IAsyncLifetime
         var userRepository = new UserRepository(context);
         await userRepository.AddUserAsync(testUser, ct);
         await userRepository.SaveChangesAsync(ct);
-        
+
         var testBooking = Booking.CreateInstance(testEvent.Id, testUser.Id);
         await context.Bookings.AddAsync(testBooking, ct);
         await context.SaveChangesAsync(ct);
-        
+
         // Act
         await using var verifyContext = CreateContext();
         var booking = await verifyContext.Bookings.Include(b => b.Event).FirstAsync(b => b.EventId == testEvent.Id, ct);
-        
+
         // Assert
         booking.Event.Should().NotBeNull();
     }
-    
+
     [Fact]
     public async Task GetActiveBookingCountForUserAsync_ShouldReturnCountOfActiveBookings()
     {
@@ -380,7 +380,7 @@ public class BookingRepositoryTests : IAsyncLifetime
         var userRepository = new UserRepository(context);
         await userRepository.AddUserAsync(testUser, ct);
         await userRepository.SaveChangesAsync(ct);
-        
+
         var futureEventBooking = Booking.CreateInstance(futureEvent.Id, testUser.Id);
         futureEventBooking.Confirm();
         var pastEventBooking = Booking.CreateInstance(pastEvent.Id, testUser.Id);
@@ -389,12 +389,12 @@ public class BookingRepositoryTests : IAsyncLifetime
         currentEventBooking.Confirm();
         await context.Bookings.AddRangeAsync(futureEventBooking, pastEventBooking, currentEventBooking);
         await context.SaveChangesAsync(ct);
-        
+
         // Act
         await using var verifyContext = CreateContext();
         var bookingRepository = new BookingRepository(verifyContext);
         var actualCount = await bookingRepository.GetActiveBookingCountForUserAsync(testUser.Id, ct);
-        
+
         // Assert
         actualCount.Should().Be(expectedCount);
     }

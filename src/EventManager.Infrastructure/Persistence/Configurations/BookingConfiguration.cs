@@ -24,7 +24,7 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
         builder.Property(b => b.Status)
             .IsRequired()
             .HasConversion<string>();
-        
+
         builder.HasOne(b => b.Event)
             .WithMany(e => e.Bookings)
             .HasForeignKey(b => b.EventId)

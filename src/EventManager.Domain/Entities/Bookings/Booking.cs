@@ -25,7 +25,7 @@ public class Booking
     {
         return new Booking(eventId, userId);
     }
-    
+
     /// <summary>
     /// Уникальный идентификатор брони
     /// </summary>
@@ -90,7 +90,7 @@ public class Booking
         {
             throw new BookingAlreadyCancelledException();
         }
-        
+
         Status = BookingStatus.Cancelled;
     }
 }
