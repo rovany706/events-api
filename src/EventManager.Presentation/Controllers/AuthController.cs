@@ -2,6 +2,7 @@ using Asp.Versioning;
 
 using EventManager.Application.Abstractions.Services;
 using EventManager.Application.Abstractions.Services.Dto;
+using EventManager.Application.Common.Results;
 using EventManager.Presentation.Models.Request;
 
 using Microsoft.AspNetCore.Mvc;
@@ -42,7 +43,7 @@ public class AuthController : ControllerBase
         var result = await _userService.RegisterUserAsync(dto, request.UserRole, cancellationToken);
 
         if (!result.IsSuccess)
-            return BadRequest(result.Error!.ErrorMessage);
+            return Problem(detail: result.Error!.ErrorMessage, statusCode: result.Error.GetHttpStatusCodeForError());
 
         return NoContent();
     }
@@ -66,7 +67,7 @@ public class AuthController : ControllerBase
         var result = await _userService.LoginUserAsync(dto, cancellationToken);
         
         if (!result.IsSuccess)
-            return BadRequest(result.Error!.ErrorMessage);
+            return Problem(detail: result.Error!.ErrorMessage, statusCode: result.Error.GetHttpStatusCodeForError());
 
         return Ok(result.Value);
     }
