@@ -31,8 +31,8 @@ builder.Services.AddOptions<UserJwtTokenSettings>()
     .Validate(s => s.Lifetime > TimeSpan.Zero, "UserJwtToken:Lifetime must be greater than zero seconds.")
     .ValidateOnStart();
 
-var dbConnectionString = builder.Configuration.GetConnectionString("EventsDb") ??
-                         throw new InvalidOperationException("Connection string 'EventsDb' not found.");
+var dbConnectionString = builder.Configuration.GetConnectionString("UsersDb") ??
+                         throw new InvalidOperationException("Connection string 'UsersDb' not found.");
 
 builder.Services
     .AddApplicationServices()

@@ -3,7 +3,9 @@ using System.Text;
 using EventManager.EventService.Application;
 using EventManager.EventService.Application.Options;
 using EventManager.EventService.Infrastructure;
+using EventManager.EventService.Infrastructure.Messaging;
 using EventManager.EventService.Infrastructure.Persistence;
+using EventManager.EventService.Infrastructure.Settings;
 using EventManager.EventService.Presentation;
 using EventManager.EventService.Presentation.Middlewares;
 
@@ -29,6 +31,14 @@ builder.Services.AddOptions<UserJwtTokenSettings>()
     .Bind(userJwtTokenSection)
     .ValidateDataAnnotations()
     .Validate(s => s.Lifetime > TimeSpan.Zero, "UserJwtToken:Lifetime must be greater than zero seconds.")
+    .ValidateOnStart();
+
+var kafkaSettings = builder.Configuration.GetSection("Kafka").Get<KafkaSettings>() ??
+                    throw new InvalidOperationException("Kafka section not found.");
+
+builder.Services.AddOptions<KafkaSettings>()
+    .Bind(builder.Configuration.GetSection("Kafka"))
+    .ValidateDataAnnotations()
     .ValidateOnStart();
 
 var dbConnectionString = builder.Configuration.GetConnectionString("EventsDb") ??
@@ -86,5 +96,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+await KafkaTopicInitializer.EnsureTopicsCreated(kafkaSettings.BootstrapServers);
 
 app.Run();
