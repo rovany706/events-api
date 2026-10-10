@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/test/" />
+  <Project Path="src\EventManager.EventService\EventManager.EventService.Application\EventManager.EventService.Application.csproj" />
+  <Project Path="src\EventManager.EventService\EventManager.EventService.Domain\EventManager.EventService.Domain.csproj" />
+  <Project Path="src\EventManager.EventService\EventManager.EventService.Infrastructure\EventManager.EventService.Infrastructure.csproj" />
+  <Project Path="src\EventManager.EventService\EventManager.EventService.Presentation\EventManager.EventService.Presentation.csproj" />
+</Solution>

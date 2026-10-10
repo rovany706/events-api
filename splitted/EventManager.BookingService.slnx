@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/test/" />
+  <Project Path="src\EventManager.BookingService\EventManager.BookingService.Application\EventManager.BookingService.Application.csproj" />
+  <Project Path="src\EventManager.BookingService\EventManager.BookingService.Domain\EventManager.BookingService.Domain.csproj" />
+  <Project Path="src\EventManager.BookingService\EventManager.BookingService.Infrastructure\EventManager.BookingService.Infrastructure.csproj" />
+  <Project Path="src\EventManager.BookingService\EventManager.BookingService.Presentation\EventManager.BookingService.Presentation.csproj" />
+</Solution>
