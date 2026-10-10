@@ -1,12 +1,11 @@
-﻿using EventManager.Application.Abstractions.Persistence.Repositories;
-using EventManager.Domain.Entities;
-using EventManager.Domain.Entities.Bookings;
+﻿using EventManager.BookingService.Application.Abstractions.Persistence.Repositories;
+using EventManager.BookingService.Domain.Entities;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace EventManager.Application.BackgroundServices;
+namespace EventManager.BookingService.Application.BackgroundServices;
 
 /// <summary>
 /// Фоновый сервис обработки бронирований
@@ -82,28 +81,31 @@ public class BookingProcessorService : BackgroundService
 
         await Task.Delay(TimeSpan.FromSeconds(ProcessingDelayInSeconds), ct); // working...
 
-        var eventToBook = booking.Event;
+        // TODO
+        //var eventToBook = booking.Event;
 
         await _bookingSemaphore.WaitAsync(ct);
 
         try
         {
-            if (eventToBook == null)
-            {
-                booking.Reject();
-                _logger.LogWarning("Event {eventId} is not found for booking {bookingId}", booking.EventId, booking.Id);
-            }
-            else
-            {
-                booking.Confirm();
-            }
+            // if (eventToBook == null)
+            // {
+            //     booking.Reject();
+            //     _logger.LogWarning("Event {eventId} is not found for booking {bookingId}", booking.EventId, booking.Id);
+            // }
+            // else
+            // {
+            //     booking.Confirm();
+            // }
+            booking.Confirm();
 
             await bookingRepository.SaveChangesAsync(ct);
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Error when processing booking {bookingId}", booking.Id);
-            ReleaseBooking(booking, eventToBook);
+            // TODO
+            //ReleaseBooking(booking, eventToBook);
 
             await bookingRepository.SaveChangesAsync(ct);
         }
@@ -114,9 +116,10 @@ public class BookingProcessorService : BackgroundService
         }
     }
 
-    private static void ReleaseBooking(Booking booking, Event? eventToBook)
-    {
-        booking.Reject();
-        eventToBook?.ReleaseSeats();
-    }
+    // TODO
+    // private static void ReleaseBooking(Booking booking, Event? eventToBook)
+    // {
+    //     booking.Reject();
+    //     eventToBook?.ReleaseSeats();
+    // }
 }

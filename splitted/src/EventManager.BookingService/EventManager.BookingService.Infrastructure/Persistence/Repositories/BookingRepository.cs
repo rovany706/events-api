@@ -1,15 +1,15 @@
-using EventManager.Application.Abstractions.Persistence.Repositories;
-using EventManager.Domain.Entities.Bookings;
+using EventManager.BookingService.Application.Abstractions.Persistence.Repositories;
+using EventManager.BookingService.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace EventManager.Infrastructure.Persistence.Repositories;
+namespace EventManager.BookingService.Infrastructure.Persistence.Repositories;
 
 public class BookingRepository : IBookingRepository
 {
-    private readonly AppDbContext _dbContext;
+    private readonly BookingDbContext _dbContext;
 
-    public BookingRepository(AppDbContext dbContext)
+    public BookingRepository(BookingDbContext dbContext)
     {
         _dbContext = dbContext;
     }
@@ -31,7 +31,7 @@ public class BookingRepository : IBookingRepository
     /// <inheritdoc />
     public Task<Booking?> GetBookingByIdAsync(int id, CancellationToken ct)
     {
-        return _dbContext.Bookings.Include(b => b.Event).FirstOrDefaultAsync(b => b.Id == id, ct);
+        return _dbContext.Bookings.FirstOrDefaultAsync(b => b.Id == id, ct);
     }
 
     /// <inheritdoc />
@@ -55,14 +55,17 @@ public class BookingRepository : IBookingRepository
     /// <inheritdoc />
     public Task<int> GetActiveBookingCountForUserAsync(int userId, CancellationToken cancellationToken)
     {
-        return _dbContext.Bookings
-            .AsNoTracking()
-            .Include(b => b.User)
-            .Include(b => b.Event)
-            .CountAsync(b =>
-                b.UserId == userId
-                && DateTime.UtcNow <= b.Event.StartAt
-                && (b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Pending),
-                cancellationToken);
+        // TODO
+        return Task.FromResult(0);
+        
+        // return _dbContext.Bookings
+        //     .AsNoTracking()
+        //     .Include(b => b.User)
+        //     .Include(b => b.Event)
+        //     .CountAsync(b =>
+        //         b.UserId == userId
+        //         && DateTime.UtcNow <= b.Event.StartAt
+        //         && (b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Pending),
+        //         cancellationToken);
     }
 }

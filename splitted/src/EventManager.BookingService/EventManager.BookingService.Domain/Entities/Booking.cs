@@ -1,7 +1,6 @@
-﻿using EventManager.Domain.Entities.Users;
-using EventManager.Domain.Exceptions;
+﻿using EventManager.BookingService.Domain.Exceptions;
 
-namespace EventManager.Domain.Entities.Bookings;
+namespace EventManager.BookingService.Domain.Entities;
 
 /// <summary>
 /// Бронирование мероприятия
@@ -10,8 +9,6 @@ public class Booking
 {
     private Booking()
     {
-        Event = null!;
-        User = null!;
     }
 
     private Booking(int eventId, int userId)
@@ -55,16 +52,6 @@ public class Booking
     /// Идентификатор пользователя
     /// </summary>
     public int UserId { get; private set; }
-
-    /// <summary>
-    /// Мероприятие
-    /// </summary>
-    public Event Event { get; private set; }
-
-    /// <summary>
-    /// Пользователь
-    /// </summary>
-    public User User { get; private set; }
 
     /// <summary>
     /// Подтвердить бронь

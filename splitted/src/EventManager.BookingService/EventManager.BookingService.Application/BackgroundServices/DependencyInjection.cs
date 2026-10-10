@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace EventManager.Application.BackgroundServices;
+namespace EventManager.BookingService.Application.BackgroundServices;
 
 internal static class DependencyInjection
 {

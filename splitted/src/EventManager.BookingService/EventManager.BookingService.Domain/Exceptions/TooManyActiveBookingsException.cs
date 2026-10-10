@@ -1,6 +1,6 @@
-using EventManager.Domain.Entities.Bookings;
+using EventManager.BookingService.Domain.Entities;
 
-namespace EventManager.Domain.Exceptions;
+namespace EventManager.BookingService.Domain.Exceptions;
 
 /// <summary>
 /// Исключение превышения количества активных броней

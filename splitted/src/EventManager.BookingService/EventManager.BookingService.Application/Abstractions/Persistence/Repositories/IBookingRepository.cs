@@ -1,6 +1,6 @@
-using EventManager.Domain.Entities.Bookings;
+using EventManager.BookingService.Domain.Entities;
 
-namespace EventManager.Application.Abstractions.Persistence.Repositories;
+namespace EventManager.BookingService.Application.Abstractions.Persistence.Repositories;
 
 /// <summary>
 /// Интерфейс репозитория бронирований

@@ -1,16 +1,14 @@
-﻿using System.Globalization;
+﻿using Asp.Versioning;
 
-using Asp.Versioning;
-
-using EventManager.Application.Abstractions.Services;
-using EventManager.Application.Common.Results;
-using EventManager.Presentation.Models.Response;
+using EventManager.BookingService.Application.Abstractions.Services;
+using EventManager.BookingService.Application.Common.Results;
+using EventManager.BookingService.Presentation.Models.Response;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 
-namespace EventManager.Presentation.Controllers;
+namespace EventManager.BookingService.Presentation.Controllers;
 
 [ApiController]
 [Authorize]

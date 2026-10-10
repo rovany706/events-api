@@ -1,4 +1,4 @@
-namespace EventManager.Domain.Entities.Bookings;
+namespace EventManager.BookingService.Domain.Entities;
 
 public static class BookingConstants
 {

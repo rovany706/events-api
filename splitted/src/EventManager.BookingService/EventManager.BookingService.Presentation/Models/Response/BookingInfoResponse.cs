@@ -1,6 +1,6 @@
-﻿using EventManager.Domain.Entities.Bookings;
+﻿using EventManager.BookingService.Domain.Entities;
 
-namespace EventManager.Presentation.Models.Response;
+namespace EventManager.BookingService.Presentation.Models.Response;
 
 /// <summary>
 /// Бронирование

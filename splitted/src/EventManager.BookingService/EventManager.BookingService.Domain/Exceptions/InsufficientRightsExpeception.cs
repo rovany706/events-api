@@ -1,4 +1,4 @@
-namespace EventManager.Domain.Exceptions;
+namespace EventManager.BookingService.Domain.Exceptions;
 
 /// <summary>
 /// Исключение отсутствия прав на выполнение операции
