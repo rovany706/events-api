@@ -1,5 +1,9 @@
-﻿using EventManager.BookingService.Application.Abstractions.Persistence.Repositories;
+﻿using System.Data;
+
+using EventManager.BookingService.Application.Abstractions.Messaging;
+using EventManager.BookingService.Application.Abstractions.Persistence.Repositories;
 using EventManager.BookingService.Domain.Entities;
+using EventManager.Contracts.Events;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,16 +17,18 @@ namespace EventManager.BookingService.Application.BackgroundServices;
 public class BookingProcessorService : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IBookingConfirmationPublisher _bookingConfirmationPublisher;
     private readonly ILogger<BookingProcessorService> _logger;
-    private readonly SemaphoreSlim _bookingSemaphore = new(1, 1);
 
     private const int ProcessingDelayInSeconds = 5;
     private const int PollingIntervalInSeconds = 5;
 
     public BookingProcessorService(IServiceScopeFactory scopeFactory,
+        IBookingConfirmationPublisher bookingConfirmationPublisher,
         ILogger<BookingProcessorService> logger)
     {
         _scopeFactory = scopeFactory;
+        _bookingConfirmationPublisher = bookingConfirmationPublisher;
         _logger = logger;
     }
 
@@ -81,45 +87,23 @@ public class BookingProcessorService : BackgroundService
 
         await Task.Delay(TimeSpan.FromSeconds(ProcessingDelayInSeconds), ct); // working...
 
-        // TODO
-        //var eventToBook = booking.Event;
-
-        await _bookingSemaphore.WaitAsync(ct);
-
         try
         {
-            // if (eventToBook == null)
-            // {
-            //     booking.Reject();
-            //     _logger.LogWarning("Event {eventId} is not found for booking {bookingId}", booking.EventId, booking.Id);
-            // }
-            // else
-            // {
-            //     booking.Confirm();
-            // }
             booking.Confirm();
-
             await bookingRepository.SaveChangesAsync(ct);
+        }
+        catch (DBConcurrencyException)
+        {
+            _logger.LogWarning("Booking {BookingId} was changed by another instance", booking.Id);
+            return;
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Error when processing booking {bookingId}", booking.Id);
-            // TODO
-            //ReleaseBooking(booking, eventToBook);
-
-            await bookingRepository.SaveChangesAsync(ct);
         }
-        finally
-        {
-            _bookingSemaphore.Release();
+        
+        await _bookingConfirmationPublisher.PublishAsync(
+            new BookingConfirmedEvent(booking.EventId, booking.Id, booking.UserId, 1, DateTime.UtcNow), ct);
             _logger.LogInformation("Processed booking {Id} ({BookingStatus})", booking.Id, booking.Status);
-        }
     }
-
-    // TODO
-    // private static void ReleaseBooking(Booking booking, Event? eventToBook)
-    // {
-    //     booking.Reject();
-    //     eventToBook?.ReleaseSeats();
-    // }
 }

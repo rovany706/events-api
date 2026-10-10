@@ -31,12 +31,15 @@ builder.Services.AddOptions<UserJwtTokenSettings>()
     .Validate(s => s.Lifetime > TimeSpan.Zero, "UserJwtToken:Lifetime must be greater than zero seconds.")
     .ValidateOnStart();
 
-var dbConnectionString = builder.Configuration.GetConnectionString("EventsDb") ??
-                         throw new InvalidOperationException("Connection string 'EventsDb' not found.");
+var dbConnectionString = builder.Configuration.GetConnectionString("BookingDb") ??
+                         throw new InvalidOperationException("Connection string 'BookingDb' not found.");
+
+var kafkaBootstrapServers = builder.Configuration.GetSection("Kafka")?.GetValue<string>("BootstrapServers") ??
+                            throw new InvalidOperationException("'Kafka/BootstrapServers' not found.");
 
 builder.Services
     .AddApplicationServices()
-    .AddInfrastructure(dbConnectionString)
+    .AddInfrastructure(dbConnectionString, kafkaBootstrapServers)
     .AddPresentation();
 
 var userJwtTokenSettings = userJwtTokenSection.Get<UserJwtTokenSettings>()!;

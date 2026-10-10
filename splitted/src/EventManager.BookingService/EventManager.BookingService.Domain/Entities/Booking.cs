@@ -54,6 +54,11 @@ public class Booking
     public int UserId { get; private set; }
 
     /// <summary>
+    /// Версия строки
+    /// </summary>
+    public uint RowVersion { get; private set; }
+    
+    /// <summary>
     /// Подтвердить бронь
     /// </summary>
     public void Confirm()
