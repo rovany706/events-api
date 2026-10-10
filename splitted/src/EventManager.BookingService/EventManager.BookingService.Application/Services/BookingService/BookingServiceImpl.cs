@@ -5,6 +5,7 @@ using EventManager.BookingService.Application.Abstractions.Services;
 using EventManager.BookingService.Application.Common.Results;
 using EventManager.BookingService.Domain.Entities;
 using EventManager.BookingService.Domain.Exceptions;
+using EventManager.Contracts.Jwt;
 
 using Microsoft.Extensions.Logging;
 
@@ -31,29 +32,10 @@ public class BookingServiceImpl : IBookingService
         await BookingSemaphore.WaitAsync(cancellationToken);
         try
         {
-            // TODO
-            // var user = await _userRepository.GetUserByIdAsync(userId, cancellationToken);
-            //
-            // if (user == null)
-            //     return Result<Booking?>.Failure(Error.NotFound($"Booking failed. User with {userId} not found."));
-            //
-            // var userBookingCount =
-            //     await _bookingRepository.GetActiveBookingCountForUserAsync(userId, cancellationToken);
-            // if (userBookingCount >= BookingConstants.MaxActiveBookingCountPerUser)
-            //     throw new TooManyActiveBookingsException();
-
-            //var eventToBook = await _eventRepository.GetEventByIdAsync(eventId, cancellationToken);
-
-            // if (eventToBook == null)
-            // {
-            //     _logger.LogDebug("Booking failed. Event with {eventId} not found.", eventId);
-            //     return Result<Booking?>.Failure(Error.NotFound($"Booking failed. Event with {eventId} not found."));
-            // }
-            //
-            // var bookResult = eventToBook.TryReserveSeats();
-            //
-            // if (!bookResult)
-            //     return Result<Booking?>.Failure(Error.Conflict($"No available seats available for event {eventId}"));
+            var userBookingCount =
+                await _bookingRepository.GetActiveBookingCountForUserAsync(userId, cancellationToken);
+            if (userBookingCount >= BookingConstants.MaxActiveBookingCountPerUser)
+                throw new TooManyActiveBookingsException();
 
             var booking = Booking.CreateInstance(eventId, userId);
 
@@ -69,63 +51,49 @@ public class BookingServiceImpl : IBookingService
     }
 
     /// <inheritdoc />
-    public async Task<Result<Booking?>> GetBookingByIdAsync(int bookingId, int userId,
+    public async Task<Result<Booking?>> GetBookingByIdAsync(int bookingId, int userId, string userRole,
         CancellationToken cancellationToken)
     {
         var booking = await _bookingRepository.GetBookingByIdAsync(bookingId, cancellationToken);
-        // TODO
-        // var user = await _userRepository.GetUserByIdAsync(userId, cancellationToken);
-        //
-        // if (booking == null)
-        // {
-        //     _logger.LogDebug("Booking with {bookingId} not found.", bookingId);
-        //     return Result<Booking?>.Failure(
-        //         Error.NotFound(string.Format(CultureInfo.InvariantCulture, Resource.ErrorBookingNotFound, bookingId)));
-        // }
-        //
-        // if (user == null)
-        //     return Result<Booking?>.Failure(Error.NotFound(Resource.ErrorUserNotFound));
-        //
-        // if (!IsAuthorized(user, booking))
-        //     throw new InsufficientRightsException();
+        if (booking == null)
+        {
+            _logger.LogDebug("Booking with {bookingId} not found.", bookingId);
+            return Result<Booking?>.Failure(
+                Error.NotFound(string.Format(CultureInfo.InvariantCulture, Resource.ErrorBookingNotFound, bookingId)));
+        }
+        
+        if (!IsAuthorized(booking.UserId, userId, userRole))
+            throw new InsufficientRightsException();
 
         return Result<Booking?>.Success(booking);
     }
 
     /// <inheritdoc />
-    public async Task<Result> CancelBookingAsync(int bookingId, int userId, CancellationToken cancellationToken)
+    public async Task<Result> CancelBookingAsync(int bookingId, int userId, string userRole, CancellationToken cancellationToken)
     {
-        // TODO
-        // var user = await _userRepository.GetUserByIdAsync(userId, cancellationToken);
-        //
-        // if (user == null)
-        //     return Result<Booking?>.Failure(Error.NotFound($"User with {userId} not found."));
-
         var booking = await _bookingRepository.GetBookingByIdAsync(bookingId, cancellationToken);
 
         if (booking == null)
             return Result<Booking?>.Failure(Error.NotFound($"Booking with {bookingId} not found."));
 
-        // if (!IsAuthorized(user, booking))
-        //     throw new InsufficientRightsException();
+        if (!IsAuthorized(booking.UserId, userId, userRole))
+            throw new InsufficientRightsException();
 
         await CancelBookingCoreAsync(booking, cancellationToken);
         return Result.Success();
     }
 
-    // TODO
-    // private static bool IsAuthorized(User user, Booking booking)
-    // {
-    //     var isAdmin = user.Role == UserRole.Admin;
-    //     var isUserBooking = booking.UserId == user.Id;
-    //     
-    //     return isAdmin || isUserBooking;
-    // }
+    private static bool IsAuthorized(int bookingUserId, int userId, string userRole)
+    {
+        var isAdmin = userRole == JwtRoles.AdminRole;
+        var isUserBooking = bookingUserId == userId;
+        
+        return isAdmin || isUserBooking;
+    }
 
     private Task CancelBookingCoreAsync(Booking booking, CancellationToken cancellationToken)
     {
         booking.Cancel();
-        // booking.Event.ReleaseSeats(); // TODO
 
         return _bookingRepository.SaveChangesAsync(cancellationToken);
     }

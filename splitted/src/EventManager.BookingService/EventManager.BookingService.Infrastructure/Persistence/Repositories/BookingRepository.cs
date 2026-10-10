@@ -55,17 +55,13 @@ public class BookingRepository : IBookingRepository
     /// <inheritdoc />
     public Task<int> GetActiveBookingCountForUserAsync(int userId, CancellationToken cancellationToken)
     {
-        // TODO
-        return Task.FromResult(0);
-        
-        // return _dbContext.Bookings
-        //     .AsNoTracking()
-        //     .Include(b => b.User)
-        //     .Include(b => b.Event)
-        //     .CountAsync(b =>
-        //         b.UserId == userId
-        //         && DateTime.UtcNow <= b.Event.StartAt
-        //         && (b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Pending),
-        //         cancellationToken);
+        return _dbContext.Bookings
+            .AsNoTracking()
+            .CountAsync(b =>
+                b.UserId == userId
+                // TODO хз как переделать, Event больше нет
+                // && DateTime.UtcNow <= b.Event.StartAt 
+                && (b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Pending),
+                cancellationToken);
     }
 }
