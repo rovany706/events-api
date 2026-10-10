@@ -63,7 +63,6 @@ public class GlobalExceptionHandlingMiddleware
         {
             BookingAlreadyCancelledException => StatusCodes.Status400BadRequest,
             InsufficientRightsException => StatusCodes.Status403Forbidden,
-            EventAlreadyStartedException => StatusCodes.Status400BadRequest,
             TooManyActiveBookingsException => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status500InternalServerError
         };
