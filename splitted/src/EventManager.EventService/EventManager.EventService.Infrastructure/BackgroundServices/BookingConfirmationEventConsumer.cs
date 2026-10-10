@@ -36,7 +36,8 @@ public class BookingConfirmationEventConsumer : BackgroundService
             BootstrapServers = _kafkaSettings.BootstrapServers,
             GroupId = _kafkaSettings.ConsumerGroup,
             AutoOffsetReset = AutoOffsetReset.Earliest,
-            EnableAutoCommit = false
+            EnableAutoCommit = false,
+            EnableAutoOffsetStore = false
         };
 
         var consumer = new ConsumerBuilder<string, string>(config).Build();
@@ -60,10 +61,10 @@ public class BookingConfirmationEventConsumer : BackgroundService
                 {
                     var consumeResult = consumer.Consume(stoppingToken);
                     var confirmation = JsonSerializer.Deserialize<BookingConfirmedEvent>(consumeResult.Message.Value);
-                    
+
                     await ProcessConfirmation(confirmation, stoppingToken);
-                    
-                    consumer.StoreOffset(consumeResult);
+
+                    consumer.Commit(consumeResult);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {
@@ -76,6 +77,10 @@ public class BookingConfirmationEventConsumer : BackgroundService
             }
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
+        finally
+        {
+            consumer.Close();
+        }
 
         _logger.LogInformation($"{nameof(BookingConfirmationEventConsumer)} stopped.");
     }
