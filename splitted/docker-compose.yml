@@ -2,7 +2,6 @@ services:
   # ─────────────────────────── Инфраструктура обмена сообщениями ───────────────────────────
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
-    container_name: eventapi-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -14,7 +13,6 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.6.1
-    container_name: eventapi-kafka
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -40,7 +38,6 @@ services:
   # ─────────────────────────── Базы данных (по одной на сервис) ───────────────────────────
   users-db:
     image: postgres:16
-    container_name: eventapi-users-db
     environment:
       POSTGRES_DB: users
       POSTGRES_USER: postgres
@@ -57,7 +54,6 @@ services:
 
   events-db:
     image: postgres:16
-    container_name: eventapi-events-db
     environment:
       POSTGRES_DB: events
       POSTGRES_USER: postgres
@@ -74,7 +70,6 @@ services:
 
   bookings-db:
     image: postgres:16
-    container_name: eventapi-bookings-db
     environment:
       POSTGRES_DB: bookings
       POSTGRES_USER: postgres
@@ -88,6 +83,61 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  user-service:
+    build:
+      context: .
+      args:
+        PROJECT: src/EventManager.UserService/EventManager.UserService.Presentation/EventManager.UserService.Presentation.csproj
+    command: ["EventManager.UserService.Presentation.dll"]
+    ports:
+      - "8081:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__UsersDb: Host=users-db;Port=5432;Database=users;Username=postgres;Password=postgres
+    depends_on:
+      users-db:
+        condition: service_healthy
+
+  event-service:
+    build:
+      context: .
+      args:
+        PROJECT: src/EventManager.EventService/EventManager.EventService.Presentation/EventManager.EventService.Presentation.csproj
+    command: ["EventManager.EventService.Presentation.dll"]
+    ports:
+      - "8082:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__EventsDb: Host=events-db;Port=5432;Database=events;Username=postgres;Password=postgres
+      Kafka__BootstrapServers: kafka:29092
+    depends_on:
+      events-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  booking-service:
+    build:
+      context: .
+      args:
+        PROJECT: src/EventManager.BookingService/EventManager.BookingService.Presentation/EventManager.BookingService.Presentation.csproj
+    command: ["EventManager.BookingService.Presentation.dll"]
+    ports:
+      - "8083:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__BookingDb: Host=bookings-db;Port=5432;Database=bookings;Username=postgres;Password=postgres
+      Kafka__BootstrapServers: kafka:29092
+    depends_on:
+      bookings-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
 volumes:
   users-db-data:
   events-db-data:
