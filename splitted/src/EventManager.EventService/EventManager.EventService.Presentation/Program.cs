@@ -4,8 +4,8 @@ using EventManager.EventService.Application;
 using EventManager.EventService.Application.Options;
 using EventManager.EventService.Infrastructure;
 using EventManager.EventService.Infrastructure.Messaging;
+using EventManager.EventService.Infrastructure.Options;
 using EventManager.EventService.Infrastructure.Persistence;
-using EventManager.EventService.Infrastructure.Settings;
 using EventManager.EventService.Presentation;
 using EventManager.EventService.Presentation.Middlewares;
 

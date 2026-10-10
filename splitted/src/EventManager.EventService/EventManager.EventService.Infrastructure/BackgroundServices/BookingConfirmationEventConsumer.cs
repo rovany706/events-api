@@ -6,7 +6,7 @@ using EventManager.BookingService.Domain.Exceptions;
 using EventManager.Contracts;
 using EventManager.Contracts.Events;
 using EventManager.EventService.Application.Abstractions.Persistence.Repositories;
-using EventManager.EventService.Infrastructure.Settings;
+using EventManager.EventService.Infrastructure.Options;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

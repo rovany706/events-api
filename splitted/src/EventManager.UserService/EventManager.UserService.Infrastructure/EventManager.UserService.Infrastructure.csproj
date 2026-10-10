@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\EventManager.Contracts\EventManager.Contracts.csproj" />
     <ProjectReference Include="..\EventManager.UserService.Application\EventManager.UserService.Application.csproj" />
     <ProjectReference Include="..\EventManager.UserService.Domain\EventManager.UserService.Domain.csproj" />
   </ItemGroup>

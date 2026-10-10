@@ -1,5 +1,6 @@
 using System.Text;
 
+using EventManager.Contracts.Jwt;
 using EventManager.UserService.Application.Abstractions.Security;
 using EventManager.UserService.Application.Options;
 using EventManager.UserService.Domain.Entities;
@@ -28,7 +29,7 @@ public class UserJwtTokenGenerator : IUserJwtTokenGenerator
         var claims = new Dictionary<string, object>
         {
             { JwtRegisteredClaimNames.Sub, user.Id.ToString() },
-            { "role", user.Role.ToString() }
+            { JwtRoles.RoleClaimName, user.Role.ToString() }
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_tokenSettings.Secret));
