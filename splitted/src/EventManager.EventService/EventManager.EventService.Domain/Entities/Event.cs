@@ -1,5 +1,4 @@
-﻿using EventManager.BookingService.Domain.Exceptions;
-using EventManager.EventService.Domain.Exceptions;
+﻿using EventManager.EventService.Domain.Exceptions;
 
 namespace EventManager.EventService.Domain.Entities;
 

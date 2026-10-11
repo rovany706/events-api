@@ -2,10 +2,10 @@ using System.Text.Json;
 
 using Confluent.Kafka;
 
-using EventManager.BookingService.Domain.Exceptions;
 using EventManager.Contracts;
 using EventManager.Contracts.Events;
 using EventManager.EventService.Application.Abstractions.Persistence.Repositories;
+using EventManager.EventService.Domain.Exceptions;
 using EventManager.EventService.Infrastructure.Options;
 
 using Microsoft.Extensions.DependencyInjection;

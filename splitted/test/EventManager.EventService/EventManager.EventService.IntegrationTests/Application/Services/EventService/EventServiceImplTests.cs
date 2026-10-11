@@ -1,9 +1,9 @@
-using EventManager.Application.Abstractions.Services.Dto;
-using EventManager.Application.Common.Pagination;
-using EventManager.Application.Services.EventService;
-using EventManager.Infrastructure.Persistence;
-using EventManager.Infrastructure.Persistence.Repositories;
-using EventManager.IntegrationTests.Application.Services.EventService.TestHelpers;
+using EventManager.EventService.Application.Abstractions.Services.Dto;
+using EventManager.EventService.Application.Common.Pagination;
+using EventManager.EventService.Application.Services.EventService;
+using EventManager.EventService.Infrastructure.Persistence;
+using EventManager.EventService.Infrastructure.Persistence.Repositories;
+using EventManager.EventService.IntegrationTests.Application.Services.EventService.TestHelpers;
 
 using FluentAssertions;
 
@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Testcontainers.PostgreSql;
 
-namespace EventManager.IntegrationTests.Application.Services.EventService;
+namespace EventManager.EventService.IntegrationTests.Application.Services.EventService;
 
 public class EventServiceImplTests : IAsyncLifetime
 {
@@ -30,13 +30,13 @@ public class EventServiceImplTests : IAsyncLifetime
         await _postgres.DisposeAsync();
     }
 
-    private AppDbContext CreateContext()
+    private EventDbContext CreateContext()
     {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
+        var options = new DbContextOptionsBuilder<EventDbContext>()
             .UseNpgsql(_postgres.GetConnectionString())
             .Options;
 
-        return new AppDbContext(options);
+        return new EventDbContext(options);
     }
 
     private async Task ResetDatabaseAsync()

@@ -1,5 +1,4 @@
-﻿using EventManager.BookingService.Domain.Exceptions;
-using EventManager.EventService.Domain.Exceptions;
+﻿using EventManager.EventService.Domain.Exceptions;
 
 using Microsoft.AspNetCore.Mvc;
 

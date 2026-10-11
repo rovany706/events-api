@@ -1,4 +1,4 @@
-namespace EventManager.BookingService.Domain.Exceptions;
+namespace EventManager.EventService.Domain.Exceptions;
 
 /// <summary>
 /// Исключение уже стартовавшего мероприятия

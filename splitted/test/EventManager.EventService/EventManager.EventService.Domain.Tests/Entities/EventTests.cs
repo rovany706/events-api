@@ -1,9 +1,9 @@
-﻿using EventManager.Domain.Entities;
-using EventManager.Domain.Exceptions;
+﻿using EventManager.EventService.Domain.Entities;
+using EventManager.EventService.Domain.Exceptions;
 
 using FluentAssertions;
 
-namespace EventManager.Domain.Tests.Entities;
+namespace EventManager.EventService.Domain.Tests.Entities;
 
 public class EventTests
 {

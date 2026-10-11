@@ -27,9 +27,5 @@
   <ItemGroup>
     <Using Include="Xunit"/>
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Entities\Bookings\" />
-  </ItemGroup>
   
 </Project>
