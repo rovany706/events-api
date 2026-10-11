@@ -18,7 +18,6 @@ public class BookingServiceImpl : IBookingService
 {
     private readonly IBookingRepository _bookingRepository;
     private readonly ILogger<BookingServiceImpl> _logger;
-    private static readonly SemaphoreSlim BookingSemaphore = new(1, 1);
 
     public BookingServiceImpl(IBookingRepository bookingRepository, ILogger<BookingServiceImpl> logger)
     {
@@ -29,25 +28,17 @@ public class BookingServiceImpl : IBookingService
     /// <inheritdoc />
     public async Task<Result<Booking?>> CreateBookingAsync(int eventId, int userId, CancellationToken cancellationToken)
     {
-        await BookingSemaphore.WaitAsync(cancellationToken);
-        try
-        {
-            var userBookingCount =
-                await _bookingRepository.GetActiveBookingCountForUserAsync(userId, cancellationToken);
-            if (userBookingCount >= BookingConstants.MaxActiveBookingCountPerUser)
-                throw new TooManyActiveBookingsException();
+        var userBookingCount =
+            await _bookingRepository.GetActiveBookingCountForUserAsync(userId, cancellationToken);
+        if (userBookingCount >= BookingConstants.MaxActiveBookingCountPerUser)
+            throw new TooManyActiveBookingsException();
 
-            var booking = Booking.CreateInstance(eventId, userId);
+        var booking = Booking.CreateInstance(eventId, userId);
 
-            await _bookingRepository.AddBookingAsync(booking, cancellationToken);
-            await _bookingRepository.SaveChangesAsync(cancellationToken);
+        await _bookingRepository.AddBookingAsync(booking, cancellationToken);
+        await _bookingRepository.SaveChangesAsync(cancellationToken);
 
-            return Result<Booking?>.Success(booking);
-        }
-        finally
-        {
-            BookingSemaphore.Release();
-        }
+        return Result<Booking?>.Success(booking);
     }
 
     /// <inheritdoc />
@@ -61,7 +52,7 @@ public class BookingServiceImpl : IBookingService
             return Result<Booking?>.Failure(
                 Error.NotFound(string.Format(CultureInfo.InvariantCulture, Resource.ErrorBookingNotFound, bookingId)));
         }
-        
+
         if (!IsAuthorized(booking.UserId, userId, userRole))
             throw new InsufficientRightsException();
 
@@ -69,7 +60,8 @@ public class BookingServiceImpl : IBookingService
     }
 
     /// <inheritdoc />
-    public async Task<Result> CancelBookingAsync(int bookingId, int userId, string userRole, CancellationToken cancellationToken)
+    public async Task<Result> CancelBookingAsync(int bookingId, int userId, string userRole,
+        CancellationToken cancellationToken)
     {
         var booking = await _bookingRepository.GetBookingByIdAsync(bookingId, cancellationToken);
 
@@ -87,7 +79,7 @@ public class BookingServiceImpl : IBookingService
     {
         var isAdmin = userRole == JwtRoles.AdminRole;
         var isUserBooking = bookingUserId == userId;
-        
+
         return isAdmin || isUserBooking;
     }
 

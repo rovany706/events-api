@@ -1,9 +1,9 @@
-﻿using EventManager.Domain.Entities.Bookings;
-using EventManager.Domain.Exceptions;
+﻿using EventManager.BookingService.Domain.Entities;
+using EventManager.BookingService.Domain.Exceptions;
 
 using FluentAssertions;
 
-namespace EventManager.Domain.Tests.Entities.Bookings;
+namespace EventManager.BookingService.Domain.Tests.Entities;
 
 public class BookingTests
 {
