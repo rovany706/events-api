@@ -5,8 +5,8 @@ namespace EventManager.EventService.Infrastructure.Options;
 public class KafkaSettings
 {
     [Required]
-    public string BootstrapServers { get; set; }
+    public required string BootstrapServers { get; init; }
     
     [Required]
-    public string ConsumerGroup { get; set; }
+    public required string ConsumerGroup { get; init; }
 }

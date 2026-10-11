@@ -11,23 +11,23 @@ public class UserJwtTokenSettings
     /// Секрет для подписи токена
     /// </summary>
     [Required]
-    public string Secret { get; set; }
+    public required string Secret { get; init; }
 
     /// <summary>
     /// Издатель токена
     /// </summary>
     [Required]
-    public string Issuer { get; set; }
+    public required string Issuer { get; init; }
 
     /// <summary>
     /// Получатель токена
     /// </summary>
     [Required]
-    public string Audience { get; set; }
+    public required string Audience { get; init; }
 
     /// <summary>
     /// Время жизни токена
     /// </summary>
     [Required]
-    public TimeSpan Lifetime { get; set; }
+    public required TimeSpan Lifetime { get; init; }
 }

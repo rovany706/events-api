@@ -1,6 +1,8 @@
 <Solution>
+  <Folder Name="/common/">
+    <Project Path="src/EventManager.Contracts/EventManager.Contracts.csproj" />
+  </Folder>
   <Folder Name="/test/" />
-  <Project Path="src/EventManager.Contracts/EventManager.Contracts.csproj" />
   <Project Path="src/EventManager.UserService/EventManager.UserService.Application/EventManager.UserService.Application.csproj" />
   <Project Path="src/EventManager.UserService/EventManager.UserService.Domain/EventManager.UserService.Domain.csproj" />
   <Project Path="src/EventManager.UserService/EventManager.UserService.Infrastructure/EventManager.UserService.Infrastructure.csproj" />
