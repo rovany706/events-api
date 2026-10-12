@@ -7,8 +7,6 @@ namespace EventManager.EventService.Domain.Entities;
 /// </summary>
 public class Event
 {
-    private int _availableSeats;
-
     private Event()
     {
         Title = null!;
