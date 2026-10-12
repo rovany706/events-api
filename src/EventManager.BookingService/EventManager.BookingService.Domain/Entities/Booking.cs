@@ -76,6 +76,16 @@ public class Booking
         ProcessedAt = DateTime.UtcNow;
     }
 
+    public void SetPendingCancel()
+    {
+        if (Status != BookingStatus.Confirmed)
+        {
+            throw new BookingNotConfirmedException();
+        }
+
+        Status = BookingStatus.PendingCancellation;
+    }
+
     public void Cancel()
     {
         if (Status == BookingStatus.Cancelled)

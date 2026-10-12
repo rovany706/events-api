@@ -1,3 +1,4 @@
+using EventManager.BookingService.Application.Common.Messaging;
 using EventManager.BookingService.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,10 @@ public class BookingDbContext : DbContext
     }
 
     public DbSet<Booking> Bookings => Set<Booking>();
+    
+    public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
+    
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)

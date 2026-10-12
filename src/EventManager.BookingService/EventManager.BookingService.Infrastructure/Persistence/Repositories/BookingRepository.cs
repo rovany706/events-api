@@ -29,6 +29,14 @@ public class BookingRepository : IBookingRepository
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<Booking>> GetPendingCancellationBookingsAsync(CancellationToken ct)
+    {
+        return await _dbContext.Bookings
+            .Where(b => b.Status == BookingStatus.PendingCancellation)
+            .ToListAsync(ct);
+    }
+
+    /// <inheritdoc />
     public Task<Booking?> GetBookingByIdAsync(int id, CancellationToken ct)
     {
         return _dbContext.Bookings.FirstOrDefaultAsync(b => b.Id == id, ct);
@@ -58,10 +66,10 @@ public class BookingRepository : IBookingRepository
         return _dbContext.Bookings
             .AsNoTracking()
             .CountAsync(b =>
-                b.UserId == userId
-                // TODO хз как переделать, Event больше нет
-                // && DateTime.UtcNow <= b.Event.StartAt 
-                && (b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Pending),
+                    b.UserId == userId
+                    // TODO хз как переделать, Event больше нет
+                    // && DateTime.UtcNow <= b.Event.StartAt 
+                    && (b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Pending),
                 cancellationToken);
     }
 }

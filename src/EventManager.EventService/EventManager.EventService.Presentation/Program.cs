@@ -44,9 +44,11 @@ builder.Services.AddOptions<KafkaSettings>()
 var dbConnectionString = builder.Configuration.GetConnectionString("EventsDb") ??
                          throw new InvalidOperationException("Connection string 'EventsDb' not found.");
 
+var kafkaBootstrapServers = builder.Configuration.GetSection("Kafka").GetValue<string>("BootstrapServers") ??
+                            throw new InvalidOperationException("'Kafka/BootstrapServers' not found.");
 builder.Services
     .AddApplicationServices()
-    .AddInfrastructure(dbConnectionString)
+    .AddInfrastructure(dbConnectionString, kafkaBootstrapServers)
     .AddPresentation();
 
 var userJwtTokenSettings = userJwtTokenSection.Get<UserJwtTokenSettings>()!;

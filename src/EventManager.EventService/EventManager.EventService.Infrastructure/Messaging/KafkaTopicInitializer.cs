@@ -19,6 +19,14 @@ public static class KafkaTopicInitializer
                 new TopicSpecification
                 {
                     Name = KafkaTopics.BookingConfirmedTopicName, NumPartitions = 2, ReplicationFactor = 1
+                },
+                new TopicSpecification
+                {
+                    Name = KafkaTopics.BookingCancelledTopicName, NumPartitions = 2, ReplicationFactor = 1
+                },
+                new TopicSpecification
+                {
+                    Name = KafkaTopics.BookingRejectedTopicName, NumPartitions = 2, ReplicationFactor = 1
                 }
             ]);
         }

@@ -71,7 +71,9 @@ public class BookingServiceImpl : IBookingService
         if (!IsAuthorized(booking.UserId, userId, userRole))
             throw new InsufficientRightsException();
 
-        await CancelBookingCoreAsync(booking, cancellationToken);
+        booking.SetPendingCancel();
+        await _bookingRepository.SaveChangesAsync(cancellationToken);
+        
         return Result.Success();
     }
 
@@ -81,12 +83,5 @@ public class BookingServiceImpl : IBookingService
         var isUserBooking = bookingUserId == userId;
 
         return isAdmin || isUserBooking;
-    }
-
-    private Task CancelBookingCoreAsync(Booking booking, CancellationToken cancellationToken)
-    {
-        booking.Cancel();
-
-        return _bookingRepository.SaveChangesAsync(cancellationToken);
     }
 }

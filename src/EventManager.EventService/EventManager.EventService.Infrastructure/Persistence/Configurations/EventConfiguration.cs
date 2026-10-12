@@ -35,6 +35,9 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
         builder.Property(e => e.AvailableSeats)
             .IsRequired();
 
+        builder.Property(b => b.RowVersion)
+            .IsRowVersion();
+        
         builder.Ignore(e => e.HasStarted);
     }
 }

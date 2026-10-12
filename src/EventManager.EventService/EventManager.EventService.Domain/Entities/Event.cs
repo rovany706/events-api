@@ -65,13 +65,14 @@ public class Event
     /// <summary>
     /// Текущее количество свободных мест
     /// </summary>
-    public int AvailableSeats
-    {
-        get => _availableSeats;
-        private set => _availableSeats = value;
-    }
+    public int AvailableSeats { get; private set; }
 
     public bool HasStarted => DateTime.UtcNow > StartAt;
+    
+    /// <summary>
+    /// Версия строки
+    /// </summary>
+    public uint RowVersion { get; private set; }
 
     public void Update(string title, string? description, DateTime startAt, DateTime endAt)
     {
@@ -102,18 +103,12 @@ public class Event
             throw new EventAlreadyStartedException();
         }
 
-        int current, updated;
-        do
+        if (AvailableSeats < count)
         {
-            current = _availableSeats;
+            return false;
+        }
 
-            if (current < count)
-            {
-                return false;
-            }
-
-            updated = current - count;
-        } while (Interlocked.CompareExchange(ref _availableSeats, updated, current) != current);
+        AvailableSeats -= count;
 
         return true;
     }
@@ -136,7 +131,7 @@ public class Event
                 "Count must be less or equal to the total seat count.");
         }
 
-        Interlocked.Add(ref _availableSeats, count);
+        AvailableSeats += count;
     }
 
     private static void ThrowIfNotValid(string title, DateTime startAt, DateTime endAt, int totalSeats)

@@ -64,6 +64,7 @@ public class GlobalExceptionHandlingMiddleware
             BookingAlreadyCancelledException => StatusCodes.Status400BadRequest,
             InsufficientRightsException => StatusCodes.Status403Forbidden,
             TooManyActiveBookingsException => StatusCodes.Status409Conflict,
+            BookingNotConfirmedException => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status500InternalServerError
         };
     }

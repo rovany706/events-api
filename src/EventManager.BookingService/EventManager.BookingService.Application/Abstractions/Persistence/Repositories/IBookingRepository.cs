@@ -17,6 +17,12 @@ public interface IBookingRepository
     /// </summary>
     /// <param name="ct">Токен отмены</param>
     Task<IReadOnlyList<Booking>> GetPendingBookingsAsync(CancellationToken ct);
+    
+    /// <summary>
+    /// Получить бронирования на отмену
+    /// </summary>
+    /// <param name="ct">Токен отмены</param>
+    Task<IReadOnlyList<Booking>> GetPendingCancellationBookingsAsync(CancellationToken ct);
 
     /// <summary>
     /// Получить бронирование по идентификатору

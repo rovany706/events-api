@@ -23,5 +23,10 @@ public enum BookingStatus
     /// <summary>
     /// Бронь отменена
     /// </summary>
-    Cancelled
+    Cancelled,
+    
+    /// <summary>
+    /// Бронь отменена, ожидание обработки
+    /// </summary>
+    PendingCancellation
 }

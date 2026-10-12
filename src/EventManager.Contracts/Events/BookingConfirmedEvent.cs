@@ -9,6 +9,7 @@ namespace EventManager.Contracts.Events;
 /// <param name="SeatCount">Количество мест</param>
 /// <param name="ProcessedAt">Дата и время обработки бронирования</param>
 public record BookingConfirmedEvent(
+    Guid MessageId,
     int EventId,
     int BookingId,
     int UserId,

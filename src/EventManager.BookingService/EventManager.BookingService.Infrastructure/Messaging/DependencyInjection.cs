@@ -13,7 +13,7 @@ public static class DependencyInjection
         services.AddSingleton<IProducer<string, string>>(_ =>
             new ProducerBuilder<string, string>(new ProducerConfig { BootstrapServers = bootstrapServers }).Build());
 
-        services.AddSingleton<IBookingConfirmationPublisher, BookingConfirmationPublisher>();
+        services.AddSingleton<IMessageBroker, KafkaMessageBroker>();
         return services;
     }
 }

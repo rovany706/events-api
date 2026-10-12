@@ -1,3 +1,4 @@
+using EventManager.EventService.Application.Common.Messaging;
 using EventManager.EventService.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,10 @@ public class EventDbContext : DbContext
     public EventDbContext(DbContextOptions<EventDbContext> options) : base(options) { }
 
     public DbSet<Event> Events => Set<Event>();
+
+    public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
+    
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)

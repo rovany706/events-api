@@ -3,6 +3,7 @@ using System.Text;
 using EventManager.BookingService.Application;
 using EventManager.BookingService.Application.Options;
 using EventManager.BookingService.Infrastructure;
+using EventManager.BookingService.Infrastructure.Options;
 using EventManager.BookingService.Infrastructure.Persistence;
 using EventManager.BookingService.Presentation;
 using EventManager.BookingService.Presentation.Middlewares;
@@ -34,8 +35,13 @@ builder.Services.AddOptions<UserJwtTokenSettings>()
 var dbConnectionString = builder.Configuration.GetConnectionString("BookingDb") ??
                          throw new InvalidOperationException("Connection string 'BookingDb' not found.");
 
-var kafkaBootstrapServers = builder.Configuration.GetSection("Kafka")?.GetValue<string>("BootstrapServers") ??
+var kafkaBootstrapServers = builder.Configuration.GetSection("Kafka").GetValue<string>("BootstrapServers") ??
                             throw new InvalidOperationException("'Kafka/BootstrapServers' not found.");
+
+builder.Services.AddOptions<KafkaSettings>()
+    .Bind(builder.Configuration.GetSection("Kafka"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 builder.Services
     .AddApplicationServices()
