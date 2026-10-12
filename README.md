@@ -91,7 +91,7 @@ PostgreSQL для сервисов доступны по адресам:
 Для добавления новой миграции следует запустить команду (примеры для `EventManager.EventService`):
 
 ```bash
-dotnet ef migrations add <название_миграции> -p src/EventManager.EventService.Infrastructure/EventManager.EventService.Infrastructure.csproj -s src/EventManager.EventService.Presentation/EventManager.EventService.Presentation.csproj -o Persistence/Migrations/ 
+dotnet ef migrations add <название_миграции> -p src/EventManager.EventService/EventManager.EventService.Infrastructure/EventManager.EventService.Infrastructure.csproj -s src/EventManager.EventService/EventManager.EventService.Presentation/EventManager.EventService.Presentation.csproj -o Persistence/Migrations/
 ```
 
 После выполнения команды в проекте в папке Migrations появится новый файл с кодом миграции, состоящий из времени создания миграции и названия.
@@ -99,13 +99,13 @@ dotnet ef migrations add <название_миграции> -p src/EventManager
 Для применения миграций используется команда:
 
 ```bash
-dotnet ef database update -p src/EventManager.EventService.Infrastructure/EventManager.EventService.Infrastructure.csproj -s src/EventManager.EventService.Presentation/EventManager.EventService.Presentation.csproj
+dotnet ef database update -p src/EventManager.EventService/EventManager.EventService.Infrastructure/EventManager.EventService.Infrastructure.csproj -s src/EventManager.EventService/EventManager.EventService.Presentation/EventManager.EventService.Presentation.csproj
 ```
 
 Для отката миграций используется команда:
 
 ```bash
-dotnet ef database update <название_миграции> -p src/EventManager.EventService.Infrastructure/EventManager.EventService.Infrastructure.csproj -s src/EventManager.EventService.Presentation/EventManager.EventService.Presentation.csproj
+dotnet ef database update <название_миграции> -p src/EventManager.EventService/EventManager.EventService.Infrastructure/EventManager.EventService.Infrastructure.csproj -s src/EventManager.EventService/EventManager.EventService.Presentation/EventManager.EventService.Presentation.csproj
 ```
 
 ## Сборка
@@ -115,9 +115,7 @@ dotnet ef database update <название_миграции> -p src/EventManage
 - .NET 10
 
 ```bash
-dotnet publish ./src/EventManager.UserService.Presentation/EventManager.UserService.Presentation.csproj -c Release -o publish_user_service
-dotnet publish ./src/EventManager.EventService.Presentation/EventManager.EventService.Presentation.csproj -c Release -o publish_event_service
-dotnet publish ./src/EventManager.BookingService.Presentation/EventManager.BookingService.Presentation.csproj -c Release -o publish_booking_service
+dotnet publish ./src/EventManager.slnx -c Release -o publish
 ```
 
 ## Тестирование
@@ -125,8 +123,7 @@ dotnet publish ./src/EventManager.BookingService.Presentation/EventManager.Booki
 Тестирование можно запустить с помощью команд:
 
 ```bash
-dotnet test --solution EventManager.EventService.slnx
-dotnet test --solution EventManager.BookingService.slnx
+dotnet test --solution EventManager.slnx
 ```
 
 ### Интеграционное тестирование
@@ -435,7 +432,8 @@ curl -X 'POST' \
   -H 'Content-Type: application/json' \
   -d '{
   "login": "user",
-  "password": "1234"
+  "password": "1234",
+  "userRole": "User"
 }'
 ```
 
@@ -485,6 +483,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiO...
 
 В EventManager API некоторые запросы требуют аутентификации и авторизации.
 Для регистрации в системе пользователь может воспользоваться запросом `POST /api/v1/auth/register`, а для входа `POST /api/v1/auth/login`.
+Для регистрации администратора нужно указать `"userRole": "Admin"` в теле запроса на регистрацию.
 При успешной регистрации пользователь получает JWT-токен, который следует передавать в заголовке `Authorization`:
 ```
 Bearer <JWT-токен>
@@ -498,14 +497,16 @@ Bearer <JWT-токен>
 
 ## Бронирование мероприятий
 
-Обработка бронирований на мероприятия осуществляется в фоновом режиме сервисом EventManager.BookingService (фоновая задача `BookingProcessorService`).
+Обработка бронирований на мероприятия осуществляется в фоновом режиме сервисом EventManager.BookingService (фоновая задача `BookingConfirmationBackgroundService`).
 При старте он подключается к экземпляру Kafka, периодически опрашивает БД на наличие новых бронирований, и обрабатывает их.
-Далее сервис присваивает брони статус "Confirmed" или "Rejected", сохраняет её в БД и отправляет событие в Kafka (топик `booking-confirmed`), содержащее всю необходимую информацию.
+Далее сервис присваивает брони статус "Confirmed", сохраняет её в БД и отправляет событие в Kafka (топик `booking-confirmed`), содержащее всю необходимую информацию.
+В случае отмены пользователем бронирования сервис отправляет событие в топик `booking-cancelled`.
 
-Сервис EventManager.EventService (фоновая задача `BookingConfirmationEventConsumer`) при старте подключается к экземпляру Kafka и подписывается на топик `booking-confirmed`.
+Сервис EventManager.EventService имеет фоновые задачи:
+- `BookingConfirmationEventConsumer` - подписывается на топик `booking-confirmed` (при получении события резервирует места).
+- `BookingCancelledEventConsumer` - подписывается на топик `booking-cancelled` (при получении события освобождает места).
 
-При получении события происходит десериализация содержимого, получение идентификатора события и уменьшение счетчика свободных мест.
-В случае отсутствия свободных мест событие пропускается.
+`BookingConfirmationEventConsumer` при получении события в топике `booking-confirmed` и отсутствия мест отправляет событие `booking-rejected` обратно сервису BookingService.
 
 ## Сценарии использования
 
