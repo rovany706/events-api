@@ -96,6 +96,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: 8080
       ConnectionStrings__UsersDb: Host=users-db;Port=5432;Database=users;Username=postgres;Password=postgres
+      UserJwtToken__Secret: lemon-dipper-kiwi-wish-whisking-squander
     depends_on:
       users-db:
         condition: service_healthy
@@ -113,6 +114,7 @@ services:
       ASPNETCORE_HTTP_PORTS: 8080
       ConnectionStrings__EventsDb: Host=events-db;Port=5432;Database=events;Username=postgres;Password=postgres
       Kafka__BootstrapServers: kafka:29092
+      UserJwtToken__Secret: lemon-dipper-kiwi-wish-whisking-squander
     depends_on:
       events-db:
         condition: service_healthy
@@ -132,6 +134,7 @@ services:
       ASPNETCORE_HTTP_PORTS: 8080
       ConnectionStrings__BookingDb: Host=bookings-db;Port=5432;Database=bookings;Username=postgres;Password=postgres
       Kafka__BootstrapServers: kafka:29092
+      UserJwtToken__Secret: lemon-dipper-kiwi-wish-whisking-squander
     depends_on:
       bookings-db:
         condition: service_healthy
