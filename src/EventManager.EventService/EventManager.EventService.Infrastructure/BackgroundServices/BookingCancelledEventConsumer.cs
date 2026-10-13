@@ -92,11 +92,11 @@ public class BookingCancelledEventConsumer : BackgroundService
 
     private async Task ProcessMessage(BookingCancelledEvent message, CancellationToken ct)
     {
+        using var scope = _scopeFactory.CreateScope();
+        await using var context = scope.ServiceProvider.GetRequiredService<EventDbContext>();
+
         try
         {
-            using var scope = _scopeFactory.CreateScope();
-            await using var context = scope.ServiceProvider.GetRequiredService<EventDbContext>();
-
             if (await context.InboxMessages.AnyAsync(x => x.Id == message.MessageId, ct))
             {
                 return;
@@ -112,7 +112,15 @@ public class BookingCancelledEventConsumer : BackgroundService
             }
 
             eventToCancel.ReleaseSeats(message.SeatCount);
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            _logger.LogError(e, "Failed to release seats for {EventId}. Wrong seat count {SeatCount}",
+                message.EventId, message.SeatCount);
+        }
 
+        try
+        {
             context.InboxMessages.Add(new InboxMessage { Id = message.MessageId, ReceivedOn = DateTime.UtcNow });
             await context.SaveChangesAsync(ct);
         }
@@ -120,11 +128,6 @@ public class BookingCancelledEventConsumer : BackgroundService
             when (e.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
         {
             _logger.LogWarning("Message {MessageId} already processed", message.MessageId);
-        }
-        catch (ArgumentOutOfRangeException e)
-        {
-            _logger.LogError(e, "Failed to release seats for {EventId}. Wrong seat count {SeatCount}",
-                message.EventId, message.SeatCount);
         }
     }
 }

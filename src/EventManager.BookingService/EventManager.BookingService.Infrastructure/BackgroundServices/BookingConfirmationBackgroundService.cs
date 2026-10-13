@@ -8,6 +8,7 @@ using EventManager.BookingService.Infrastructure.Persistence;
 using EventManager.Contracts;
 using EventManager.Contracts.Events;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -93,7 +94,7 @@ public class BookingConfirmationBackgroundService : BackgroundService
         {
             await context.SaveChangesAsync(ct);
         }
-        catch (DBConcurrencyException)
+        catch (DbUpdateConcurrencyException)
         {
             _logger.LogWarning("Booking {BookingId} was changed by another instance", booking.Id);
             return;

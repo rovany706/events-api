@@ -95,6 +95,12 @@ public class BookingRejectedEventConsumer : BackgroundService
         {
             using var scope = _scopeFactory.CreateScope();
             await using var context = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
+            
+            if (await context.InboxMessages.AnyAsync(x => x.Id == message.MessageId, ct))
+            {
+                return;
+            }
+            
             var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
             
             var bookingToReject = await bookingRepository.GetBookingByIdAsync(message.BookingId, ct);

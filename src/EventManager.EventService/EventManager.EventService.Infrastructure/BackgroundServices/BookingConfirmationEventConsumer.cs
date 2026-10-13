@@ -94,6 +94,11 @@ public class BookingConfirmationEventConsumer : BackgroundService
     {
         using var scope = _scopeFactory.CreateScope();
         await using var context = scope.ServiceProvider.GetRequiredService<EventDbContext>();
+
+        if (await context.InboxMessages.AnyAsync(x => x.Id == message.MessageId, ct))
+        {
+            return;
+        }
         
         try
         {
