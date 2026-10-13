@@ -1,0 +1,58 @@
+﻿using System.Reflection;
+using System.Text.Json.Serialization;
+
+using Asp.Versioning;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Net.Http.Headers;
+using Microsoft.OpenApi;
+
+namespace EventManager.EventService.Presentation;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddPresentation(this IServiceCollection services)
+    {
+        services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
+        services.AddApiVersioning(options =>
+        {
+            options.DefaultApiVersion = new ApiVersion(1);
+            options.ReportApiVersions = true;
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.ApiVersionReader = new UrlSegmentApiVersionReader();
+        }).AddApiExplorer(options =>
+        {
+            options.GroupNameFormat = "'v'V";
+            options.SubstituteApiVersionInUrl = true;
+        });
+        services.AddSwaggerGen(options =>
+        {
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            options.IncludeXmlComments(xmlPath);
+
+            options.SwaggerDoc("v1", new OpenApiInfo { Title = "Events API v1", Version = "v1" });
+
+            options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme,
+                new OpenApiSecurityScheme
+                {
+                    Description = "Enter JWT token",
+                    In = ParameterLocation.Header,
+                    BearerFormat = "JWT",
+                    Type = SecuritySchemeType.Http,
+                    Name = HeaderNames.Authorization,
+                    Scheme = JwtBearerDefaults.AuthenticationScheme
+                });
+            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme, document)] = []
+            });
+        });
+
+        return services;
+    }
+}

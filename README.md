@@ -2,44 +2,69 @@
 
 ## Структура проекта
 
-Структура EventManager API делится на несколько проектов, следуя принципам чистой архитектуры:
+EventManager API имеет микросервисную архитектуру и делится на несколько проектов:
 
-1. EventManager.Domain - слой домена, содержит бизнес-сущности, с которыми работает EventManager.
-2. EventManager.Application - слой приложения, содержит use cases, абстракции сервисов и репозиториев.
-3. EventManager.Infrastructure - слой инфраструктуры, содержит реализации абстракций, работает с внешними зависимостями (СУБД, кеширование и т.д.)
-4. EventManager.Presentation - слой представления, содержит описание API и предоставляет клиентам доступ к нему.
+1. EventManager.UserService - сервис пользователей.
+2. EventManager.EventService - сервис мероприятий.
+3. EventManager.BookingService - сервис бронирований.
+
+Каждый проект состоит из нескольких слоев, следуя принципам чистой архитектуры:
+
+1. Domain - слой домена, содержит бизнес-сущности, с которыми работает EventManager.
+2. Application - слой приложения, содержит use cases, абстракции сервисов и репозиториев.
+3. Infrastructure - слой инфраструктуры, содержит реализации абстракций, работает с внешними зависимостями (СУБД, кеширование и т.д.)
+4. Presentation - слой представления, содержит описание API и предоставляет клиентам доступ к нему.
 
 ```mermaid
 ---
 title: Схема зависимостей проектов
 ---
 flowchart TB
-    EventManager.Application --> EventManager.Domain
-    EventManager.Infrastructure --> EventManager.Domain & EventManager.Application
-    EventManager.Presentation --> EventManager.Infrastructure & EventManager.Application
+    Application --> Domain
+    Infrastructure --> Domain & Application
+    Presentation --> Infrastructure & Application
 ```
 
-## Запуск зависимостей
+## Зависимости
 
-Для запуска API требуются внешние зависимости: 
+API имеет внешние зависимости: 
 
 - PostgreSQL (СУБД для хранения данных)
+- Apache Kafka (распределенный журнал событий)
 
-Для их запуска в виде docker-контейнеров доступен [docker-compose.yml]().
+## Запуск API и зависимостей
+
+Для удобного запуска API и внешних зависимостей подготовлен [docker-compose.yml]().
 
 Запуск контейнеров производится с помощью команды:
 
 ```bash
-docker compose up
+docker compose up --build -d
 ```
+
+После запуска Swagger будет доступен по адресам:
+- EventManager.UserService - http://localhost:8081/swagger
+- EventManager.EventService - http://localhost:8082/swagger
+- EventManager.BookingService - http://localhost:8083/swagger
+
+PostgreSQL для сервисов доступны по адресам:
+- users-db - localhost:5432
+- events-db - localhost:5433
+- bookings-db - localhost:5434
 
 ### Настройка подключения к PostgreSQL
 
-Для подключения к PostgreSQL нужно задать строку подключения в файле `appsettings.json` (свойство `ConnectionStrings/EventsDb`).
+У каждого микросервиса есть своя база данных. СУБД для них указаны в [docker-compose.yml]().
+Строки подключения к СУБД PostgreSQL задаются в виде переменных окружения.
+
+Например, `ConnectionStrings__EventsDb: Host=events-db;Port=5432;Database=events;Username=postgres;Password=postgres`.
+
+Если docker не используется для запуска, то нужно задать строку подключения в файле `appsettings.json`.
 
 Пример:
 
 ```json
+// src/EventManager.EventService.Presentation/appsettings.json
 "ConnectionStrings": {
   "EventsDb": "Host=localhost;Port=5432;Database=eventapi;Username=postgres;Password=postgres"
 }
@@ -59,12 +84,14 @@ docker compose up
   }
 ```
 
+Также секрет можно задать в docker-compose.yml: `UserJwtToken__Secret: superstrongsecret`.
+
 ### Миграции
 
-Для добавления новой миграции следует запустить команду:
+Для добавления новой миграции следует запустить команду (примеры для `EventManager.EventService`):
 
 ```bash
-dotnet ef migrations add <название_миграции> -p src/EventManager.Infrastructure/EventManager.Infrastructure.csproj -s src/EventManager.Presentation/EventManager.Presentation.csproj -o Persistence/Migrations/ 
+dotnet ef migrations add <название_миграции> -p src/EventManager.EventService/EventManager.EventService.Infrastructure/EventManager.EventService.Infrastructure.csproj -s src/EventManager.EventService/EventManager.EventService.Presentation/EventManager.EventService.Presentation.csproj -o Persistence/Migrations/
 ```
 
 После выполнения команды в проекте в папке Migrations появится новый файл с кодом миграции, состоящий из времени создания миграции и названия.
@@ -72,22 +99,14 @@ dotnet ef migrations add <название_миграции> -p src/EventManager
 Для применения миграций используется команда:
 
 ```bash
-dotnet ef database update -p src/EventManager.Infrastructure/EventManager.Infrastructure.csproj -s src/EventManager.Presentation/EventManager.Presentation.csproj
+dotnet ef database update -p src/EventManager.EventService/EventManager.EventService.Infrastructure/EventManager.EventService.Infrastructure.csproj -s src/EventManager.EventService/EventManager.EventService.Presentation/EventManager.EventService.Presentation.csproj
 ```
 
 Для отката миграций используется команда:
 
 ```bash
-dotnet ef database update <название_миграции> -p src/EventManager.Infrastructure/EventManager.Infrastructure.csproj -s src/EventManager.Presentation/EventManager.Presentation.csproj
+dotnet ef database update <название_миграции> -p src/EventManager.EventService/EventManager.EventService.Infrastructure/EventManager.EventService.Infrastructure.csproj -s src/EventManager.EventService/EventManager.EventService.Presentation/EventManager.EventService.Presentation.csproj
 ```
-
-### Запуск EventManager API
-
-```bash
-dotnet run --project ./src/EventManager.Presentation/EventManager.Presentation.csproj
-```
-
-После запуска Swagger будет доступен по адресу: http://localhost:5080/swagger
 
 ## Сборка
 
@@ -96,15 +115,23 @@ dotnet run --project ./src/EventManager.Presentation/EventManager.Presentation.c
 - .NET 10
 
 ```bash
-dotnet publish ./src/EventManager.Presentation/EventManager.Presentation.csproj -c Release -o publish
+dotnet build
+```
+
+Для публикации каждого сервиса:
+
+```bash
+dotnet publish ./src/EventManager.UserService/EventManager.UserService.Presentation/EventManager.UserService.Presentation.csproj -c Release -o publish_user_service
+dotnet publish ./src/EventManager.EventService/EventManager.EventService.Presentation/EventManager.EventService.Presentation.csproj -c Release -o publish_event_service
+dotnet publish ./src/EventManager.BookingService/EventManager.BookingService.Presentation/EventManager.BookingService.Presentation.csproj -c Release -o publish_booking_service
 ```
 
 ## Тестирование
 
-Тестирование можно запустить с помощью команды:
+Тестирование можно запустить с помощью команд:
 
 ```bash
-dotnet test
+dotnet test --solution EventManager.slnx
 ```
 
 ### Интеграционное тестирование
@@ -114,11 +141,11 @@ dotnet test
 - Проверка схемы базы данных, связи, ограничения.
 
 Для этого используется библиотека TestContainers, которая запускает контейнер с СУБД PostgreSQL.
-Поэтому для запуска тестов в проекте `test/EventManager.IntegrationTests` потребуется установленный Docker.
+Поэтому для запуска тестов в проектах `test/EventManager.EventService/EventManager.EventService.IntegrationTests` и `test/EventManager.BookingService/EventManager.BookingService.IntegrationTests` потребуется установленный Docker.
 
 ## Описание API
 
-После запуска сервер доступен по адресу http://localhost:5080 (HTTP), https://localhost:5443 (HTTPS)
+После запуска сервер доступен на адресах http://localhost:8081 (UserService), http://localhost:8082 (EventService), http://localhost:8083 (BookingService)
 
 Доступные эндпоинты:
 
@@ -136,7 +163,7 @@ GET /api/v1/events
 
 ```bash
 curl -X 'GET' \
-  'http://localhost:5080/api/v1/Events?Title=Workshop&From=2026-01-01&To=2026-06-01&Page=1&PageSize=10' \
+  'http://localhost:8082/api/v1/Events?Title=Workshop&From=2026-01-01&To=2026-06-01&Page=1&PageSize=10' \
   -H 'accept: text/plain'
 ```
 
@@ -193,7 +220,7 @@ GET /api/v1/events/1
 
 ```bash
 curl -X 'GET' \
-  'http://localhost:5080/api/v1/Events/1' \
+  'http://localhost:8082/api/v1/Events/1' \
   -H 'accept: text/plain'
 ```
 
@@ -227,7 +254,7 @@ POST /api/v1/events
 
 ```bash
 curl -X 'POST' \
-  'http://localhost:5080/api/v1/Events' \
+  'http://localhost:8082/api/v1/Events' \
   -H 'accept: */*' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -269,7 +296,7 @@ PUT /api/v1/events/1
 
 ```bash
 curl -X 'PUT' \
-  'http://localhost:5080/api/v1/Events/1' \
+  'http://localhost:8082/api/v1/Events/1' \
   -H 'accept: */*' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -299,7 +326,7 @@ DELETE /api/v1/events/1
 
 ```bash
 curl -X 'DELETE' \
-  'http://localhost:5080/api/v1/Events/1' \
+  'http://localhost:8082/api/v1/Events/1' \
   -H 'accept: */*'
 ```
 
@@ -324,7 +351,7 @@ POST /api/v1/events/1/book
 
 ```bash
 curl -X 'POST' \
-  'http://localhost:5080/api/v1/Events/1/book' \
+  'http://localhost:8083/api/v1/Events/1/book' \
   -H 'accept: */*'
 ```
 
@@ -355,7 +382,7 @@ GET /api/v1/bookings/1
 
 ```bash
 curl -X 'GET' \
-  'http://localhost:5080/api/v1/Bookings/1' \
+  'http://localhost:8083/api/v1/Bookings/1' \
   -H 'accept: */*'
 ```
 
@@ -387,7 +414,7 @@ DELETE /api/v1/bookings/1
 
 ```bash
 curl -X 'DELETE' \
-  'http://localhost:5080/api/v1/Bookings/1' \
+  'http://localhost:8083/api/v1/Bookings/1' \
   -H 'accept: */*'
 ```
 
@@ -408,12 +435,13 @@ POST /api/v1/auth/register
 
 ```bash
 curl -X 'POST' \
-  'http://localhost:5080/api/v1/auth/register' \
+  'http://localhost:8081/api/v1/auth/register' \
   -H 'accept: */*' \
   -H 'Content-Type: application/json' \
   -d '{
   "login": "user",
-  "password": "1234"
+  "password": "1234",
+  "userRole": "User"
 }'
 ```
 
@@ -430,7 +458,7 @@ POST /api/v1/auth/login
 
 ```bash
 curl -X 'POST' \
-  'http://localhost:5080/api/v1/auth/login' \
+  'http://localhost:8081/api/v1/auth/login' \
   -H 'accept: */*' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -463,6 +491,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiO...
 
 В EventManager API некоторые запросы требуют аутентификации и авторизации.
 Для регистрации в системе пользователь может воспользоваться запросом `POST /api/v1/auth/register`, а для входа `POST /api/v1/auth/login`.
+Для регистрации администратора нужно указать `"userRole": "Admin"` в теле запроса на регистрацию.
 При успешной регистрации пользователь получает JWT-токен, который следует передавать в заголовке `Authorization`:
 ```
 Bearer <JWT-токен>
@@ -476,19 +505,16 @@ Bearer <JWT-токен>
 
 ## Бронирование мероприятий
 
-Обработка бронирований на мероприятия осуществляется в фоновом режиме сервисом `BookingProcessorService`.
-Он периодически опрашивает очередь задач на наличие новых бронирований, забирает задачу и приступает к её обработке.
-Далее, если бронирование не было удалено, пока задача стояла в очереди, сервис присваивает брони статус "Confirmed" или "Rejected" (если связанное с ним мероприятие было удалено) и сохраняет её в хранилище.
+Обработка бронирований на мероприятия осуществляется в фоновом режиме сервисом EventManager.BookingService (фоновая задача `BookingConfirmationBackgroundService`).
+При старте он подключается к экземпляру Kafka, периодически опрашивает БД на наличие новых бронирований, и обрабатывает их.
+Далее сервис присваивает брони статус "Confirmed", сохраняет её в БД и отправляет событие в Kafka (топик `booking-confirmed`), содержащее всю необходимую информацию.
+В случае отмены пользователем бронирования сервис отправляет событие в топик `booking-cancelled`.
 
-## Использование примитивов синхронизации
+Сервис EventManager.EventService имеет фоновые задачи:
+- `BookingConfirmationEventConsumer` - подписывается на топик `booking-confirmed` (при получении события резервирует места).
+- `BookingCancelledEventConsumer` - подписывается на топик `booking-cancelled` (при получении события освобождает места).
 
-1. Резервирование мест на мероприятии
-
-Логика резервирования мест (получение события, уменьшение счетчика свободных мест, сохранение обновленного события) происходит в рамках блокировки с помощью `SemaphoreSlim`.
-
-2. Обработка очереди бронирований
-
-Логика подтверждения/отклонения бронирования (проверка события, обновление статуса бронирования) происходит в рамках блокировки с помощью `SemaphoreSlim`. Выбор в пользу семафора обусловлено использованием асинхронных операций.
+`BookingConfirmationEventConsumer` при получении события в топике `booking-confirmed` и отсутствия мест отправляет событие `booking-rejected` обратно сервису BookingService.
 
 ## Сценарии использования
 

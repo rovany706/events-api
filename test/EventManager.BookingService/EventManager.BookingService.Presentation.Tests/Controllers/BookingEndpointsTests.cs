@@ -1,0 +1,94 @@
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+
+using EventManager.BookingService.Application.Abstractions.Services;
+using EventManager.BookingService.Application.Common.Results;
+using EventManager.BookingService.Domain.Entities;
+using EventManager.BookingService.Presentation.Controllers;
+using EventManager.Contracts.Jwt;
+
+using FluentAssertions;
+
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
+
+namespace EventManager.BookingService.Presentation.Tests.Controllers;
+
+public class BookingEndpointsTests
+{
+    private readonly Mock<IBookingService> _bookingServiceMock;
+    private readonly BookingEndpoints _controller;
+
+    public BookingEndpointsTests()
+    {
+        _bookingServiceMock = new Mock<IBookingService>();
+        _controller =
+            new BookingEndpoints(_bookingServiceMock.Object, NullLogger<BookingEndpoints>.Instance)
+            {
+                ControllerContext = { HttpContext = new DefaultHttpContext { User = GetTestClaims() } }
+            };
+    }
+
+    private ClaimsPrincipal GetTestClaims()
+    {
+        return new ClaimsPrincipal(new ClaimsIdentity([
+            new Claim(JwtRegisteredClaimNames.Sub, "1"),
+            new Claim(JwtRoles.RoleClaimName, JwtRoles.AdminRole)
+        ]));
+    }
+
+    [Fact]
+    public async Task BookEventAsync_WhenBookingCreated_ShouldReturn202AcceptedAt()
+    {
+        const int id = 1;
+        const int userId = 1;
+        var booking = Booking.CreateInstance(id, userId);
+
+        _bookingServiceMock.Setup(x => x.CreateBookingAsync(id, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<Booking?>.Success(booking));
+
+        var actual = await _controller.BookEventAsync(id, TestContext.Current.CancellationToken);
+        var result = Assert.IsType<AcceptedAtActionResult>(actual);
+
+        result.StatusCode.Should().Be(StatusCodes.Status202Accepted);
+        result.ActionName.Should().Be(nameof(BookingEndpoints.GetBookingById));
+        result.RouteValues.Should().ContainKey("id");
+    }
+
+    [Fact]
+    public async Task BookEventAsync_WhenCreateBookingReturnsConflictError_ShouldReturn409Conflict()
+    {
+        const int id = 1;
+        const int userId = 1;
+        const string expectedErrorMessage = "Conflict";
+        _bookingServiceMock.Setup(x => x.CreateBookingAsync(id, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<Booking?>.Failure(Error.Conflict(expectedErrorMessage)));
+
+        var actual = await _controller.BookEventAsync(id, TestContext.Current.CancellationToken);
+        var result = Assert.IsType<ObjectResult>(actual);
+        var body = Assert.IsType<ProblemDetails>(result.Value);
+
+        result.StatusCode.Should().Be(StatusCodes.Status409Conflict);
+        body.Detail.Should().Be(expectedErrorMessage);
+    }
+
+    [Fact]
+    public async Task BookEventAsync_WhenCreateBookingReturnsNotFoundError_ShouldReturn404NotFound()
+    {
+        const int id = 1;
+        const int userId = 1;
+        const string expectedErrorMessage = "Not found";
+        _bookingServiceMock.Setup(x => x.CreateBookingAsync(id, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<Booking?>.Failure(Error.NotFound(expectedErrorMessage)));
+
+        var actual = await _controller.BookEventAsync(id, TestContext.Current.CancellationToken);
+        var result = Assert.IsType<ObjectResult>(actual);
+        var body = Assert.IsType<ProblemDetails>(result.Value);
+
+        result.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+        body.Detail.Should().Match(expectedErrorMessage);
+    }
+}

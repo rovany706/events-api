@@ -1,0 +1,8 @@
+.git
+.agents
+.aws
+.codex
+.idea
+**/bin
+**/obj
+*.DotSettings.user

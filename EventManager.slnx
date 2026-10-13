@@ -1,0 +1,32 @@
+<Solution>
+  <Folder Name="/EventService/">
+    <Project Path="src/EventManager.EventService/EventManager.EventService.Application/EventManager.EventService.Application.csproj" />
+    <Project Path="src/EventManager.EventService/EventManager.EventService.Domain/EventManager.EventService.Domain.csproj" />
+    <Project Path="src/EventManager.EventService/EventManager.EventService.Infrastructure/EventManager.EventService.Infrastructure.csproj" />
+    <Project Path="src/EventManager.EventService/EventManager.EventService.Presentation/EventManager.EventService.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/EventService/test/">
+    <Project Path="test/EventManager.EventService/EventManager.EventService.Application.Tests/EventManager.EventService.Application.Tests.csproj" />
+    <Project Path="test/EventManager.EventService/EventManager.EventService.Domain.Tests/EventManager.EventService.Domain.Tests.csproj" />
+    <Project Path="test/EventManager.EventService/EventManager.EventService.IntegrationTests/EventManager.EventService.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/BookingService/">
+    <Project Path="src/EventManager.BookingService/EventManager.BookingService.Application/EventManager.BookingService.Application.csproj" />
+    <Project Path="src/EventManager.BookingService/EventManager.BookingService.Domain/EventManager.BookingService.Domain.csproj" />
+    <Project Path="src/EventManager.BookingService/EventManager.BookingService.Infrastructure/EventManager.BookingService.Infrastructure.csproj" />
+    <Project Path="src/EventManager.BookingService/EventManager.BookingService.Presentation/EventManager.BookingService.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/BookingService/test/">
+    <Project Path="test/EventManager.BookingService/EventManager.BookingService.Application.Tests/EventManager.BookingService.Application.Tests.csproj" />
+    <Project Path="test/EventManager.BookingService/EventManager.BookingService.Domain.Tests/EventManager.BookingService.Domain.Tests.csproj" />
+    <Project Path="test/EventManager.BookingService/EventManager.BookingService.IntegrationTests/EventManager.BookingService.IntegrationTests.csproj" />
+    <Project Path="test/EventManager.BookingService/EventManager.BookingService.Presentation.Tests/EventManager.BookingService.Presentation.Tests.csproj" />
+  </Folder>
+  <Folder Name="/UserService/">
+    <Project Path="src/EventManager.UserService/EventManager.UserService.Application/EventManager.UserService.Application.csproj" />
+    <Project Path="src/EventManager.UserService/EventManager.UserService.Domain/EventManager.UserService.Domain.csproj" />
+    <Project Path="src/EventManager.UserService/EventManager.UserService.Infrastructure/EventManager.UserService.Infrastructure.csproj" />
+    <Project Path="src/EventManager.UserService/EventManager.UserService.Presentation/EventManager.UserService.Presentation.csproj" />
+  </Folder>
+  <Project Path="src/EventManager.Contracts/EventManager.Contracts.csproj" />
+</Solution>

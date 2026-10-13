@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/common/">
+    <Project Path="EventManager.Contracts/EventManager.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="../test/EventManager.EventService/EventManager.EventService.Application.Tests/EventManager.EventService.Application.Tests.csproj" />
+    <Project Path="../test/EventManager.EventService/EventManager.EventService.Domain.Tests/EventManager.EventService.Domain.Tests.csproj" />
+    <Project Path="../test/EventManager.EventService/EventManager.EventService.IntegrationTests/EventManager.EventService.IntegrationTests.csproj" />
+  </Folder>
+  <Project Path="EventManager.EventService/EventManager.EventService.Application/EventManager.EventService.Application.csproj" />
+  <Project Path="EventManager.EventService/EventManager.EventService.Domain/EventManager.EventService.Domain.csproj" />
+  <Project Path="EventManager.EventService/EventManager.EventService.Infrastructure/EventManager.EventService.Infrastructure.csproj" />
+  <Project Path="EventManager.EventService/EventManager.EventService.Presentation/EventManager.EventService.Presentation.csproj" />
+</Solution>

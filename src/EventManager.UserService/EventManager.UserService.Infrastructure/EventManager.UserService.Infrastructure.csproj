@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12"/>
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.23.0"/>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\EventManager.Contracts\EventManager.Contracts.csproj" />
+    <ProjectReference Include="..\EventManager.UserService.Application\EventManager.UserService.Application.csproj" />
+    <ProjectReference Include="..\EventManager.UserService.Domain\EventManager.UserService.Domain.csproj" />
+  </ItemGroup>
+</Project>
