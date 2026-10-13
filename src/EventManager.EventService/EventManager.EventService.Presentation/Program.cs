@@ -3,6 +3,7 @@ using System.Text;
 using EventManager.EventService.Application;
 using EventManager.EventService.Application.Options;
 using EventManager.EventService.Infrastructure;
+using EventManager.EventService.Infrastructure.BackgroundServices;
 using EventManager.EventService.Infrastructure.Messaging;
 using EventManager.EventService.Infrastructure.Options;
 using EventManager.EventService.Infrastructure.Persistence;
@@ -97,7 +98,5 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-
-await KafkaTopicInitializer.EnsureTopicsCreated(kafkaSettings.BootstrapServers);
 
 app.Run();

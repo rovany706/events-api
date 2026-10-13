@@ -6,6 +6,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddBackgroundServices(this IServiceCollection services)
     {
+        services.AddHostedService<KafkaTopicInitializer>();
         services.AddHostedService<BookingConfirmationEventConsumer>();
         services.AddHostedService<BookingCancelledEventConsumer>();
         services.AddHostedService<OutboxProcessor>();
