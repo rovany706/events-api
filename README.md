@@ -115,7 +115,15 @@ dotnet ef database update <название_миграции> -p src/EventManage
 - .NET 10
 
 ```bash
-dotnet publish ./src/EventManager.slnx -c Release -o publish
+dotnet build
+```
+
+Для публикации каждого сервиса:
+
+```bash
+dotnet publish ./src/EventManager.UserService/EventManager.UserService.Presentation/EventManager.UserService.Presentation.csproj -c Release -o publish_user_service
+dotnet publish ./src/EventManager.EventService/EventManager.EventService.Presentation/EventManager.EventService.Presentation.csproj -c Release -o publish_event_service
+dotnet publish ./src/EventManager.BookingService/EventManager.BookingService.Presentation/EventManager.BookingService.Presentation.csproj -c Release -o publish_booking_service
 ```
 
 ## Тестирование
