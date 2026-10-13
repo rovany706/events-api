@@ -137,7 +137,7 @@ public class BookingServiceImplTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task CancelBookingAsync_WhenBookingAndUserExists_ShouldCancelBooking()
+    public async Task CancelBookingAsync_WhenBookingExists_ShouldSetPendingCancellation()
     {
         var ct = TestContext.Current.CancellationToken;
         await ResetDatabaseAsync();
@@ -147,21 +147,25 @@ public class BookingServiceImplTests : IAsyncLifetime
         const int testUserId = 1;
         await using var context = CreateContext();
 
-        var bookingRepository = new BookingRepository(context);
-        var bookingService = new BookingServiceImpl(bookingRepository, NullLogger<BookingServiceImpl>.Instance);
+        var testBooking = Booking.CreateInstance(testEventId, testUserId);
+        testBooking.Confirm();;
+        context.Bookings.Add(testBooking);
+        await context.SaveChangesAsync(ct);
         
         // Act
-        var booking = (await bookingService.CreateBookingAsync(testEventId, testEventId, ct)).Value!;
+        await using var actContext = CreateContext();
+        var bookingRepository = new BookingRepository(actContext);
+        var bookingService = new BookingServiceImpl(bookingRepository, NullLogger<BookingServiceImpl>.Instance);
 
         var result =
-            await bookingService.CancelBookingAsync(booking.Id, testUserId, JwtRoles.UserRole,
-                TestContext.Current.CancellationToken);
+            await bookingService.CancelBookingAsync(testBooking.Id, testUserId, JwtRoles.UserRole,
+                ct);
 
         // Assert
         await using var verifyContext = CreateContext();
-        var verifyBooking = verifyContext.Bookings.First(b => b.Id == booking.Id);
+        var verifyBooking = verifyContext.Bookings.First(b => b.Id == testBooking.Id);
         result.IsSuccess.Should().BeTrue();
-        verifyBooking.Status.Should().Be(BookingStatus.Cancelled);
+        verifyBooking.Status.Should().Be(BookingStatus.PendingCancellation);
     }
 
     [Fact]
