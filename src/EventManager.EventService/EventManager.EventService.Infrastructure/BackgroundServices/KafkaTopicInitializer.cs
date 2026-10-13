@@ -44,6 +44,11 @@ public class KafkaTopicInitializer : BackgroundService
                 }
             ]);
         }
+        catch (CreateTopicsException e) when (e.Results.All(r =>
+                                                  r.Error.Code is ErrorCode.TopicAlreadyExists or ErrorCode.NoError))
+        {
+            return;
+        }
         catch (Exception e)
         {
             _logger.LogWarning(e, "Failed to create topics in Kafka.");
