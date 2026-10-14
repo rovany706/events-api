@@ -1,4 +1,6 @@
-﻿using EventManager.EventService.Domain.Exceptions;
+﻿using System.Text.Json.Serialization;
+
+using EventManager.EventService.Domain.Exceptions;
 
 namespace EventManager.EventService.Domain.Entities;
 
@@ -12,6 +14,7 @@ public class Event
         Title = null!;
     }
 
+    [JsonConstructor]
     private Event(string title, string? description, DateTime startAt, DateTime endAt, int totalSeats)
     {
         Title = title;

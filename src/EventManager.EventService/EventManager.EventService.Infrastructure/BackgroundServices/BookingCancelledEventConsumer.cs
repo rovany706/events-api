@@ -4,6 +4,7 @@ using Confluent.Kafka;
 
 using EventManager.Contracts;
 using EventManager.Contracts.Events;
+using EventManager.EventService.Application.Abstractions.Caching;
 using EventManager.EventService.Application.Abstractions.Persistence.Repositories;
 using EventManager.EventService.Application.Common.Messaging;
 using EventManager.EventService.Domain.Exceptions;
@@ -94,17 +95,17 @@ public class BookingCancelledEventConsumer : BackgroundService
     {
         using var scope = _scopeFactory.CreateScope();
         await using var context = scope.ServiceProvider.GetRequiredService<EventDbContext>();
+        var cache = scope.ServiceProvider.GetRequiredService<ICache>();
+        if (await context.InboxMessages.AnyAsync(x => x.Id == message.MessageId, ct))
+        {
+            return;
+        }
+
+        var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var eventToCancel = await eventRepository.GetEventByIdAsync(message.EventId, ct);
 
         try
         {
-            if (await context.InboxMessages.AnyAsync(x => x.Id == message.MessageId, ct))
-            {
-                return;
-            }
-
-            var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
-            var eventToCancel = await eventRepository.GetEventByIdAsync(message.EventId, ct);
-
             if (eventToCancel == null)
             {
                 _logger.LogWarning("Event to cancel {EventId} not found", message.EventId);
@@ -129,5 +130,8 @@ public class BookingCancelledEventConsumer : BackgroundService
         {
             _logger.LogWarning("Message {MessageId} already processed", message.MessageId);
         }
+        
+        await cache.SetByKeyAsync($"event:{eventToCancel.Id}", JsonSerializer.Serialize(eventToCancel), TimeSpan.FromMinutes(5));
+        
     }
 }

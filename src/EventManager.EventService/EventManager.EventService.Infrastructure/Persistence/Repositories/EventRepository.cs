@@ -56,6 +56,16 @@ public class EventRepository : IEventRepository
     }
 
     /// <inheritdoc />
+    public Task<List<Event>> GetTop10PopularEvents(CancellationToken ct)
+    {
+        return _dbContext.Events
+            .AsNoTracking()
+            .OrderByDescending(e => (e.TotalSeats - e.AvailableSeats) / (double)e.TotalSeats)
+            .Take(10)
+            .ToListAsync(ct);
+    }
+
+    /// <inheritdoc />
     public void RemoveEvent(Event eventToRemove)
     {
         _dbContext.Events.Remove(eventToRemove);
