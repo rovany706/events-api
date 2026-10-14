@@ -47,9 +47,12 @@ var dbConnectionString = builder.Configuration.GetConnectionString("EventsDb") ?
 
 var kafkaBootstrapServers = builder.Configuration.GetSection("Kafka").GetValue<string>("BootstrapServers") ??
                             throw new InvalidOperationException("'Kafka/BootstrapServers' not found.");
+
+var redisEndpoints = builder.Configuration.GetSection("Redis").GetValue<string>("Endpoints") ??
+                            throw new InvalidOperationException("'Redis/Endpoints' not found.");
 builder.Services
     .AddApplicationServices()
-    .AddInfrastructure(dbConnectionString, kafkaBootstrapServers)
+    .AddInfrastructure(dbConnectionString, kafkaBootstrapServers, redisEndpoints)
     .AddPresentation();
 
 var userJwtTokenSettings = userJwtTokenSection.Get<UserJwtTokenSettings>()!;
