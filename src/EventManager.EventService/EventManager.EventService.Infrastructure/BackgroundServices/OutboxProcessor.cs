@@ -1,4 +1,3 @@
-using EventManager.Contracts;
 using EventManager.EventService.Application.Abstractions.Messaging;
 using EventManager.EventService.Infrastructure.Persistence;
 

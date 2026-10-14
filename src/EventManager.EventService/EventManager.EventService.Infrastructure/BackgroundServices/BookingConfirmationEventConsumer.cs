@@ -4,6 +4,7 @@ using Confluent.Kafka;
 
 using EventManager.Contracts;
 using EventManager.Contracts.Events;
+using EventManager.EventService.Application.Abstractions.Caching;
 using EventManager.EventService.Application.Abstractions.Persistence.Repositories;
 using EventManager.EventService.Application.Common.Messaging;
 using EventManager.EventService.Domain.Exceptions;
@@ -94,17 +95,18 @@ public class BookingConfirmationEventConsumer : BackgroundService
     {
         using var scope = _scopeFactory.CreateScope();
         await using var context = scope.ServiceProvider.GetRequiredService<EventDbContext>();
+        var cache = scope.ServiceProvider.GetRequiredService<ICache>();
 
         if (await context.InboxMessages.AnyAsync(x => x.Id == message.MessageId, ct))
         {
             return;
         }
-        
+
+        var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var eventToBook = await eventRepository.GetEventByIdAsync(message.EventId, ct);
+
         try
         {
-            var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
-            var eventToBook = await eventRepository.GetEventByIdAsync(message.EventId, ct);
-
             if (eventToBook == null)
             {
                 _logger.LogWarning("Event to book {EventId} not found", message.EventId);
@@ -143,6 +145,10 @@ public class BookingConfirmationEventConsumer : BackgroundService
         {
             _logger.LogWarning("Message {MessageId} already processed", message.MessageId);
         }
+
+        if (eventToBook != null)
+            await cache.SetByKeyAsync($"event:{eventToBook.Id}", JsonSerializer.Serialize(eventToBook),
+                CacheTtlValues.GetEventByIdTtl);
     }
 
     private static void RejectBookingConfirmation(EventDbContext context, BookingConfirmedEvent message)

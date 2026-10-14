@@ -52,4 +52,10 @@ public interface IEventService
     /// <param name="ct">Токен отмены</param>
     /// <returns>false, если мероприятие не найдено, иначе true</returns>
     Task<Result> RemoveEvent(int id, CancellationToken ct);
+
+    /// <summary>
+    /// Получение топ-10 самых популярных мероприятий
+    /// </summary>
+    /// <param name="ct">Токен отмены</param>
+    Task<List<Event>> GetTop10PopularEvents(CancellationToken ct);
 }

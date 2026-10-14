@@ -1,6 +1,5 @@
 using EventManager.BookingService.Application.Abstractions.Messaging;
 using EventManager.BookingService.Infrastructure.Persistence;
-using EventManager.Contracts;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

@@ -43,4 +43,10 @@ public interface IEventRepository
     /// </summary>
     /// <param name="ct">Токен отмены</param>
     Task SaveChangesAsync(CancellationToken ct);
+
+    /// <summary>
+    /// Получить топ-10 самых популярных мероприятий
+    /// </summary>
+    /// <param name="ct">Токен отмены</param>
+    Task<List<Event>> GetTop10PopularEvents(CancellationToken ct);
 }

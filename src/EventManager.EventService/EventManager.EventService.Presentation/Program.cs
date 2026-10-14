@@ -3,8 +3,6 @@ using System.Text;
 using EventManager.EventService.Application;
 using EventManager.EventService.Application.Options;
 using EventManager.EventService.Infrastructure;
-using EventManager.EventService.Infrastructure.BackgroundServices;
-using EventManager.EventService.Infrastructure.Messaging;
 using EventManager.EventService.Infrastructure.Options;
 using EventManager.EventService.Infrastructure.Persistence;
 using EventManager.EventService.Presentation;
@@ -34,9 +32,6 @@ builder.Services.AddOptions<UserJwtTokenSettings>()
     .Validate(s => s.Lifetime > TimeSpan.Zero, "UserJwtToken:Lifetime must be greater than zero seconds.")
     .ValidateOnStart();
 
-var kafkaSettings = builder.Configuration.GetSection("Kafka").Get<KafkaSettings>() ??
-                    throw new InvalidOperationException("Kafka section not found.");
-
 builder.Services.AddOptions<KafkaSettings>()
     .Bind(builder.Configuration.GetSection("Kafka"))
     .ValidateDataAnnotations()
@@ -47,9 +42,12 @@ var dbConnectionString = builder.Configuration.GetConnectionString("EventsDb") ?
 
 var kafkaBootstrapServers = builder.Configuration.GetSection("Kafka").GetValue<string>("BootstrapServers") ??
                             throw new InvalidOperationException("'Kafka/BootstrapServers' not found.");
+
+var redisEndpoints = builder.Configuration.GetSection("Redis").GetValue<string>("Endpoints") ??
+                            throw new InvalidOperationException("'Redis/Endpoints' not found.");
 builder.Services
     .AddApplicationServices()
-    .AddInfrastructure(dbConnectionString, kafkaBootstrapServers)
+    .AddInfrastructure(dbConnectionString, kafkaBootstrapServers, redisEndpoints)
     .AddPresentation();
 
 var userJwtTokenSettings = userJwtTokenSection.Get<UserJwtTokenSettings>()!;

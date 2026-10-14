@@ -1,5 +1,7 @@
 ﻿using System.Globalization;
+using System.Text.Json;
 
+using EventManager.EventService.Application.Abstractions.Caching;
 using EventManager.EventService.Application.Abstractions.Persistence.Repositories;
 using EventManager.EventService.Application.Abstractions.Services;
 using EventManager.EventService.Application.Abstractions.Services.Dto;
@@ -17,11 +19,13 @@ namespace EventManager.EventService.Application.Services.EventService;
 public class EventServiceImpl : IEventService
 {
     private readonly IEventRepository _eventRepository;
+    private readonly ICache _cache;
     private readonly ILogger<EventServiceImpl> _logger;
 
-    public EventServiceImpl(IEventRepository eventRepository, ILogger<EventServiceImpl> logger)
+    public EventServiceImpl(IEventRepository eventRepository, ICache cache, ILogger<EventServiceImpl> logger)
     {
         _eventRepository = eventRepository;
+        _cache = cache;
         _logger = logger;
     }
 
@@ -37,6 +41,14 @@ public class EventServiceImpl : IEventService
     /// <inheritdoc />
     public async Task<Result<Event?>> GetEventById(int id, CancellationToken ct)
     {
+        var cacheResult = await _cache.GetByKeyAsync($"event:{id}");
+
+        if (cacheResult.IsSuccess)
+        {
+            var cachedEvent = JsonSerializer.Deserialize<Event>(cacheResult.Value);
+            return cachedEvent;
+        }
+
         var eventToGet = await _eventRepository.GetEventByIdAsync(id, ct);
 
         if (eventToGet == null)
@@ -45,6 +57,8 @@ public class EventServiceImpl : IEventService
             return Result<Event?>.Failure(
                 Error.NotFound(string.Format(CultureInfo.InvariantCulture, Resource.ErrorEventNotFound, id)));
         }
+
+        await UpdateEventInCache(eventToGet);
 
         return Result<Event?>.Success(eventToGet);
     }
@@ -76,6 +90,8 @@ public class EventServiceImpl : IEventService
             updateEventRequest.EndAt);
         await _eventRepository.SaveChangesAsync(ct);
 
+        await UpdateEventInCache(eventToUpdate);
+
         return Result.Success();
     }
 
@@ -93,6 +109,33 @@ public class EventServiceImpl : IEventService
         _eventRepository.RemoveEvent(eventToRemove);
         await _eventRepository.SaveChangesAsync(ct);
 
+        await _cache.DeleteKeyAsync($"event:{id}");
+
         return Result.Success();
+    }
+
+    public async Task<List<Event>> GetTop10PopularEvents(CancellationToken ct)
+    {
+        var cachedResult = await _cache.GetByKeyAsync("events:top10");
+
+        if (cachedResult.IsSuccess)
+        {
+            var cachedTop10List = JsonSerializer.Deserialize<List<Event>>(cachedResult.Value);
+
+            if (cachedTop10List != null)
+                return cachedTop10List;
+        }
+
+        var top10List = await _eventRepository.GetTop10PopularEvents(ct);
+        await _cache.SetByKeyAsync("events:top10", JsonSerializer.Serialize(top10List),
+            CacheTtlValues.GetTop10PopularEventsTtl);
+        
+        return top10List;
+    }
+
+    private async Task UpdateEventInCache(Event e)
+    {
+        await _cache.SetByKeyAsync($"event:{e.Id}", JsonSerializer.Serialize(e),
+            CacheTtlValues.GetEventByIdTtl);
     }
 }

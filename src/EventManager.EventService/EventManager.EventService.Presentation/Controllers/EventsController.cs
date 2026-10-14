@@ -10,7 +10,6 @@ using EventManager.EventService.Presentation.Models.Response;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace EventManager.EventService.Presentation.Controllers;
 
@@ -168,5 +167,19 @@ public class EventsController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Получение топ-10 популярных мероприятий
+    /// </summary>
+    /// <param name="ct">Токен отмены</param>
+    /// <response code="200">Список из 10 мероприятий, отсортированный по популярности</response>
+    [HttpGet("top")]
+    [ProducesResponseType(typeof(List<EventInfoResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<EventInfoResponse>>> GetTop10Events(CancellationToken ct)
+    {
+        var top10 = await _eventService.GetTop10PopularEvents(ct);
+
+        return Ok(top10.Select(x => x.ToEventResponse()));
     }
 }

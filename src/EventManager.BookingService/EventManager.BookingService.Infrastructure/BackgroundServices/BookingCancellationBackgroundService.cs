@@ -1,4 +1,3 @@
-using System.Data;
 using System.Text.Json;
 
 using EventManager.BookingService.Application.Abstractions.Persistence.Repositories;
