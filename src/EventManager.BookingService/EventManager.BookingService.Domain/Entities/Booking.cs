@@ -78,6 +78,11 @@ public class Booking
 
     public void SetPendingCancel()
     {
+        if (Status == BookingStatus.Cancelled)
+        {
+            throw new BookingAlreadyCancelledException();
+        }
+
         if (Status != BookingStatus.Confirmed)
         {
             throw new BookingNotConfirmedException();
