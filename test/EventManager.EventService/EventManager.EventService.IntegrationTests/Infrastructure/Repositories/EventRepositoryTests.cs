@@ -4,7 +4,6 @@ using EventManager.EventService.Infrastructure.Persistence.Repositories;
 
 using FluentAssertions;
 
-using Microsoft.ApplicationInsights;
 using Microsoft.EntityFrameworkCore;
 
 using Testcontainers.PostgreSql;

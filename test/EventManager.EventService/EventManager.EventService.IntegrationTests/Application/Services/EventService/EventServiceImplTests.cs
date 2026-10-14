@@ -1,6 +1,7 @@
 using EventManager.EventService.Application.Abstractions.Services.Dto;
 using EventManager.EventService.Application.Common.Pagination;
 using EventManager.EventService.Application.Services.EventService;
+using EventManager.EventService.Infrastructure.Caching;
 using EventManager.EventService.Infrastructure.Persistence;
 using EventManager.EventService.Infrastructure.Persistence.Repositories;
 using EventManager.EventService.IntegrationTests.Application.Services.EventService.TestHelpers;
@@ -10,7 +11,10 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 
+using StackExchange.Redis;
+
 using Testcontainers.PostgreSql;
+using Testcontainers.Redis;
 
 namespace EventManager.EventService.IntegrationTests.Application.Services.EventService;
 
@@ -20,14 +24,18 @@ public class EventServiceImplTests : IAsyncLifetime
         .WithDatabase("test_db")
         .Build();
 
+    private readonly RedisContainer _redis = new RedisBuilder("redis:7.2-alpine").Build();
+
     public async ValueTask InitializeAsync()
     {
         await _postgres.StartAsync();
+        await _redis.StartAsync();
     }
 
     public async ValueTask DisposeAsync()
     {
         await _postgres.DisposeAsync();
+        await _redis.DisposeAsync();
     }
 
     private EventDbContext CreateContext()
@@ -46,15 +54,32 @@ public class EventServiceImplTests : IAsyncLifetime
         await context.Database.MigrateAsync();
     }
 
+    private async Task ResetCacheAsync()
+    {
+        var options = ConfigurationOptions.Parse(_redis.GetConnectionString());
+        options.AllowAdmin = true;
+
+        await using var connectionMultiplexer = await ConnectionMultiplexer.ConnectAsync(options);
+        await connectionMultiplexer.GetServer(options.EndPoints.Single()).FlushAllDatabasesAsync();
+    }
+
+    private RedisCache CreateRedisCache()
+    {
+        var connectionMultiplexer = ConnectionMultiplexer.Connect(_redis.GetConnectionString());
+        return new RedisCache(connectionMultiplexer, NullLogger<RedisCache>.Instance);
+    }
+
     [Fact]
     public async Task AddEvent_ShouldAddEventAndReturnNewId()
     {
+        await ResetCacheAsync();
         await ResetDatabaseAsync();
 
         // Arrange
         await using var context = CreateContext();
+        var cache = CreateRedisCache();
         var repository = new EventRepository(context);
-        var eventService = new EventServiceImpl(repository, NullLogger<EventServiceImpl>.Instance);
+        var eventService = new EventServiceImpl(repository, cache, NullLogger<EventServiceImpl>.Instance);
 
         // Act
         var createEventRequest = new CreateEventRequest
@@ -86,16 +111,18 @@ public class EventServiceImplTests : IAsyncLifetime
     [Trait("Category", "Filters")]
     public async Task GetEvents_WhenFiltersAreEmpty_ReturnsAllEvents()
     {
+        await ResetCacheAsync();
         await ResetDatabaseAsync();
 
         // Arrange
         await using var context = CreateContext();
+        var cache = CreateRedisCache();
         context.Events.AddRange(EventTestDataGenerator.GetTestEvents());
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act
         var repository = new EventRepository(context);
-        var eventService = new EventServiceImpl(repository, NullLogger<EventServiceImpl>.Instance);
+        var eventService = new EventServiceImpl(repository, cache, NullLogger<EventServiceImpl>.Instance);
         var events = await eventService.GetEvents(new EventFilterDto(), new PaginationParamsDto(1, 100),
             TestContext.Current.CancellationToken);
 
@@ -114,16 +141,18 @@ public class EventServiceImplTests : IAsyncLifetime
     [InlineData("   ", 15)]
     public async Task GetEvents_WhenFilteredByTitle_ReturnExpectedResults(string titleFilter, int expectedCount)
     {
+        await ResetCacheAsync();
         await ResetDatabaseAsync();
 
         // Arrange
         await using var context = CreateContext();
+        var cache = CreateRedisCache();
         context.Events.AddRange(EventTestDataGenerator.GetTestEvents());
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act
         var repository = new EventRepository(context);
-        var eventService = new EventServiceImpl(repository, NullLogger<EventServiceImpl>.Instance);
+        var eventService = new EventServiceImpl(repository, cache, NullLogger<EventServiceImpl>.Instance);
 
         var events = await eventService.GetEvents(new EventFilterDto { Title = titleFilter },
             new PaginationParamsDto(1, 100), TestContext.Current.CancellationToken);
@@ -140,18 +169,23 @@ public class EventServiceImplTests : IAsyncLifetime
     public async Task GetEvents_WhenFilteredByFrom_ReturnExpectedResults(int year, int month, int day, int hour,
         int expectedCount)
     {
+        await ResetCacheAsync();
         await ResetDatabaseAsync();
 
         // Arrange
         await using var context = CreateContext();
+        var cache = CreateRedisCache();
         context.Events.AddRange(EventTestDataGenerator.GetTestEvents());
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act
         var repository = new EventRepository(context);
-        var eventService = new EventServiceImpl(repository, NullLogger<EventServiceImpl>.Instance);
+        var eventService = new EventServiceImpl(repository, cache, NullLogger<EventServiceImpl>.Instance);
         var events = await eventService.GetEvents(
-            new EventFilterDto { From = DateTime.SpecifyKind(new DateTime(year, month, day, hour, 0, 0), DateTimeKind.Utc) },
+            new EventFilterDto
+            {
+                From = DateTime.SpecifyKind(new DateTime(year, month, day, hour, 0, 0), DateTimeKind.Utc)
+            },
             new PaginationParamsDto(1, 100), TestContext.Current.CancellationToken);
 
         // Assert
@@ -166,18 +200,23 @@ public class EventServiceImplTests : IAsyncLifetime
     public async Task GetEvents_WhenFilteredByTo_ReturnExpectedResults(int year, int month, int day, int hour,
         int expectedCount)
     {
+        await ResetCacheAsync();
         await ResetDatabaseAsync();
 
         // Arrange
         await using var context = CreateContext();
+        var cache = CreateRedisCache();
         context.Events.AddRange(EventTestDataGenerator.GetTestEvents());
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act
         var repository = new EventRepository(context);
-        var eventService = new EventServiceImpl(repository, NullLogger<EventServiceImpl>.Instance);
+        var eventService = new EventServiceImpl(repository, cache, NullLogger<EventServiceImpl>.Instance);
         var events = await eventService.GetEvents(
-            new EventFilterDto { To = DateTime.SpecifyKind(new DateTime(year, month, day, hour, 0, 0), DateTimeKind.Utc) },
+            new EventFilterDto
+            {
+                To = DateTime.SpecifyKind(new DateTime(year, month, day, hour, 0, 0), DateTimeKind.Utc)
+            },
             new PaginationParamsDto(1, 100), TestContext.Current.CancellationToken);
 
         // Assert
@@ -195,16 +234,18 @@ public class EventServiceImplTests : IAsyncLifetime
     public async Task GetEvents_WhenPaginated_ReturnExpectedResults(int page, int pageSize, int initialCount,
         int expectedItemCount, int expectedPage, int expectedTotalPages, int expectedTotalItems)
     {
+        await ResetCacheAsync();
         await ResetDatabaseAsync();
 
         // Arrange
         await using var context = CreateContext();
+        var cache = CreateRedisCache();
         context.Events.AddRange(EventTestDataGenerator.GetTestEvents().Take(initialCount));
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act
         var repository = new EventRepository(context);
-        var eventService = new EventServiceImpl(repository, NullLogger<EventServiceImpl>.Instance);
+        var eventService = new EventServiceImpl(repository, cache, NullLogger<EventServiceImpl>.Instance);
         var pagedEvents = await eventService.GetEvents(
             new EventFilterDto(),
             new PaginationParamsDto(page, pageSize), TestContext.Current.CancellationToken);
@@ -222,16 +263,18 @@ public class EventServiceImplTests : IAsyncLifetime
     public async Task GetEvents_WhenFiltered_ReturnExpectedResults(string title, DateTime from, DateTime to,
         int expectedCount)
     {
+        await ResetCacheAsync();
         await ResetDatabaseAsync();
 
         // Arrange
         await using var context = CreateContext();
+        var cache = CreateRedisCache();
         context.Events.AddRange(EventTestDataGenerator.GetTestEvents());
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act
         var repository = new EventRepository(context);
-        var eventService = new EventServiceImpl(repository, NullLogger<EventServiceImpl>.Instance);
+        var eventService = new EventServiceImpl(repository, cache, NullLogger<EventServiceImpl>.Instance);
         var filter = new EventFilterDto { Title = title, From = from, To = to };
 
         var filteredEvents = await eventService.GetEvents(filter, new PaginationParamsDto(1, 100),
