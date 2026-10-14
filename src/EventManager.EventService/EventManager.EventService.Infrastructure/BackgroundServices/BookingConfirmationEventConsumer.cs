@@ -101,7 +101,7 @@ public class BookingConfirmationEventConsumer : BackgroundService
         {
             return;
         }
-        
+
         var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
         var eventToBook = await eventRepository.GetEventByIdAsync(message.EventId, ct);
 
@@ -145,8 +145,10 @@ public class BookingConfirmationEventConsumer : BackgroundService
         {
             _logger.LogWarning("Message {MessageId} already processed", message.MessageId);
         }
-        
-        await cache.SetByKeyAsync($"event:{eventToBook.Id}", JsonSerializer.Serialize(eventToBook), TimeSpan.FromMinutes(5));
+
+        if (eventToBook != null)
+            await cache.SetByKeyAsync($"event:{eventToBook.Id}", JsonSerializer.Serialize(eventToBook),
+                CacheTtlValues.GetEventByIdTtl);
     }
 
     private static void RejectBookingConfirmation(EventDbContext context, BookingConfirmedEvent message)

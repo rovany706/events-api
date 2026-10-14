@@ -7,7 +7,6 @@ using EventManager.Contracts.Events;
 using EventManager.EventService.Application.Abstractions.Caching;
 using EventManager.EventService.Application.Abstractions.Persistence.Repositories;
 using EventManager.EventService.Application.Common.Messaging;
-using EventManager.EventService.Domain.Exceptions;
 using EventManager.EventService.Infrastructure.Options;
 using EventManager.EventService.Infrastructure.Persistence;
 
@@ -130,8 +129,9 @@ public class BookingCancelledEventConsumer : BackgroundService
         {
             _logger.LogWarning("Message {MessageId} already processed", message.MessageId);
         }
-        
-        await cache.SetByKeyAsync($"event:{eventToCancel.Id}", JsonSerializer.Serialize(eventToCancel), TimeSpan.FromMinutes(5));
-        
+
+        if (eventToCancel != null)
+            await cache.SetByKeyAsync($"event:{eventToCancel.Id}", JsonSerializer.Serialize(eventToCancel),
+                CacheTtlValues.GetEventByIdTtl);
     }
 }
