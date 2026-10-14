@@ -31,10 +31,11 @@ API имеет внешние зависимости:
 
 - PostgreSQL (СУБД для хранения данных)
 - Apache Kafka (распределенный журнал событий)
+- Redis (кеширование)
 
 ## Запуск API и зависимостей
 
-Для удобного запуска API и внешних зависимостей подготовлен [docker-compose.yml]().
+Для удобного запуска API и внешних зависимостей подготовлен [docker-compose.yml](docker-compose.yml).
 
 Запуск контейнеров производится с помощью команды:
 
@@ -54,7 +55,7 @@ PostgreSQL для сервисов доступны по адресам:
 
 ### Настройка подключения к PostgreSQL
 
-У каждого микросервиса есть своя база данных. СУБД для них указаны в [docker-compose.yml]().
+У каждого микросервиса есть своя база данных. СУБД для них указаны в [docker-compose.yml](docker-compose.yml).
 Строки подключения к СУБД PostgreSQL задаются в виде переменных окружения.
 
 Например, `ConnectionStrings__EventsDb: Host=events-db;Port=5432;Database=events;Username=postgres;Password=postgres`.
@@ -337,6 +338,121 @@ curl -X 'DELETE' \
 - `HTTP 403` - Пользователь не имеет прав на выполнение операции
 - `HTTP 404` - Мероприятие не найдено
 
+#### `GET /api/v1/events/top`
+
+Получение топ-10 популярных мероприятий
+
+Запрос:
+
+```
+GET /api/v1/events/top
+```
+
+```bash
+curl -X 'GET' \
+  'http://localhost:8082/api/v1/Events/top' \
+  -H 'accept: */*'
+```
+
+Ответы:
+
+- `HTTP 200` - список из 10 мероприятий, отсортированный по популярности
+
+```json
+[
+  {
+    "id": 5,
+    "title": "Jazz Night",
+    "description": "Live jazz performance at Blue Note Club in New York",
+    "startAt": "2026-11-12T19:00:00Z",
+    "endAt": "2026-11-12T22:00:00Z",
+    "totalSeats": 300,
+    "availableSeats": 15
+  },
+  {
+    "id": 1,
+    "title": "Rock Concert",
+    "description": "Alternative rock concert at Madison Square Garden in New York",
+    "startAt": "2026-11-15T18:00:00Z",
+    "endAt": "2026-11-15T21:00:00Z",
+    "totalSeats": 2000,
+    "availableSeats": 200
+  },
+  {
+    "id": 8,
+    "title": "Comedy Show",
+    "description": "Stand-up comedy night featuring emerging comedians in Chicago",
+    "startAt": "2026-11-20T20:00:00Z",
+    "endAt": "2026-11-20T22:00:00Z",
+    "totalSeats": 400,
+    "availableSeats": 60
+  },
+  {
+    "id": 3,
+    "title": "Tech Conference",
+    "description": "Annual software development and cloud computing conference in Seattle",
+    "startAt": "2026-12-03T09:00:00Z",
+    "endAt": "2026-12-03T17:00:00Z",
+    "totalSeats": 1500,
+    "availableSeats": 300
+  },
+  {
+    "id": 10,
+    "title": "Classical Music Evening",
+    "description": "Symphony orchestra performing works by Beethoven in Boston",
+    "startAt": "2026-12-08T19:30:00Z",
+    "endAt": "2026-12-08T21:30:00Z",
+    "totalSeats": 800,
+    "availableSeats": 200
+  },
+  {
+    "id": 4,
+    "title": "Football Match",
+    "description": "Exhibition football match at a stadium in Dallas",
+    "startAt": "2026-12-12T16:00:00Z",
+    "endAt": "2026-12-12T18:00:00Z",
+    "totalSeats": 10000,
+    "availableSeats": 3500
+  },
+  {
+    "id": 7,
+    "title": "Food Festival",
+    "description": "International street food festival in San Francisco",
+    "startAt": "2026-12-18T11:00:00Z",
+    "endAt": "2026-12-18T20:00:00Z",
+    "totalSeats": 1200,
+    "availableSeats": 540
+  },
+  {
+    "id": 2,
+    "title": "Art Exhibition",
+    "description": "Contemporary art exhibition featuring local artists in Los Angeles",
+    "startAt": "2027-01-10T10:00:00Z",
+    "endAt": "2027-01-10T16:00:00Z",
+    "totalSeats": 500,
+    "availableSeats": 300
+  },
+  {
+    "id": 9,
+    "title": "Gaming Tournament",
+    "description": "Regional esports championship featuring competitive gaming teams in Austin",
+    "startAt": "2027-01-16T12:00:00Z",
+    "endAt": "2027-01-16T19:00:00Z",
+    "totalSeats": 2000,
+    "availableSeats": 1500
+  },
+  {
+    "id": 6,
+    "title": "Theater Performance",
+    "description": "Modern adaptation of Hamlet at a theater in Philadelphia",
+    "startAt": "2027-01-22T18:30:00Z",
+    "endAt": "2027-01-22T21:00:00Z",
+    "totalSeats": 600,
+    "availableSeats": 540
+  }
+]
+```
+
 ### Управление бронированиями
 
 #### POST /api/v1/events/{id}/book
@@ -515,6 +631,21 @@ Bearer <JWT-токен>
 - `BookingCancelledEventConsumer` - подписывается на топик `booking-cancelled` (при получении события освобождает места).
 
 `BookingConfirmationEventConsumer` при получении события в топике `booking-confirmed` и отсутствия мест отправляет событие `booking-rejected` обратно сервису BookingService.
+
+## Кеширование данных
+
+В сервисе EventService реализовано кеширование с помощью Redis с использованием паттерна Cache-Aside для следующих данных:
+
+1. GET /events/{id} - кеширование мероприятий получаемых по идентификатору (TTL = 5 минут)
+
+В следующих случаях значение кеша для мероприятия обновляется:
+- При изменении мероприятия.
+- При отмене бронирования.
+- При подтверждении бронирования.
+
+При удалении мероприятия запись о нем удаляется из кеша.
+
+2. GET /events/top - кеширование списка топ-10 популярных мероприятий (TTL = 1 час)
 
 ## Сценарии использования
 
