@@ -136,6 +136,6 @@ public class EventServiceImpl : IEventService
     private async Task UpdateEventInCache(Event e)
     {
         await _cache.SetByKeyAsync($"event:{e.Id}", JsonSerializer.Serialize(e),
-            CacheTtlValues.GetTop10PopularEventsTtl);
+            CacheTtlValues.GetEventByIdTtl);
     }
 }
