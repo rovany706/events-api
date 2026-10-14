@@ -3,8 +3,6 @@ using System.Text;
 using EventManager.EventService.Application;
 using EventManager.EventService.Application.Options;
 using EventManager.EventService.Infrastructure;
-using EventManager.EventService.Infrastructure.BackgroundServices;
-using EventManager.EventService.Infrastructure.Messaging;
 using EventManager.EventService.Infrastructure.Options;
 using EventManager.EventService.Infrastructure.Persistence;
 using EventManager.EventService.Presentation;
@@ -33,9 +31,6 @@ builder.Services.AddOptions<UserJwtTokenSettings>()
     .ValidateDataAnnotations()
     .Validate(s => s.Lifetime > TimeSpan.Zero, "UserJwtToken:Lifetime must be greater than zero seconds.")
     .ValidateOnStart();
-
-var kafkaSettings = builder.Configuration.GetSection("Kafka").Get<KafkaSettings>() ??
-                    throw new InvalidOperationException("Kafka section not found.");
 
 builder.Services.AddOptions<KafkaSettings>()
     .Bind(builder.Configuration.GetSection("Kafka"))
