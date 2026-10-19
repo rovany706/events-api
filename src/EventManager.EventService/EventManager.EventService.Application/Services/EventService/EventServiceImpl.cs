@@ -52,7 +52,7 @@ public class EventServiceImpl : IEventService
     /// <inheritdoc />
     public async Task<Result<EventInfoDto?>> GetEventById(int id, CancellationToken ct)
     {
-        var cacheResult = await _cache.GetByKeyAsync($"event:{id}");
+        var cacheResult = await _cache.GetByKeyAsync(CacheKeys.Event(id));
 
         if (cacheResult.IsSuccess)
         {
@@ -125,14 +125,14 @@ public class EventServiceImpl : IEventService
         _eventRepository.RemoveEvent(eventToRemove);
         await _eventRepository.SaveChangesAsync(ct);
 
-        await _cache.DeleteKeyAsync($"event:{id}");
+        await _cache.DeleteKeyAsync(CacheKeys.Event(id));
 
         return Result.Success();
     }
 
     public async Task<List<EventInfoDto>> GetTop10PopularEvents(CancellationToken ct)
     {
-        var cachedResult = await _cache.GetByKeyAsync("events:top10");
+        var cachedResult = await _cache.GetByKeyAsync(CacheKeys.TopEvents);
 
         if (cachedResult.IsSuccess)
         {
@@ -145,7 +145,7 @@ public class EventServiceImpl : IEventService
         var top10List = (await _eventRepository.GetTop10PopularEvents(ct))
             .Select(EventInfoDto.FromEvent)
             .ToList();
-        await _cache.SetByKeyAsync("events:top10", JsonSerializer.Serialize(top10List),
+        await _cache.SetByKeyAsync(CacheKeys.TopEvents, JsonSerializer.Serialize(top10List),
             _cacheSettings.TopEventsTtl);
 
         return top10List;
@@ -153,7 +153,7 @@ public class EventServiceImpl : IEventService
 
     private async Task UpdateEventInCache(EventInfoDto e)
     {
-        await _cache.SetByKeyAsync($"event:{e.Id}", JsonSerializer.Serialize(e),
+        await _cache.SetByKeyAsync(CacheKeys.Event(e.Id), JsonSerializer.Serialize(e),
             _cacheSettings.EventTtl);
     }
 }
