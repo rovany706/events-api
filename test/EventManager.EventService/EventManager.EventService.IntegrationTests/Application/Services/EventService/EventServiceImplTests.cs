@@ -1,5 +1,6 @@
 using EventManager.EventService.Application.Abstractions.Services.Dto;
 using EventManager.EventService.Application.Common.Pagination;
+using EventManager.EventService.Application.Options;
 using EventManager.EventService.Application.Services.EventService;
 using EventManager.EventService.Infrastructure.Caching;
 using EventManager.EventService.Infrastructure.Persistence;
@@ -10,6 +11,7 @@ using FluentAssertions;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 using StackExchange.Redis;
 
@@ -78,8 +80,13 @@ public class EventServiceImplTests : IAsyncLifetime
         // Arrange
         await using var context = CreateContext();
         var cache = CreateRedisCache();
+        var cacheSettings = new CacheSettings
+        {
+            EventTtl = TimeSpan.FromMinutes(5), TopEventsTtl = TimeSpan.FromHours(1)
+        };
         var repository = new EventRepository(context);
-        var eventService = new EventServiceImpl(repository, cache, NullLogger<EventServiceImpl>.Instance);
+        var eventService = new EventServiceImpl(repository, cache, Options.Create(cacheSettings),
+            NullLogger<EventServiceImpl>.Instance);
 
         // Act
         var createEventRequest = new CreateEventRequest
@@ -121,8 +128,13 @@ public class EventServiceImplTests : IAsyncLifetime
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act
+        var cacheSettings = new CacheSettings
+        {
+            EventTtl = TimeSpan.FromMinutes(5), TopEventsTtl = TimeSpan.FromHours(1)
+        };
         var repository = new EventRepository(context);
-        var eventService = new EventServiceImpl(repository, cache, NullLogger<EventServiceImpl>.Instance);
+        var eventService = new EventServiceImpl(repository, cache, Options.Create(cacheSettings),
+            NullLogger<EventServiceImpl>.Instance);
         var events = await eventService.GetEvents(new EventFilterDto(), new PaginationParamsDto(1, 100),
             TestContext.Current.CancellationToken);
 
@@ -151,8 +163,13 @@ public class EventServiceImplTests : IAsyncLifetime
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act
+        var cacheSettings = new CacheSettings
+        {
+            EventTtl = TimeSpan.FromMinutes(5), TopEventsTtl = TimeSpan.FromHours(1)
+        };
         var repository = new EventRepository(context);
-        var eventService = new EventServiceImpl(repository, cache, NullLogger<EventServiceImpl>.Instance);
+        var eventService = new EventServiceImpl(repository, cache, Options.Create(cacheSettings),
+            NullLogger<EventServiceImpl>.Instance);
 
         var events = await eventService.GetEvents(new EventFilterDto { Title = titleFilter },
             new PaginationParamsDto(1, 100), TestContext.Current.CancellationToken);
@@ -179,8 +196,13 @@ public class EventServiceImplTests : IAsyncLifetime
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act
+        var cacheSettings = new CacheSettings
+        {
+            EventTtl = TimeSpan.FromMinutes(5), TopEventsTtl = TimeSpan.FromHours(1)
+        };
         var repository = new EventRepository(context);
-        var eventService = new EventServiceImpl(repository, cache, NullLogger<EventServiceImpl>.Instance);
+        var eventService = new EventServiceImpl(repository, cache, Options.Create(cacheSettings),
+            NullLogger<EventServiceImpl>.Instance);
         var events = await eventService.GetEvents(
             new EventFilterDto
             {
@@ -210,8 +232,13 @@ public class EventServiceImplTests : IAsyncLifetime
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act
+        var cacheSettings = new CacheSettings
+        {
+            EventTtl = TimeSpan.FromMinutes(5), TopEventsTtl = TimeSpan.FromHours(1)
+        };
         var repository = new EventRepository(context);
-        var eventService = new EventServiceImpl(repository, cache, NullLogger<EventServiceImpl>.Instance);
+        var eventService = new EventServiceImpl(repository, cache, Options.Create(cacheSettings),
+            NullLogger<EventServiceImpl>.Instance);
         var events = await eventService.GetEvents(
             new EventFilterDto
             {
@@ -244,8 +271,13 @@ public class EventServiceImplTests : IAsyncLifetime
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act
+        var cacheSettings = new CacheSettings
+        {
+            EventTtl = TimeSpan.FromMinutes(5), TopEventsTtl = TimeSpan.FromHours(1)
+        };
         var repository = new EventRepository(context);
-        var eventService = new EventServiceImpl(repository, cache, NullLogger<EventServiceImpl>.Instance);
+        var eventService = new EventServiceImpl(repository, cache, Options.Create(cacheSettings),
+            NullLogger<EventServiceImpl>.Instance);
         var pagedEvents = await eventService.GetEvents(
             new EventFilterDto(),
             new PaginationParamsDto(page, pageSize), TestContext.Current.CancellationToken);
@@ -273,8 +305,13 @@ public class EventServiceImplTests : IAsyncLifetime
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act
+        var cacheSettings = new CacheSettings
+        {
+            EventTtl = TimeSpan.FromMinutes(5), TopEventsTtl = TimeSpan.FromHours(1)
+        };
         var repository = new EventRepository(context);
-        var eventService = new EventServiceImpl(repository, cache, NullLogger<EventServiceImpl>.Instance);
+        var eventService = new EventServiceImpl(repository, cache, Options.Create(cacheSettings),
+            NullLogger<EventServiceImpl>.Instance);
         var filter = new EventFilterDto { Title = title, From = from, To = to };
 
         var filteredEvents = await eventService.GetEvents(filter, new PaginationParamsDto(1, 100),

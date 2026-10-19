@@ -7,6 +7,7 @@ using EventManager.Contracts.Events;
 using EventManager.EventService.Application.Abstractions.Caching;
 using EventManager.EventService.Application.Abstractions.Persistence.Repositories;
 using EventManager.EventService.Application.Common.Messaging;
+using EventManager.EventService.Application.Options;
 using EventManager.EventService.Infrastructure.Options;
 using EventManager.EventService.Infrastructure.Persistence;
 
@@ -23,14 +24,16 @@ namespace EventManager.EventService.Infrastructure.BackgroundServices;
 public class BookingCancelledEventConsumer : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly CacheSettings _cacheSettings;
     private readonly ILogger<BookingConfirmationEventConsumer> _logger;
     private readonly KafkaSettings _kafkaSettings;
 
     public BookingCancelledEventConsumer(IServiceScopeFactory scopeFactory, IOptions<KafkaSettings> kafkaSettings,
-        ILogger<BookingConfirmationEventConsumer> logger)
+        IOptions<CacheSettings> cacheSettings, ILogger<BookingConfirmationEventConsumer> logger)
     {
         _kafkaSettings = kafkaSettings.Value;
         _scopeFactory = scopeFactory;
+        _cacheSettings = cacheSettings.Value;
         _logger = logger;
     }
 
@@ -132,6 +135,6 @@ public class BookingCancelledEventConsumer : BackgroundService
 
         if (eventToCancel != null)
             await cache.SetByKeyAsync($"event:{eventToCancel.Id}", JsonSerializer.Serialize(eventToCancel),
-                CacheTtlValues.GetEventByIdTtl);
+                _cacheSettings.EventTtl);
     }
 }

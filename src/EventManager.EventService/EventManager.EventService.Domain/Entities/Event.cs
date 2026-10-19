@@ -14,7 +14,6 @@ public class Event
         Title = null!;
     }
 
-    [JsonConstructor]
     private Event(string title, string? description, DateTime startAt, DateTime endAt, int totalSeats)
     {
         Title = title;

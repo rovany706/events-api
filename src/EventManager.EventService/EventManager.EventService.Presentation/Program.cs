@@ -37,6 +37,11 @@ builder.Services.AddOptions<KafkaSettings>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
+builder.Services.AddOptions<CacheSettings>()
+    .Bind(builder.Configuration.GetSection("Redis"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 var dbConnectionString = builder.Configuration.GetConnectionString("EventsDb") ??
                          throw new InvalidOperationException("Connection string 'EventsDb' not found.");
 

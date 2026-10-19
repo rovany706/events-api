@@ -4,6 +4,7 @@ using EventManager.EventService.Application.Abstractions.Caching;
 using EventManager.EventService.Application.Abstractions.Persistence.Repositories;
 using EventManager.EventService.Application.Abstractions.Services.Dto;
 using EventManager.EventService.Application.Common.Results;
+using EventManager.EventService.Application.Options;
 using EventManager.EventService.Application.Services.EventService;
 using EventManager.EventService.Domain.Entities;
 
@@ -20,12 +21,15 @@ public class EventServiceImplTests
     private readonly Mock<IEventRepository> _eventRepositoryMock;
     private readonly EventServiceImpl _eventService;
     private readonly Mock<ICache> _cacheMock;
+    private readonly CacheSettings _cacheSettings;
 
     public EventServiceImplTests()
     {
         _eventRepositoryMock = new Mock<IEventRepository>();
         _cacheMock = new Mock<ICache>();
-        _eventService = new EventServiceImpl(_eventRepositoryMock.Object, _cacheMock.Object, NullLogger<EventServiceImpl>.Instance);
+        _cacheSettings = new CacheSettings { EventTtl = TimeSpan.FromSeconds(5), TopEventsTtl = TimeSpan.FromHours(1) };
+        _eventService = new EventServiceImpl(_eventRepositoryMock.Object, _cacheMock.Object,
+            Microsoft.Extensions.Options.Options.Create(_cacheSettings), NullLogger<EventServiceImpl>.Instance);
     }
 
     private Event CreateTestEvent()
@@ -72,7 +76,7 @@ public class EventServiceImplTests
         _ = await _eventService.GetEventById(eventId, TestContext.Current.CancellationToken);
 
         _cacheMock.Verify(x => x.GetByKeyAsync($"event:{eventId}"), Times.Once);
-        _cacheMock.Verify(x => x.SetByKeyAsync($"event:{eventId}", It.IsAny<string>(), CacheTtlValues.GetEventByIdTtl), Times.Once);
+        _cacheMock.Verify(x => x.SetByKeyAsync($"event:{eventId}", It.IsAny<string>(), _cacheSettings.EventTtl), Times.Once);
     }
     
     [Fact]
@@ -84,13 +88,24 @@ public class EventServiceImplTests
 
         _cacheMock.Setup(x => x.GetByKeyAsync($"event:{eventId}")).ReturnsAsync(Result<string>.Success(serializedEvent));
 
-        _ = await _eventService.GetEventById(eventId, TestContext.Current.CancellationToken);
+        var result = await _eventService.GetEventById(eventId, TestContext.Current.CancellationToken);
 
+        result.IsSuccess.Should().BeTrue();
+        var cachedEvent = result.Value;
+
+        cachedEvent.Should().NotBeNull();
+        cachedEvent.Id.Should().Be(testEvent.Id);
+        cachedEvent.Title.Should().Be(testEvent.Title);
+        cachedEvent.Description.Should().Be(testEvent.Description);
+        cachedEvent.StartAt.Should().Be(testEvent.StartAt);
+        cachedEvent.EndAt.Should().Be(testEvent.EndAt);
+        cachedEvent.TotalSeats.Should().Be(testEvent.TotalSeats);
+        cachedEvent.AvailableSeats.Should().Be(testEvent.AvailableSeats);
         _cacheMock.Verify(x => x.GetByKeyAsync($"event:{eventId}"), Times.Once);
-        _cacheMock.Verify(x => x.SetByKeyAsync($"event:{eventId}", It.IsAny<string>(), CacheTtlValues.GetEventByIdTtl), Times.Never);
+        _cacheMock.Verify(x => x.SetByKeyAsync($"event:{eventId}", It.IsAny<string>(), _cacheSettings.EventTtl), Times.Never);
         _eventRepositoryMock.Verify(x => x.GetEventByIdAsync(eventId, It.IsAny<CancellationToken>()), Times.Never);
     }
-
+    
     [Fact]
     public async Task GetEventById_WhenEventNotExists_ReturnsNull()
     {
