@@ -12,6 +12,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
+using Serilog;
+using Serilog.Formatting.Compact;
+
 var builder = WebApplication.CreateBuilder(args);
 
 if (builder.Environment.IsDevelopment())
@@ -38,6 +41,9 @@ var dbConnectionString = builder.Configuration.GetConnectionString("BookingDb") 
 var kafkaBootstrapServers = builder.Configuration.GetSection("Kafka").GetValue<string>("BootstrapServers") ??
                             throw new InvalidOperationException("'Kafka/BootstrapServers' not found.");
 
+var otlpEndpoint = builder.Configuration.GetSection("Otlp").GetValue<string>("Endpoint") ??
+                   throw new InvalidOperationException("'Otlp/Endpoint' not found.");
+
 builder.Services.AddOptions<KafkaSettings>()
     .Bind(builder.Configuration.GetSection("Kafka"))
     .ValidateDataAnnotations()
@@ -46,7 +52,8 @@ builder.Services.AddOptions<KafkaSettings>()
 builder.Services
     .AddApplicationServices()
     .AddInfrastructure(dbConnectionString, kafkaBootstrapServers)
-    .AddPresentation();
+    .AddPresentation()
+    .AddObservability(otlpEndpoint);
 
 var userJwtTokenSettings = userJwtTokenSection.Get<UserJwtTokenSettings>()!;
 
@@ -68,6 +75,12 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(userJwtTokenSettings.Secret))
     };
+});
+
+builder.Host.UseSerilog((ctx, cfg) =>
+{
+    cfg.ReadFrom.Configuration(ctx.Configuration)
+        .WriteTo.Console(new CompactJsonFormatter());
 });
 
 var app = builder.Build();
@@ -94,5 +107,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapPrometheusScrapingEndpoint();
 
 app.Run();

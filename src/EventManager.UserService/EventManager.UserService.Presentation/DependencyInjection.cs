@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi;
 
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
 namespace EventManager.Presentation;
 
 public static class DependencyInjection
@@ -52,6 +56,31 @@ public static class DependencyInjection
                 [new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme, document)] = []
             });
         });
+
+        return services;
+    }
+
+    public static IServiceCollection AddObservability(this IServiceCollection services, string otlpEndpoint)
+    {
+        services
+            .AddOpenTelemetry()
+            .WithTracing(tracing => tracing
+                .AddAspNetCoreInstrumentation(options =>
+                {
+                    options.Filter = httpContext =>
+                    {
+                        var path = httpContext.Request.Path;
+
+                        return !path.StartsWithSegments("/metrics");
+                    };
+                })
+                .AddHttpClientInstrumentation()
+                .AddEntityFrameworkCoreInstrumentation()
+                .AddOtlpExporter(o => o.Endpoint = new Uri(otlpEndpoint)))
+            .WithMetrics(metrics => metrics
+                .AddAspNetCoreInstrumentation()
+                .AddRuntimeInstrumentation()
+                .AddPrometheusExporter());
 
         return services;
     }

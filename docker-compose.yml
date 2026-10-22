@@ -45,6 +45,34 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+  
+  # ─────────────────────────── Мониторинг ───────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: eventapi-prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.56
+    container_name: eventapi-jaeger
+    ports:
+      - "16686:16686"   # UI
+      - "4317:4317"     # OTLP gRPC
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: eventapi-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
 
   # ─────────────────────────── Базы данных (по одной на сервис) ───────────────────────────
   users-db:
@@ -95,6 +123,7 @@ services:
       timeout: 5s
       retries: 10
 
+# ─────────────────────────── Сервисы ───────────────────────────
   user-service:
     build:
       context: .
@@ -106,8 +135,11 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: 8080
+      OTEL_SERVICE_NAME: user-service
+      OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
       ConnectionStrings__UsersDb: Host=users-db;Port=5432;Database=users;Username=postgres;Password=postgres
       UserJwtToken__Secret: lemon-dipper-kiwi-wish-whisking-squander
+      Otlp__Endpoint: http://jaeger:4317
     depends_on:
       users-db:
         condition: service_healthy
@@ -123,10 +155,13 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: 8080
+      OTEL_SERVICE_NAME: event-service
+      OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
       ConnectionStrings__EventsDb: Host=events-db;Port=5432;Database=events;Username=postgres;Password=postgres
       Kafka__BootstrapServers: kafka:29092
       UserJwtToken__Secret: lemon-dipper-kiwi-wish-whisking-squander
       Redis__Endpoints: redis:6379
+      Otlp__Endpoint: http://jaeger:4317
     depends_on:
       events-db:
         condition: service_healthy
@@ -146,9 +181,12 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: 8080
+      OTEL_SERVICE_NAME: booking-service
+      OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
       ConnectionStrings__BookingDb: Host=bookings-db;Port=5432;Database=bookings;Username=postgres;Password=postgres
       Kafka__BootstrapServers: kafka:29092
       UserJwtToken__Secret: lemon-dipper-kiwi-wish-whisking-squander
+      Otlp__Endpoint: http://jaeger:4317
     depends_on:
       bookings-db:
         condition: service_healthy
@@ -159,3 +197,4 @@ volumes:
   users-db-data:
   events-db-data:
   bookings-db-data:
+  grafana-data:

@@ -11,6 +11,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
+using Serilog;
+using Serilog.Formatting.Compact;
+
 var builder = WebApplication.CreateBuilder(args);
 
 if (builder.Environment.IsDevelopment())
@@ -34,10 +37,14 @@ builder.Services.AddOptions<UserJwtTokenSettings>()
 var dbConnectionString = builder.Configuration.GetConnectionString("UsersDb") ??
                          throw new InvalidOperationException("Connection string 'UsersDb' not found.");
 
+var otlpEndpoint = builder.Configuration.GetSection("Otlp").GetValue<string>("Endpoint") ??
+                   throw new InvalidOperationException("'Otlp/Endpoint' not found.");
+
 builder.Services
     .AddApplicationServices()
     .AddInfrastructure(dbConnectionString)
-    .AddPresentation();
+    .AddPresentation()
+    .AddObservability(otlpEndpoint);
 
 var userJwtTokenSettings = userJwtTokenSection.Get<UserJwtTokenSettings>()!;
 
@@ -59,6 +66,12 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(userJwtTokenSettings.Secret))
     };
+});
+
+builder.Host.UseSerilog((ctx, cfg) =>
+{
+    cfg.ReadFrom.Configuration(ctx.Configuration)
+        .WriteTo.Console(new CompactJsonFormatter());
 });
 
 var app = builder.Build();
@@ -85,5 +98,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapPrometheusScrapingEndpoint();
 
 app.Run();
