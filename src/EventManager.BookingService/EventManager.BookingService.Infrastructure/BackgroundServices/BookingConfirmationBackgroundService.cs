@@ -1,5 +1,4 @@
-﻿using System.Data;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 using EventManager.BookingService.Application.Abstractions.Persistence.Repositories;
 using EventManager.BookingService.Application.Common.Messaging;

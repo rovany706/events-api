@@ -4,9 +4,10 @@ using Confluent.Kafka;
 
 using EventManager.Contracts;
 using EventManager.Contracts.Events;
+using EventManager.EventService.Application.Abstractions.Caching;
 using EventManager.EventService.Application.Abstractions.Persistence.Repositories;
 using EventManager.EventService.Application.Common.Messaging;
-using EventManager.EventService.Domain.Exceptions;
+using EventManager.EventService.Application.Options;
 using EventManager.EventService.Infrastructure.Options;
 using EventManager.EventService.Infrastructure.Persistence;
 
@@ -23,14 +24,16 @@ namespace EventManager.EventService.Infrastructure.BackgroundServices;
 public class BookingCancelledEventConsumer : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly CacheSettings _cacheSettings;
     private readonly ILogger<BookingConfirmationEventConsumer> _logger;
     private readonly KafkaSettings _kafkaSettings;
 
     public BookingCancelledEventConsumer(IServiceScopeFactory scopeFactory, IOptions<KafkaSettings> kafkaSettings,
-        ILogger<BookingConfirmationEventConsumer> logger)
+        IOptions<CacheSettings> cacheSettings, ILogger<BookingConfirmationEventConsumer> logger)
     {
         _kafkaSettings = kafkaSettings.Value;
         _scopeFactory = scopeFactory;
+        _cacheSettings = cacheSettings.Value;
         _logger = logger;
     }
 
@@ -94,17 +97,17 @@ public class BookingCancelledEventConsumer : BackgroundService
     {
         using var scope = _scopeFactory.CreateScope();
         await using var context = scope.ServiceProvider.GetRequiredService<EventDbContext>();
+        var cache = scope.ServiceProvider.GetRequiredService<ICache>();
+        if (await context.InboxMessages.AnyAsync(x => x.Id == message.MessageId, ct))
+        {
+            return;
+        }
+
+        var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var eventToCancel = await eventRepository.GetEventByIdAsync(message.EventId, ct);
 
         try
         {
-            if (await context.InboxMessages.AnyAsync(x => x.Id == message.MessageId, ct))
-            {
-                return;
-            }
-
-            var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
-            var eventToCancel = await eventRepository.GetEventByIdAsync(message.EventId, ct);
-
             if (eventToCancel == null)
             {
                 _logger.LogWarning("Event to cancel {EventId} not found", message.EventId);
@@ -129,5 +132,9 @@ public class BookingCancelledEventConsumer : BackgroundService
         {
             _logger.LogWarning("Message {MessageId} already processed", message.MessageId);
         }
+
+        if (eventToCancel != null)
+            await cache.SetByKeyAsync($"event:{eventToCancel.Id}", JsonSerializer.Serialize(eventToCancel),
+                _cacheSettings.EventTtl);
     }
 }

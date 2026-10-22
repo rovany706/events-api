@@ -17,7 +17,7 @@ public interface IEventService
     /// <param name="paginationParams">Параметры пагинации</param>
     /// <param name="ct">Токен отмены</param>
     /// <returns>Коллекция мероприятий с пагинацией</returns>
-    Task<PaginatedResult<Event>> GetEvents(EventFilterDto filterDto, PaginationParamsDto paginationParams,
+    Task<PaginatedResult<EventInfoDto>> GetEvents(EventFilterDto filterDto, PaginationParamsDto paginationParams,
         CancellationToken ct);
 
     /// <summary>
@@ -26,7 +26,7 @@ public interface IEventService
     /// <param name="id">Идентификатор мероприятия</param>
     /// <param name="ct">Токен отмены</param>
     /// <returns>null, если мероприятие не найдено, иначе <see cref="Event" /></returns>
-    Task<Result<Event?>> GetEventById(int id, CancellationToken ct);
+    Task<Result<EventInfoDto?>> GetEventById(int id, CancellationToken ct);
 
     /// <summary>
     /// Добавление мероприятия
@@ -52,4 +52,10 @@ public interface IEventService
     /// <param name="ct">Токен отмены</param>
     /// <returns>false, если мероприятие не найдено, иначе true</returns>
     Task<Result> RemoveEvent(int id, CancellationToken ct);
+
+    /// <summary>
+    /// Получение топ-10 самых популярных мероприятий
+    /// </summary>
+    /// <param name="ct">Токен отмены</param>
+    Task<List<EventInfoDto>> GetTop10PopularEvents(CancellationToken ct);
 }

@@ -4,13 +4,10 @@ using EventManager.EventService.Application.Abstractions.Services;
 using EventManager.EventService.Application.Abstractions.Services.Dto;
 using EventManager.EventService.Application.Common.Pagination;
 using EventManager.EventService.Application.Common.Results;
-using EventManager.EventService.Presentation.Models.Mapping;
 using EventManager.EventService.Presentation.Models.Request;
-using EventManager.EventService.Presentation.Models.Response;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace EventManager.EventService.Presentation.Controllers;
 
@@ -38,20 +35,21 @@ public class EventsController : ControllerBase
     /// </summary>
     /// <response code="200">Возвращается список мероприятий</response>
     [HttpGet]
-    [ProducesResponseType(typeof(PaginatedResult<EventInfoResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PaginatedResult<EventInfoResponse>>> GetAllEvents([FromQuery] GetEventsFilterParams filters,
+    [ProducesResponseType(typeof(PaginatedResult<EventInfoDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PaginatedResult<EventInfoDto>>> GetAllEvents(
+        [FromQuery] GetEventsFilterParams filters,
         [FromQuery] PaginationParams paginationParams, CancellationToken ct)
     {
         _logger.LogDebug("Получен запрос на получение всех мероприятий");
         _logger.LogDebug("Filters: {0}", filters);
         _logger.LogDebug("Pagination params: {0}", paginationParams);
 
-        var filterDto = new EventFilterDto() { Title = filters.Title, From = filters.From, To = filters.To };
+        var filterDto = new EventFilterDto { Title = filters.Title, From = filters.From, To = filters.To };
         var paginationDto = new PaginationParamsDto(paginationParams.Page, paginationParams.PageSize);
         var events = await _eventService.GetEvents(filterDto, paginationDto, ct);
 
-        return Ok(new PaginatedResult<EventInfoResponse>(
-            events.Items.Select(x => x.ToEventResponse()).ToList(),
+        return Ok(new PaginatedResult<EventInfoDto>(
+            events.Items,
             events.ItemCount,
             events.CurrentPage,
             events.TotalPages,
@@ -67,9 +65,9 @@ public class EventsController : ControllerBase
     /// <response code="200">Возвращается мероприятие</response>
     /// <response code="404">Мероприятие не найдено</response>
     [HttpGet("{id:int}")]
-    [ProducesResponseType(typeof(EventInfoResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(EventInfoDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<EventInfoResponse>> GetEventById(int id, CancellationToken ct)
+    public async Task<ActionResult<EventInfoDto>> GetEventById(int id, CancellationToken ct)
     {
         _logger.LogDebug("Получен запрос на получение мероприятия по идентификатору (id = {Id})", id);
 
@@ -82,7 +80,7 @@ public class EventsController : ControllerBase
 
         var eventToSend = result.Value!;
 
-        return Ok(eventToSend.ToEventResponse());
+        return Ok(eventToSend);
     }
 
     /// <summary>
@@ -101,16 +99,10 @@ public class EventsController : ControllerBase
         _logger.LogDebug("Получен запрос на создание мероприятия");
 
         var eventId = await _eventService.AddEvent(createEventRequest, ct);
-        var response = new EventInfoResponse
-        {
-            Id = eventId,
-            Title = createEventRequest.Title,
-            Description = createEventRequest.Description,
-            StartAt = createEventRequest.StartAt,
-            EndAt = createEventRequest.EndAt,
-            AvailableSeats = createEventRequest.TotalSeats,
-            TotalSeats = createEventRequest.TotalSeats
-        };
+        var response =
+            new EventInfoDto(eventId, createEventRequest.Title, createEventRequest.Description,
+                createEventRequest.StartAt, createEventRequest.EndAt, createEventRequest.TotalSeats,
+                createEventRequest.TotalSeats);
 
         return CreatedAtAction(nameof(GetEventById), new { id = eventId }, response);
     }
@@ -129,7 +121,8 @@ public class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UpdateEvent(int id, [FromBody] UpdateEventRequest updateEventRequest, CancellationToken ct)
+    public async Task<IActionResult> UpdateEvent(int id, [FromBody] UpdateEventRequest updateEventRequest,
+        CancellationToken ct)
     {
         _logger.LogDebug("Получен запрос на обновление информации о мероприятии (id = {Id})", id);
 
@@ -168,5 +161,19 @@ public class EventsController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Получение топ-10 популярных мероприятий
+    /// </summary>
+    /// <param name="ct">Токен отмены</param>
+    /// <response code="200">Список из 10 мероприятий, отсортированный по популярности</response>
+    [HttpGet("top")]
+    [ProducesResponseType(typeof(List<EventInfoDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<EventInfoDto>>> GetTop10Events(CancellationToken ct)
+    {
+        var top10 = await _eventService.GetTop10PopularEvents(ct);
+
+        return Ok(top10);
     }
 }
